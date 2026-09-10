@@ -1,0 +1,299 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Homelab 搭建手记（2）更换无线网卡与 XRDP WiFi 扫描授权问题【我的个人天地】</title><meta name="description" content="Homelab 搭建手记（2）更换无线网卡与 XRDP WiFi 扫描授权问题"><meta name="keywords" content="Homelab,Debian,AX210,XRDP"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Homelab 搭建手记（2）更换无线网卡与 XRDP WiFi 扫描授权问题【我的个人天地】"><meta property="og:description" content="Homelab 搭建手记（2）更换无线网卡与 XRDP WiFi 扫描授权问题"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/06/35187/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Homelab 搭建手记（2）更换无线网卡与 XRDP WiFi 扫描授权问题",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-06-16T15:00:00.000Z",
+  "dateModified": "2026-06-16T15:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/06/35187/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%9B%B4%E6%8D%A2%E6%97%A0%E7%BA%BF%E7%BD%91%E5%8D%A1"><span class="toc-text">一、更换无线网卡</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%8D%A2"><span class="toc-text">1.1 为什么要换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%9B%B4%E6%8D%A2%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E6%95%A3%E7%83%AD%E7%BB%86%E8%8A%82"><span class="toc-text">1.2 更换过程中的散热细节</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-AX210-%E5%9F%BA%E6%9C%AC%E4%BF%A1%E6%81%AF"><span class="toc-text">1.3 AX210 基本信息</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81XRDP-%E7%8E%AF%E5%A2%83%E4%B8%8B-WiFi-%E6%89%AB%E6%8F%8F%E6%8E%88%E6%9D%83%E9%97%AE%E9%A2%98"><span class="toc-text">二、XRDP 环境下 WiFi 扫描授权问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E9%97%AE%E9%A2%98%E7%8E%B0%E8%B1%A1"><span class="toc-text">2.1 问题现象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5"><span class="toc-text">2.2 问题排查</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E4%B8%BA%E4%BB%80%E4%B9%88-MT7921-%E6%B2%A1%E6%9C%89%E8%A7%A6%E5%8F%91%E8%AF%A5%E9%97%AE%E9%A2%98"><span class="toc-text">2.3 为什么 MT7921 没有触发该问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9A%E6%B7%BB%E5%8A%A0-polkit-%E8%A7%84%E5%88%99"><span class="toc-text">2.4 解决方案：添加 polkit 规则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-%E7%BB%93%E6%9E%9C"><span class="toc-text">2.5 结果</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E"><span class="toc-text">三、补充说明</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%85%B3%E4%BA%8E-policykit-1-gnome"><span class="toc-text">3.1 关于 policykit-1-gnome</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%85%B3%E4%BA%8E-XRDP-%E4%B8%8E%E6%9C%AC%E5%9C%B0%E5%9B%BE%E5%BD%A2%E4%BC%9A%E8%AF%9D%E5%85%B1%E5%AD%98"><span class="toc-text">3.2 关于 XRDP 与本地图形会话共存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color6"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color1"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Homelab 搭建手记（2）更换无线网卡与 XRDP WiFi 扫描授权问题</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-16</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-06-16</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Homelab/">Homelab</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Debian/">Debian</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/AX210/">AX210</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/XRDP/">XRDP</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">2393 字 · 约 8 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>上一篇记录了迷你主机的选购和 <code>Debian</code> 系统的安装过程。本篇是一个小的硬件更新：将原装的联发科 <code>MT7921</code> 无线网卡更换为 <code>Intel AX210</code>，同时记录更换后在 <code>XRDP</code> 远程桌面环境下遇到的 <code>WiFi</code> 扫描授权问题及解决方案。</p>
+<span id="more"></span>
+<h2 id="一、更换无线网卡">一、更换无线网卡</h2>
+<h3 id="1-1-为什么要换">1.1 为什么要换</h3>
+<p><code>联想来酷 Mini Pro</code> 原装无线网卡是联发科 <code>MT7921</code>，网上普遍反映该网卡在 <code>Linux</code> 下存在偶发断连、休眠唤醒后无法恢复等稳定性问题。<code>Intel AX210</code> 是目前 <code>Linux</code> 兼容性最好的 <code>WiFi 6E</code> 网卡之一，<code>iwlwifi</code> 驱动由 <code>Intel</code> 官方维护，稳定性有保障。</p>
+<h3 id="1-2-更换过程中的散热细节">1.2 更换过程中的散热细节</h3>
+<p>拆机后发现一个值得注意的设计细节：<strong>原装硬盘和网卡是叠叠乐放置的</strong>，<code>NVMe</code> 硬盘直接叠在无线网卡上方，两者之间没有额外的散热隔层。这种布局下硬盘的热量会直接传导到网卡，长时间运行可能影响网卡稳定性。</p>
+<p>更换网卡的同时，建议将第一块硬盘挪到另一个 <code>M.2</code> 插槽位置，拉开两者距离，改善散热条件。如果两个插槽位置固定无法更换，也可以在硬盘和网卡之间加一层导热垫或铜片辅助散热。</p>
+<h3 id="1-3-AX210-基本信息">1.3 AX210 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">项目</th>
+<th style="text-align:left">规格</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">型号</td>
+<td style="text-align:left"><code>Intel Wi-Fi 6E AX210</code></td>
+</tr>
+<tr>
+<td style="text-align:left">协议</td>
+<td style="text-align:left"><code>WiFi 6E</code>（<code>802.11ax</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left">频段</td>
+<td style="text-align:left"><code>2.4GHz</code> / <code>5GHz</code> / <code>6GHz</code></td>
+</tr>
+<tr>
+<td style="text-align:left">驱动</td>
+<td style="text-align:left"><code>iwlwifi</code>（<code>Intel</code> 官方维护）</td>
+</tr>
+<tr>
+<td style="text-align:left">蓝牙</td>
+<td style="text-align:left"><code>Bluetooth 5.3</code></td>
+</tr>
+</tbody>
+</table>
+<p>更换后通过 <code>dmesg</code> 确认驱动正常加载：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">dmesg | grep -i &quot;iwlwifi\|ax210&quot;</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">loaded firmware version ...
+Detected Intel(R) Wi-Fi 6 AX210 160MHz</code></div></pre>
+<p>日志中可能会出现 <code>failed to load iwl-debug-yoyo.bin</code> 的提示，这是可选的 <code>debug firmware</code> 缺失，不影响正常使用。</p>
+<h2 id="二、XRDP-环境下-WiFi-扫描授权问题">二、XRDP 环境下 WiFi 扫描授权问题</h2>
+<h3 id="2-1-问题现象">2.1 问题现象</h3>
+<p>更换 <code>AX210</code> 后，系统本地登录一切正常，但在 <code>XRDP</code> 远程桌面环境中出现以下问题：</p>
+<ul>
+<li>点击 <code>XFCE</code> 右上角 <code>NetworkManager</code> 的无线网络图标时弹出授权窗口</li>
+<li>提示：<code>System policy prevents Wi-Fi scans</code></li>
+<li>即使不输入密码，<code>WiFi</code> 网络实际上仍然能扫描出来</li>
+<li>一段时间后会再次弹出授权窗口</li>
+<li>某些情况下 <code>XFCE GUI</code> 会出现卡死，<code>NetworkManager applet</code> 无响应</li>
+</ul>
+<p>本地物理登录则完全正常，不会出现任何授权提示。</p>
+<h3 id="2-2-问题排查">2.2 问题排查</h3>
+<p>首先排除驱动问题：</p>
+<ul>
+<li><code>AX210</code> 驱动工作正常</li>
+<li><code>firmware</code> 已正确加载</li>
+<li>未使用 <code>iwd</code></li>
+<li><code>NetworkManager</code> 服务运行正常</li>
+</ul>
+<p>通过 <code>loginctl</code> 查看会话状态，发现了关键线索：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">loginctl</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-text">SESSION  UID USER    SEAT
+4        1000 tiger  seat0
+c6       1000 tiger  -</code></div></pre>
+<p>其中 <code>seat0</code> 表示本地物理桌面，<code>-</code> 表示远程 <code>XRDP</code> 会话。<code>XRDP</code> 远程会话不被 <code>systemd-logind</code> / <code>polkit</code> 视为本地 <code>active session</code>，因此 <code>WiFi</code> 扫描操作会触发额外的权限校验。</p>
+<p><strong>本质上这不是网卡驱动问题，而是 <code>XRDP</code> 会话的权限模型与本地会话不一致导致的。</strong></p>
+<h3 id="2-3-为什么-MT7921-没有触发该问题">2.3 为什么 MT7921 没有触发该问题</h3>
+<p>不同无线网卡驱动在 <code>NetworkManager</code> / <code>polkit</code> 权限路径上的行为并不完全一致。<code>Intel AX210</code> 的 <code>iwlwifi</code> 驱动对权限模型实现更加严格，因此更容易暴露 <code>XRDP</code> 会话的权限问题。简单来说：</p>
+<ul>
+<li><code>MT7921</code> 的驱动在权限校验上更&quot;宽松&quot;</li>
+<li><code>AX210</code> 的 <code>iwlwifi</code> 更符合标准权限模型</li>
+</ul>
+<h3 id="2-4-解决方案：添加-polkit-规则">2.4 解决方案：添加 polkit 规则</h3>
+<p>创建 <code>polkit</code> 规则文件：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo vim /etc/polkit-1/rules.d/50-networkmanager.rules</code></div></pre>
+<p>写入以下内容：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-javascript">polkit.addRule(function(action, subject) &#123;
+    if (
+        subject.isInGroup(&quot;sudo&quot;) &amp;&amp;
+        action.id.indexOf(&quot;org.freedesktop.NetworkManager&quot;) == 0
+    ) &#123;
+        return polkit.Result.YES;
+    &#125;
+&#125;);</code></div></pre>
+<p>该规则表示：允许 <code>sudo</code> 组用户直接执行 <code>NetworkManager</code> 相关操作，不再弹出 <code>WiFi</code> 扫描授权窗口。</p>
+<p>重启相关服务使规则生效：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo systemctl restart polkit
+sudo systemctl restart NetworkManager</code></div></pre>
+<p>重新登录 <code>XRDP</code> 即可。</p>
+<h3 id="2-5-结果">2.5 结果</h3>
+<p>配置完成后：</p>
+<ul>
+<li>不再出现 <code>System policy prevents Wi-Fi scans</code> 提示</li>
+<li>无线网络扫描恢复正常</li>
+<li><code>XFCE</code> 不再出现 <code>GUI</code> 假死</li>
+<li>无需安装额外 <code>GNOME</code> 桌面组件</li>
+<li>无需修改 <code>AX210</code> 驱动配置</li>
+</ul>
+<h2 id="三、补充说明">三、补充说明</h2>
+<h3 id="3-1-关于-policykit-1-gnome">3.1 关于 policykit-1-gnome</h3>
+<p>很多资料会提到通过安装 <code>policykit-1-gnome</code> 来解决类似问题。需要注意的是，<code>policykit-1-gnome</code> 并不是完整的 <code>GNOME</code> 桌面，仅仅是一个 <code>polkit authentication agent</code>，不会安装 <code>GNOME Shell</code>，也不会破坏 <code>XFCE</code> 环境。不过本问题中仅通过 <code>polkit rule</code> 即可解决，无需额外安装。</p>
+<h3 id="3-2-关于-XRDP-与本地图形会话共存">3.2 关于 XRDP 与本地图形会话共存</h3>
+<p>如果系统同时存在本地自动登录的 <code>XFCE</code> 和 <code>XRDP</code> 远程的 <code>XFCE</code>，可能导致 <code>DBus</code>、<code>polkit</code>、<code>NetworkManager applet</code> 之间出现额外冲突。对于长期远程使用的 <code>Homelab</code> 主机，更建议：</p>
+<ul>
+<li>关闭本地自动登录</li>
+<li>使用单一 <code>XRDP</code> 图形会话</li>
+</ul>
+<p>以减少桌面环境相关的问题。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://wiki.archlinux.org/title/NetworkManager" title="Arch Wiki - NetworkManager" class="external-link" data-redirect="https%3A%2F%2Fwiki.archlinux.org%2Ftitle%2FNetworkManager">Arch Wiki - NetworkManager</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.freedesktop.org/software/polkit/docs/latest/" title="Polkit Documentation" class="external-link" data-redirect="https%3A%2F%2Fwww.freedesktop.org%2Fsoftware%2Fpolkit%2Fdocs%2Flatest%2F">Polkit Documentation</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/06/35187/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/06/35187/">https://www.superheaoz.top/2026/06/35187/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/06/3470/"><span>Homelab 搭建手记（3）开发环境一键配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/06/40732/"><span>Homelab 搭建手记（1）迷你主机选购与 Debian 系统安装</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

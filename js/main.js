@@ -1,0 +1,33 @@
+import { initPageVisibility } from "./utils/PageVisibility.js";
+import { initClock, initAutoResizeHeaderRight, initToggleHeaderMenu, initSearchButton } from "./layout/header.js";
+import AppearanceController from "./layout/appearance.js";
+import { initToggleSidebar, initSidebarSwitch } from "./layout/sidebar.js";
+import { enhanceContent } from "./utils/content.js";
+import { initSponsor } from "./features/sponsor.js";
+import ScrollHandler from "./utils/scroll.js";
+import Background from "./layout/background.js";
+import Hero from "./layout/hero.js";
+import Page404 from "./layout/page404.js";
+import { initLocalSearch } from "./utils/localSearch.js";
+import { initPostQRCodes } from "./features/qrcode.js";
+import { initEncryptedPosts } from "./features/encrypt.js";
+
+document.addEventListener("DOMContentLoaded", () => {
+    initPageVisibility();
+    initClock();
+    new AppearanceController();
+    initToggleSidebar();
+    initAutoResizeHeaderRight();
+    initToggleHeaderMenu();
+    initSidebarSwitch();
+    enhanceContent();
+    initSponsor();
+    initSearchButton();
+    new ScrollHandler();
+    new Background();
+    new Hero();
+    new Page404();
+    initLocalSearch();
+    initPostQRCodes();
+    initEncryptedPosts();
+});

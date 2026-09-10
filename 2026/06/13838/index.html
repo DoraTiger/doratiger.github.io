@@ -1,0 +1,416 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>HEXO 开发笔记（4）自建主题：架构与设计哲学【我的个人天地】</title><meta name="description" content="HEXO 开发笔记（4）自建主题：架构与设计哲学"><meta name="keywords" content="hexo,主题开发,架构设计"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（4）自建主题：架构与设计哲学【我的个人天地】"><meta property="og:description" content="HEXO 开发笔记（4）自建主题：架构与设计哲学"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/06/13838/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HEXO 开发笔记（4）自建主题：架构与设计哲学",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-06-19T02:00:00.000Z",
+  "dateModified": "2026-09-08T16:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/06/13838/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%BB%8E%E8%B4%A1%E7%8C%AE%E8%80%85%E5%88%B0%E7%8B%AC%E7%AB%8B%E5%BC%80%E5%8F%91%E8%80%85"><span class="toc-text">一、从贡献者到独立开发者</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%8E-Fan-%E4%B8%BB%E9%A2%98%E7%9A%84%E6%B8%8A%E6%BA%90"><span class="toc-text">1.1 与 Fan 主题的渊源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9%E4%B8%80%E4%BD%93%E5%8C%96%E9%9B%86%E6%88%90"><span class="toc-text">1.2 为什么选择一体化集成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E9%87%8D%E5%86%99%E7%9B%AE%E6%A0%87"><span class="toc-text">1.3 重写目标</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B"><span class="toc-text">二、技术选型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%EF%BC%9APug"><span class="toc-text">2.1 模板引擎：Pug</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%A0%B7%E5%BC%8F%E9%A2%84%E5%A4%84%E7%90%86%EF%BC%9AStylus"><span class="toc-text">2.2 样式预处理：Stylus</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%84%9A%E6%9C%AC%EF%BC%9AES6-Modules"><span class="toc-text">2.3 客户端脚本：ES6 Modules</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E4%B8%89%E5%B1%82%E9%85%8D%E7%BD%AE%E5%90%88%E5%B9%B6%E4%B8%8E%E5%8A%A0%E8%BD%BD%E8%B0%83%E8%AF%95"><span class="toc-text">三、三层配置合并与加载调试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%90%88%E5%B9%B6%E5%AE%9E%E7%8E%B0"><span class="toc-text">3.1 合并实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E8%B0%83%E8%AF%95%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E6%9C%80%E5%A4%A7%E5%9D%91%EF%BC%9A%E9%85%8D%E7%BD%AE%E5%8A%A0%E8%BD%BD%E6%97%B6%E5%BA%8F"><span class="toc-text">3.2 调试过程中的最大坑：配置加载时序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E4%B8%A4%E6%AD%A5%E6%A8%A1%E5%BC%8F%E7%9A%84%E4%BC%98%E5%8A%BF"><span class="toc-text">3.3 两步模式的优势</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E8%84%9A%E6%9C%AC%E6%B3%A8%E5%85%A5%E6%9E%B6%E6%9E%84"><span class="toc-text">四、脚本注入架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-Hook-%E7%9A%84%E7%94%9F%E6%95%88%E6%9C%BA%E5%88%B6"><span class="toc-text">4.1 Hook 的生效机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E7%A9%BA-hook-%E7%9A%84%E6%84%8F%E4%B9%89"><span class="toc-text">4.2 空 hook 的意义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%AE%9E%E9%99%85%E6%B3%A8%E5%85%A5%E5%86%85%E5%AE%B9"><span class="toc-text">4.3 实际注入内容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E6%8C%89%E5%8A%9F%E8%83%BD%E5%BC%80%E5%85%B3%E5%8A%A0%E8%BD%BD%E8%B5%84%E6%BA%90"><span class="toc-text">4.4 按功能开关加载资源</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E7%BD%AE%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%86%B3%E7%AD%96"><span class="toc-text">五、内置第三方库的设计决策</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1"><span class="toc-text">六、目录结构设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">七、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color3"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color4"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（4）自建主题：架构与设计哲学</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%B8%BB%E9%A2%98%E5%BC%80%E5%8F%91/">主题开发</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">架构设计</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">6588 字 · 约 22 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>前几篇记录了 <code>Hexo</code> 的基础用法，下面开始整理自己开发 <code>DoraTiger</code> 主题的过程。这一篇先说为什么从 <code>Fan</code> 迁移，以及主题的配置如何合并、脚本如何加载。</p>
+<span id="more"></span>
+<h2 id="一、从贡献者到独立开发者">一、从贡献者到独立开发者</h2>
+<h3 id="1-1-与-Fan-主题的渊源">1.1 与 Fan 主题的渊源</h3>
+<p>我最初使用的是 <code>Fan</code> 主题，并且在 <code>GitHub</code> 上为其贡献过代码，算是 <code>Fan</code> 主题的贡献者之一。使用了相当长一段时间，整体体验不错。</p>
+<p>但后来作者长期没有更新，而 <code>Hexo</code> 版本在不断迭代。随着 <code>Hexo 7.x</code> 的发布，一些 <code>API</code> 和行为发生了变化，<code>Fan</code> 主题逐渐出现了兼容性问题。加上我当时正好有空，想深入学习一下 <code>Pug</code>、<code>Stylus</code>、<code>ES6 Modules</code> 等前端技术，所以决定从头构建一个自己的主题。</p>
+<h3 id="1-2-为什么选择一体化集成">1.2 为什么选择一体化集成</h3>
+<p>最终没有选择继续维护 <code>Fan</code> 的 fork，而是完全重写，主要考虑的是一体化集成的设计理念。<code>Hexo</code> 主题生态中有大量优秀的第三方插件（加密、搜索、<code>sitemap</code>、统计等），但在实际使用中，将这些功能分散在不同插件中会带来一些问题：</p>
+<ul>
+<li>各插件的配置格式不统一，维护成本高</li>
+<li>插件之间可能存在兼容性冲突</li>
+<li>功能逻辑分散在多处，排查问题困难</li>
+<li>升级 <code>Hexo</code> 版本时，需要逐个检查插件兼容性</li>
+</ul>
+<p>我把这些常用功能集成到 <code>DoraTiger</code> 内部，统一处理配置和加载逻辑。相关实现的原始来源和引用链接保留在主题 <code>README.md</code> 中。</p>
+<h3 id="1-3-重写目标">1.3 重写目标</h3>
+<ul>
+<li><strong>一体化集成</strong> — 加密、搜索、<code>sitemap</code>、统计、外链拦截等功能直接内置</li>
+<li>暗色主题 + <code>Canvas</code> 动画</li>
+<li>配置文档（<code>docs/CONFIG.md</code>）</li>
+<li>模块化脚本架构，方便扩展</li>
+</ul>
+<h2 id="二、技术选型">二、技术选型</h2>
+<h3 id="2-1-模板引擎：Pug">2.1 模板引擎：Pug</h3>
+<p><code>Hexo</code> 主题支持 <code>Pug</code> 和 <code>EJS</code> 两种模板引擎。选择 <code>Pug</code> 的原因：</p>
+<ul>
+<li><strong>缩进语法</strong>：嵌套结构一目了然，不需要成对的 <code>&lt;% %&gt;</code> 标签</li>
+<li><strong>原生支持</strong>：<code>extends</code>/<code>block</code>/<code>include</code>/<code>mixin</code> 等模板功能</li>
+<li><strong>与 Stylus 一致</strong>：同为简洁表达力强的设计哲学</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-pug">// Pug 示例：条件渲染 + 循环
+if is_post()
+  .post-item-header-meta
+    each tag in post.tags.data
+      .post-item-header-meta-item
+        a(href=url_for(tag.path))= tag.name</code></div></pre>
+<p>从 <code>Fan</code> 主题迁移到 <code>Pug</code> 的过程中，<code>Hexo</code> 版本升级没有遇到严重的不兼容问题。主要是一些小的加载逻辑 <code>bug</code>，比如模板继承顺序、变量作用域等，调试后都能解决。<code>Pug</code> 本身在 <code>Hexo</code> 各版本间保持了良好的向后兼容性。</p>
+<h3 id="2-2-样式预处理：Stylus">2.2 样式预处理：Stylus</h3>
+<p><code>Stylus</code> 的缩进语法与 <code>Pug</code> 一致，支持变量、<code>Mixin</code>、函数，适合构建设计令牌系统：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-stylus">// 设计令牌：所有值通过 theme-config() 从配置文件读取
+$color-theme = theme-config('style.color.theme', 'rgba(230, 119, 0, 1)');
+$color-background = theme-config('style.color.background',
+  'radial-gradient(100% 100% at 70% 120%, rgba(33, 39, 80, 1) 10%, #020409 100%)');</code></div></pre>
+<h3 id="2-3-客户端脚本：ES6-Modules">2.3 客户端脚本：ES6 Modules</h3>
+<p>所有客户端脚本使用 <code>ES6 Modules</code>，浏览器原生支持，无需构建步骤：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-javascript">// source/js/main.js — 入口文件
+import &#123; initClock &#125; from &quot;./layout/header.js&quot;;
+import &#123; initToggleSidebar &#125; from &quot;./layout/sidebar.js&quot;;
+import ScrollHandler from &quot;./utils/scroll.js&quot;;
+import Background from &quot;./layout/background.js&quot;;
+
+document.addEventListener(&quot;DOMContentLoaded&quot;, () =&gt; &#123;
+    initClock();
+    initToggleSidebar();
+    new ScrollHandler();  // 有状态组件用 class
+    new Background();     // Canvas 动画
+&#125;);</code></div></pre>
+<p>两种初始化模式并存：无状态工具用 <code>init*()</code> 函数，有状态组件用 <code>new Class()</code> 实例化。</p>
+<h2 id="三、三层配置合并与加载调试">三、三层配置合并与加载调试</h2>
+<p>直接修改主题的 <code>_config.yml</code>，升级时需要处理自己的配置与上游改动。因此我把用户配置放在主仓库中，加载时再与主题默认值合并：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-text">优先级（高 → 低）：
+  _config.hexo-theme-doratiger.yml  ← 用户覆盖（推荐）
+  source/_data/doratiger_config.yml ← 已废弃
+  themes/xxx/_config.yml            ← 主题默认（993 行）</code></div></pre>
+<h3 id="3-1-合并实现">3.1 合并实现</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-javascript">// scripts/events/lib/themeConfig.js — 核心合并逻辑
+themeMergeConfig = merge(&#123;&#125;, defaultThemeConfig);           // 层 1：主题默认值
+if (isNotEmptyObject(dataThemeConfig)) &#123;
+    themeMergeConfig = merge(&#123;&#125;, themeMergeConfig, dataThemeConfig);  // 层 2：用户数据
+&#125;
+if (isNotEmptyObject(rootThemeConfig)) &#123;
+    themeMergeConfig = merge(&#123;&#125;, themeMergeConfig, rootThemeConfig);  // 层 3：根目录覆盖（最高优先级）
+&#125;</code></div></pre>
+<p>使用深度合并（<code>deep merge</code>），嵌套对象不会被整体替换，而是逐字段合并。</p>
+<h3 id="3-2-调试过程中的最大坑：配置加载时序">3.2 调试过程中的最大坑：配置加载时序</h3>
+<p>最初实现三层合并时遇到了一个很大的问题：<strong>多处配置的加载顺序不一致</strong>。<code>Hexo</code> 的生命周期中，配置在不同阶段被读取，但有些模块需要的环境变量在配置还没加载完的时候就被引用了。结果就是部分功能的配置项读不到值，表现为&quot;配置写了但不生效&quot;。</p>
+<p>排查后发现根本原因是：<code>Hexo</code> 的 <code>ready</code> 事件、<code>generateBefore</code> 事件、模板渲染阶段各自读取配置的时机不同，如果没有统一的加载器，就很容易出现时序问题。</p>
+<p>最终参考了其他主题的实现思路，<strong>完全自行构建了变量加载器</strong>，在 <code>ready</code> 事件中一次性完成所有配置的读取和合并，然后在 <code>generateBefore</code> 阶段统一写回。这样无论后续哪个模块读取配置，拿到的都是完整且正确的值。</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-text">修复前：
+  ready → 部分模块读配置 → generateBefore → 其他模块读配置（不一致）
+
+修复后：
+  ready → themeConfig.js 统一加载三层配置 → mergeConfig.js 一次性写回
+  generateBefore → 所有模块读到的配置一致</code></div></pre>
+<h3 id="3-3-两步模式的优势">3.3 两步模式的优势</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-javascript">// scripts/events/lib/mergeConfig.js
+hexo.theme.config = merge(&#123;&#125;, themeConfig, doratiger.config);
+hexo.theme.i18n.data = merge(&#123;&#125;, themeI18nConfig.data, doratiger.i18n.data);</code></div></pre>
+<p>这种两步模式（<code>themeConfig</code> 收集 → <code>mergeConfig</code> 应用）将配置解析与 <code>Hexo</code> 内部生命周期解耦。配置的&quot;计算&quot;和&quot;生效&quot;分离，便于调试和扩展。</p>
+<h2 id="四、脚本注入架构">四、脚本注入架构</h2>
+<h3 id="4-1-Hook-的生效机制">4.1 Hook 的生效机制</h3>
+<p><code>Hexo</code> 的 <code>injector</code> 系统提供四个生命周期钩子：<code>head_begin</code>、<code>head_end</code>、<code>body_begin</code>、<code>body_end</code>。理解这些钩子的生效时机是正确注入内容的关键：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-text">HTML 渲染顺序：
+  &lt;head&gt;
+    head_begin  ← 非常早期，DOM 还没构建
+    head_end    ← head 尾部，适合 CSS 和配置脚本
+  &lt;/head&gt;
+  &lt;body&gt;
+    body_begin  ← body 开头
+    [页面内容]
+    body_end    ← body 尾部，适合 JS 和评论初始化
+  &lt;/body&gt;</code></div></pre>
+<h3 id="4-2-空-hook-的意义">4.2 空 hook 的意义</h3>
+<p><code>DoraTiger</code> 中有些 hook 当前是空的（如 <code>head_begin</code>），但仍然注册了默认内容。这是有意为之 — 为将来可能的功能预留注入点，避免后续添加功能时需要修改核心注入逻辑：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-javascript">// scripts/injectors/index.js
+// 即使当前为空，也保持注册
+hexo.extend.injector.register(&quot;head_begin&quot;, () =&gt; &#123;&#125;, &quot;default&quot;);
+hexo.extend.injector.register(&quot;body_begin&quot;, () =&gt; &#123;&#125;, &quot;default&quot;);</code></div></pre>
+<h3 id="4-3-实际注入内容">4.3 实际注入内容</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div></div><code class="language-javascript">// head_end：注入 CSS + 搜索配置
+hexo.extend.injector.register(&quot;head_end&quot;, function () &#123;
+    let inject_content = [];
+    inject_content.push(require(&quot;./lib/injector-config.js&quot;)(hexo));
+    inject_content.push(require(&quot;./lib/injector-search.js&quot;)(hexo));
+    inject_content.push(require(&quot;./lib/injector-resource.js&quot;)(hexo, &quot;css&quot;));
+    return inject_content.join(&quot;\n&quot;);
+&#125;, &quot;default&quot;);
+
+// body_end：注入 JS + 评论 + 统计
+hexo.extend.injector.register(&quot;body_end&quot;, () =&gt; &#123;
+    let inject_content = [];
+    inject_content.push(require(&quot;./lib/injector-resource.js&quot;)(hexo, &quot;js&quot;));
+    inject_content.push(require(&quot;./lib/injector-resource.js&quot;)(hexo, &quot;script&quot;));
+    inject_content.push(require(&quot;./lib/injector-comments.js&quot;)(hexo));
+    return inject_content.join(&quot;\n&quot;);
+&#125;, &quot;default&quot;);</code></div></pre>
+<h3 id="4-4-按功能开关加载资源">4.4 按功能开关加载资源</h3>
+<p>资源注入按功能开关控制 — 只有启用的功能才注入对应资源：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-javascript">// scripts/injectors/lib/injector-resource.js
+const search = theme.search || &#123;&#125;;
+if (search.enable &amp;&amp; search_type) &#123;
+    resources.push(loadResource(resource[search_type], resourceType, globalCDN));
+&#125;
+if (statistics.enable) &#123;
+    resources.push(loadResource(resource[statistics_type], resourceType, globalCDN));
+&#125;</code></div></pre>
+<h2 id="五、内置第三方库的设计决策">五、内置第三方库的设计决策</h2>
+<p><code>DoraTiger</code> 将 <code>highlight.js</code>、<code>mathjax</code>、<code>font-awesome</code> 等第三方库内置在 <code>source/lib/</code> 下，而非通过 <code>CDN</code> 引用。这个决策背后有两个实际原因：</p>
+<p><strong>国内网络问题</strong>：部分 <code>CDN</code> 在国内访问不稳定，<code>jsDelivr</code> 等偶尔会被限速或不可达。把库随站点一起提供，可以减少对这些外部地址的依赖。</p>
+<p><strong>内网开发需求</strong>：写博客时经常处于内网环境，没有外网连接。如果依赖 <code>CDN</code>，本地预览时样式和功能都会缺失。内置库让离线开发成为可能。</p>
+<p>为此设计了<strong>本地 + CDN 双重机制</strong>，每个资源都可以独立切换：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-yaml">resource:
+  enable_cdn: false        # 全局默认：本地
+  highlight:
+    enable_cdn: true       # 代码高亮强制 CDN（库体积大）
+  mathjax:
+    enable_cdn: false      # 数学渲染用本地（稳定性优先）</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-text">source/lib/ 内置库清单：
+├── highlight.js/@11.10.0/     # 代码高亮
+├── mathjax/@3.2.2/            # 数学渲染
+├── font-awesome/@6.7.2/       # 图标字体
+├── twikoo/@1.6.40/            # 评论系统
+├── valine/@1.5.3/             # 评论系统
+├── instantsearch.js/          # Algolia 搜索 UI
+├── pretext/                   # Canvas 文字排版
+└── prism.js/@1.29.0/          # 备用代码高亮</code></div></pre>
+<h2 id="六、目录结构设计">六、目录结构设计</h2>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div></div><code class="language-text">themes/hexo-theme-doratiger/
+├── layout/                    # 模板层
+│   ├── *.pug                  # 页面模板（index/post/archive...）
+│   └── _include/              # 可复用组件
+│       ├── _layout.pug        # 主布局骨架
+│       ├── head.pug           # SEO/OG/JSON-LD
+│       ├── header.pug         # 导航栏
+│       ├── footer.pug         # 底栏 + 统计 + 备案
+│       └── sidebar.pug        # 侧边栏路由
+├── scripts/                   # 服务端脚本层
+│   ├── events/                # 生命周期钩子
+│   ├── filters/               # 内容过滤器
+│   ├── generators/            # 页面生成器
+│   ├── injectors/             # 资源注入器
+│   └── console/               # CLI 命令
+├── source/                    # 静态资源层
+│   ├── css/                   # Stylus 样式
+│   ├── js/                    # ES6 客户端脚本
+│   └── lib/                   # 内置第三方库
+└── languages/                 # i18n 翻译</code></div></pre>
+<p>关键设计决策：</p>
+<table>
+<thead>
+<tr>
+<th>决策</th>
+<th>选择</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模板引擎</td>
+<td>Pug</td>
+<td>缩进语法，嵌套清晰</td>
+</tr>
+<tr>
+<td>样式预处理</td>
+<td>Stylus</td>
+<td>与 Pug 设计哲学一致</td>
+</tr>
+<tr>
+<td>JS 模块化</td>
+<td>ES6 Modules</td>
+<td>浏览器原生支持，无构建步骤</td>
+</tr>
+<tr>
+<td>第三方库</td>
+<td>内置 <code>source/lib/</code></td>
+<td>国网不稳定 + 内网离线需求</td>
+</tr>
+<tr>
+<td>配置方式</td>
+<td>三层合并 + 统一加载器</td>
+<td>解决多处配置加载时序问题</td>
+</tr>
+<tr>
+<td>主题色</td>
+<td>深蓝黑 + 橙色</td>
+<td>暗色为主，橙色强调</td>
+</tr>
+<tr>
+<td>Hook 注册</td>
+<td>全部注册（含空 hook）</td>
+<td>预留扩展点，保持架构一致</td>
+</tr>
+</tbody>
+</table>
+<h2 id="七、总结">七、总结</h2>
+<p>这部分开发中，花时间最多的是配置加载时序。配置写在文件里却没有生效时，需要检查读取发生在哪个阶段。统一加载器之后，加密、搜索和统计都从合并后的配置取值，排查起来方便了不少。第三方库则保留本地文件，方便在没有外网的环境下预览。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/DoraTiger/hexo-theme-doratiger" title="DoraTiger 主题仓库" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FDoraTiger%2Fhexo-theme-doratiger">DoraTiger 主题 GitHub</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/themes" title="Hexo 主题文档" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fzh-cn%2Fdocs%2Fthemes">Hexo 主题开发文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://pugjs.org/" title="Pug 模板引擎" class="external-link" data-redirect="https%3A%2F%2Fpugjs.org%2F">Pug 模板引擎</a></li>
+<li><a target="_blank" rel="noopener" href="https://stylus-lang.com/" title="Stylus CSS 预处理器" class="external-link" data-redirect="https%3A%2F%2Fstylus-lang.com%2F">Stylus CSS 预处理器</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/nicehash/hexo-theme-fan" title="Fan 主题" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fnicehash%2Fhexo-theme-fan">Fan 主题</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/06/13838/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/06/13838/">https://www.superheaoz.top/2026/06/13838/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/06/50649/"><span>HEXO 开发笔记（5）自建主题：视觉系统</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/06/5806/"><span>HEXO 开发笔记（3）进阶功能</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

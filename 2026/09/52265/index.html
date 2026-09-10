@@ -1,0 +1,299 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>HEXO 开发笔记（11）自建主题：视觉系统重构【我的个人天地】</title><meta name="description" content="HEXO 开发笔记（11）自建主题：视觉系统重构"><meta name="keywords" content="hexo,theme,css,javascript,accessibility"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（11）自建主题：视觉系统重构【我的个人天地】"><meta property="og:description" content="HEXO 开发笔记（11）自建主题：视觉系统重构"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/09/52265/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HEXO 开发笔记（11）自建主题：视觉系统重构",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-09-05T18:32:26.000Z",
+  "dateModified": "2026-09-08T16:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/09/52265/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%95%B4%E7%90%86%E9%85%8D%E8%89%B2%E9%85%8D%E7%BD%AE"><span class="toc-text">一、整理配色配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%87%8F%E5%B0%91%E9%87%8D%E5%A4%8D%E7%9A%84%E9%A2%9C%E8%89%B2%E9%85%8D%E7%BD%AE"><span class="toc-text">1.1 减少重复的颜色配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%97%A5%E9%97%B4%E9%85%8D%E8%89%B2%E4%B8%8E%E6%97%A5%E6%9C%88%E5%88%87%E6%8D%A2"><span class="toc-text">1.2 日间配色与日月切换</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%95%B4%E7%90%86%E6%A8%A1%E6%9D%BF%E4%B8%8E%E6%B5%8F%E8%A7%88%E5%99%A8%E8%84%9A%E6%9C%AC"><span class="toc-text">二、整理模板与浏览器脚本</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-Pug-%E5%8F%AA%E6%8F%8F%E8%BF%B0%E9%A1%B5%E9%9D%A2%E7%BB%93%E6%9E%84"><span class="toc-text">2.1 Pug 只描述页面结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%B5%8F%E8%A7%88%E5%99%A8%E4%BB%A3%E7%A0%81%E6%8C%89%E8%81%8C%E8%B4%A3%E6%8B%86%E5%88%86"><span class="toc-text">2.2 浏览器代码按职责拆分</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%87%8D%E6%96%B0%E7%BB%84%E7%BB%87%E9%A1%B5%E9%9D%A2%E9%AA%A8%E6%9E%B6"><span class="toc-text">三、重新组织页面骨架</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E8%AE%A9%E9%A1%B5%E8%84%9A%E5%9B%BA%E5%AE%9A%EF%BC%8C%E6%96%87%E7%AB%A0%E7%8B%AC%E7%AB%8B%E6%BB%9A%E5%8A%A8"><span class="toc-text">3.1 让页脚固定，文章独立滚动</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%9B%AE%E5%BD%95%E4%B8%8D%E5%86%8D%E7%94%A8%E7%AC%A6%E5%8F%B7%E6%A8%A1%E6%8B%9F%E5%B1%82%E7%BA%A7"><span class="toc-text">3.2 目录不再用符号模拟层级</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E7%BB%99%E6%97%A5%E6%9C%88%E8%83%8C%E6%99%AF%E7%95%99%E5%87%BA%E7%A9%BA%E9%97%B4"><span class="toc-text">3.3 给日月背景留出空间</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%A3%80%E6%9F%A5%E6%90%9C%E7%B4%A2%E3%80%81%E8%AF%84%E8%AE%BA%E5%92%8C%E9%9D%99%E6%80%81%E9%A1%B5%E9%9D%A2"><span class="toc-text">四、检查搜索、评论和静态页面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%9E%84%E5%BB%BA%E4%B8%8E%E9%A1%B5%E9%9D%A2%E6%A3%80%E6%9F%A5"><span class="toc-text">五、构建与页面检查</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%B0%8F%E7%BB%93"><span class="toc-text">六、小结</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color7"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color5"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（11）自建主题：视觉系统重构</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-06</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/theme/">theme</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/css/">css</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/javascript/">javascript</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/accessibility/">accessibility</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">4185 字 · 约 14 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>前面几篇已经介绍了主题的目录、搜索、评论和文章加密等功能。最近继续调整页面时，发现各个组件的颜色和边框不太统一，日间模式还有一些配色没有处理好，侧边栏和页脚在窄屏、短窗口下也有布局问题。</p>
+<p>所以这次把相关样式和脚本一起整理了一遍。背景仍然保留星空，补充日间配色和日月切换，同时调整文章的滚动区域。本文记录具体改法，以及布局调整中遇到的几个问题。</p>
+<span id="more"></span>
+<h2 id="一、整理配色配置">一、整理配色配置</h2>
+<h3 id="1-1-减少重复的颜色配置">1.1 减少重复的颜色配置</h3>
+<p>旧主题把背景、正文卡片、侧边栏、按钮、代码块、边框和阴影都暴露为单独的配置项。开始看上去很灵活，但实际维护时有两个问题。</p>
+<p>修改夜间背景时，还要同步调整侧栏、卡片和按钮；新增搜索弹窗或评论组件时，又容易漏掉日间颜色。各处单独配置，也容易出现文字和背景对比度不够、相似按钮颜色不同的问题。</p>
+<p>这次减少了对外配置项，保留外观模式、两种强调色、基础字号、正文宽度和侧栏宽度。旧版逐组件设置颜色的配置需要随之调整。</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">style:
+  appearance: night # night | day | system
+  accent: &quot;#E7A63A&quot;
+  accent_secondary: &quot;#73C4F5&quot;
+  typography:
+    font_size: &quot;16px&quot;
+  layout:
+    content_width: &quot;46rem&quot;
+    sidebar_width: &quot;18rem&quot;</code></div></pre>
+<p>其余颜色在主题内部通过 CSS 变量管理，按背景、正文、边框等用途区分。卡片、侧栏、搜索框引用对应变量，修改配色时就不用逐个查找组件样式。主要变量如下：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-text">--dt-canvas             页面天空与底色
+--dt-surface            文章等主要表面
+--dt-chrome             顶栏、侧栏、页脚的低对比度表面
+--dt-control            卡片内的次级按钮或 chip
+--dt-text / muted       正文与弱文字
+--dt-border             共享边界
+--dt-accent             当前状态和主操作
+--dt-accent-secondary   链接与辅助定位</code></div></pre>
+<p>切换昼夜模式时，统一修改这些变量的取值，搜索、目录、评论、代码块和静态页面便能一起切换配色。</p>
+<h3 id="1-2-日间配色与日月切换">1.2 日间配色与日月切换</h3>
+<p>主题默认使用夜间模式，背景为深靛蓝，保留星光和流星，按钮与链接使用金色、冷蓝色。日间模式改用偏暖的浅色背景，加入日晕和云层光尘，并调整文字、卡片和边框颜色。</p>
+<p>外观策略支持 <code>night</code>、<code>day</code> 和 <code>system</code>。前两者固定初始状态，<code>system</code> 读取浏览器的 <code>prefers-color-scheme</code>。页头的圆形日月按钮只保存浏览器本地偏好，不回写主题 YAML；这样站点默认策略和访问者个人选择可以共存。</p>
+<p>日月本身也不再是两个始终并列的图标。背景中使用一个超出屏幕的轨道作为旋转面，切换时月亮沿轨道下沉、太阳从另一侧进入；按钮则只保留当前可见的一个符号。日间画布补充缓慢移动的云层和日晕，夜间保留星空与流星。持续动画在页面不可见、用户启用减少动效或屏幕过窄时会降低或停止，避免把装饰变成阅读负担。</p>
+<h2 id="二、整理模板与浏览器脚本">二、整理模板与浏览器脚本</h2>
+<h3 id="2-1-Pug-只描述页面结构">2.1 Pug 只描述页面结构</h3>
+<p>这一轮曾暴露出一个很典型的问题：页面模板一边负责输出 HTML，一边绑定点击事件、拼接小段脚本。短期很快，长期会让行为散落在搜索、文章、侧栏和静态页面中，难以测试，也很难判断某次样式调整是否改坏了交互。</p>
+<p>因此模板只保留语义结构、可访问性属性和模块所需的数据属性。例如搜索区域作为页面根层的 <code>dialog</code> 输出，而不是被锁在 header 内；目录/站点概览切换按钮只提供当前标签和状态；加密文章只输出密码表单与错误区域。事件绑定、焦点管理和状态同步都交给浏览器模块。</p>
+<p>搜索、外链和加密功能分别做了以下调整：</p>
+<ol>
+<li>搜索对话框可以在全屏遮罩上居中，打开时隔离背景焦点，按 <code>Escape</code> 关闭，并把焦点还给触发按钮。</li>
+<li>外链跳转拦截可以在全局注入脚本中一次处理，而不是在每篇文章生成时改写链接或重复绑定监听器。这样不会把正常外链在构建期改成重定向地址，避免影响文章的原始链接和 SEO。</li>
+<li>二维码和文章解密等行为可以独立加载。模板不再内嵌密钥相关的运行时逻辑，错误提示也使用页面内的 <code>role=&quot;alert&quot;</code>，而不是浏览器原生弹窗。</li>
+</ol>
+<h3 id="2-2-浏览器代码按职责拆分">2.2 浏览器代码按职责拆分</h3>
+<p>浏览器端仍以 <code>main.js</code> 为入口，但入口只负责初始化。背景、外观、header、侧栏、二维码、加密、对话框和外链处理分别位于对应模块中；通用的焦点隔离和对话框生命周期归入 <code>utils/</code>。</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-text">source/js/
+├── layout/       # 背景、外观、顶栏、侧栏等页面骨架
+├── features/     # 二维码、加密等可选能力
+└── utils/        # dialog、外链拦截、滚动等通用行为</code></div></pre>
+<p>调整后，页面结构在 Pug 中修改，颜色和布局在 CSS 中修改，事件绑定在浏览器 JS 中处理。Hexo 的过滤器和 injector 负责构建时的生成与注入，排查问题时也可以按这几处分别查找。</p>
+<h2 id="三、重新组织页面骨架">三、重新组织页面骨架</h2>
+<h3 id="3-1-让页脚固定，文章独立滚动">3.1 让页脚固定，文章独立滚动</h3>
+<p>传统文档流中，页脚会跟随文章内容向下移动。对长文来说没有问题，但在这个主题里，顶栏、侧栏、阅读进度和回到顶部都已经是页面框架的一部分；继续让整个 <code>body</code> 滚动，容易造成组件各自监听不同滚动源。</p>
+<p>这里把主容器高度设为 <code>100dvh</code>，顶栏和页脚固定在页面上下两端，<code>#content-wrapper</code> 使用 <code>flex: 1</code>、<code>min-height: 0</code> 填满剩余空间，文章在这个区域内滚动。阅读进度、目录高亮和回顶的事件源也一并改到内容区域。</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-text">┌──────────────────────────────────────────┐
+│ header                                   │
+├──────────────┬───────────────────────────┤
+│ sidebar      │ content-wrapper（滚动）     │
+│              │   └── article stage        │
+├──────────────┴───────────────────────────┤
+│ footer                                   │
+└──────────────────────────────────────────┘</code></div></pre>
+<p>这里要特别区分宽度与高度。屏幕窄不等于窗口矮：小于桌面阈值时，侧栏转换为抽屉或隐藏入口；高度较短时，则只压缩顶栏、页脚和辅助内容，不能误把桌面窗口切成手机布局。触摸设备通过 <code>pointer: coarse</code> 增大操作目标，而不是只凭宽度猜测输入方式。</p>
+<h3 id="3-2-目录不再用符号模拟层级">3.2 目录不再用符号模拟层级</h3>
+<p>文章目录曾在最左边使用 <code>&gt;&gt;</code> 作为前导符。它有明显的旧式终端感，但放在新的低对比度轨道中显得过于突兀，也无法自然表达当前阅读位置。</p>
+<p>新目录使用一条弱对比度的垂直轨道和圆点节点：普通节点保持弱文字颜色，hover 和当前章节使用强调色与轻微的光晕。层级仍由缩进和编号配置表达，不再依赖重复的装饰符号。桌面侧栏中的目录与站点概览共享同一个切换入口，按钮文字随当前视图变化，避免“按钮写着站点概览，下面却显示文章目录”的状态错位。</p>
+<h3 id="3-3-给日月背景留出空间">3.3 给日月背景留出空间</h3>
+<p>背景右侧的日月天体需要空间，但内容卡片不能因此看起来向侧边栏倾斜。这个问题在宽屏上尤其明显：第一次实现使用了安全区加 <code>translateX</code> 左移，虽然右侧空出来了，文章舞台却不再处于主容器中心。</p>
+<p>后来去掉了左移，改为计算正文可用宽度。设当前主容器可用宽度为 <code>W</code>，主题可读宽度为 <code>S</code>，单侧天体安全距离为 <code>C</code>，则桌面正文区域宽度为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">stage = min(S, W - 2C - gutter)</code></div></pre>
+<p>左右对称扣除 <code>C</code> 后，卡片仍使用 <code>margin: auto</code> 居中。右侧不会贴近天体，左侧也不会被推向侧边栏；在侧栏隐藏的窄屏断点，安全距离归零，恢复普通单列宽度。4K 宽度下再设置单独的舞台上限，避免长文一行过长。</p>
+<h2 id="四、检查搜索、评论和静态页面">四、检查搜索、评论和静态页面</h2>
+<p>首页和文章页往往最先得到关注，但主题真正容易出问题的地方是低频页面和可选功能。这次样式令牌与页面骨架调整后，也逐项检查了以下内容：</p>
+<table>
+<thead>
+<tr>
+<th>范围</th>
+<th>本轮关注点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本地/Algolia 搜索</td>
+<td>对话框置于全局层；两种后端共享触发入口、结果表面、背景遮罩、模糊、焦点隔离与语言包文案，不让本地搜索残留中文固定文案</td>
+</tr>
+<tr>
+<td>评论</td>
+<td>Gitment、Valine、Twikoo 等第三方容器使用统一表面、文字与控制器令牌</td>
+</tr>
+<tr>
+<td>加密文章</td>
+<td>密码表单、错误提示和解密后的内容延续文章表面层级</td>
+</tr>
+<tr>
+<td>404、隐私、条款与重定向</td>
+<td>使用相同的标题、空状态和弱文字规则，不再像独立页面</td>
+</tr>
+<tr>
+<td>二维码与赞赏</td>
+<td>提示文案允许回退到当前语言，避免主题默认中文覆盖英文页面</td>
+</tr>
+<tr>
+<td>滚动条</td>
+<td>内容区与侧栏分别使用昼夜令牌，而不是浏览器默认白色滚动条</td>
+</tr>
+</tbody>
+</table>
+<p>国际化同样不能只翻导航菜单。页面标题、搜索占位符、空结果、倒计时、加密提示、二维码和赞赏提示都应该优先读取语言包；配置留空时才回退到该语言的默认文本。这样站点可以用一份主题配置切换语言，而不会在英文页面里突然出现“本地搜索”几个中文字。</p>
+<h2 id="五、构建与页面检查">五、构建与页面检查</h2>
+<p>主题包含 Pug、Stylus、浏览器 ES Module、Hexo filter、injector 和 generator。直接执行某个 JS 文件，无法证明 Hexo 的配置合并、页面生成、资源注入和最终选择器仍然正确。因此这轮验证一直以 Hexo CLI 为核心。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash"># 在博客根目录
+npm run clean
+npm run build
+
+# 在主题目录
+node tests/theme-contract.test.js</code></div></pre>
+<p>契约测试覆盖了子路径资源、外观策略、搜索与静态页面开关、加密、站点地图、robots、本地搜索、语言包和 <code>themeinit</code> 配置初始化等场景。它不替代浏览器测试，但可以防止模板/配置/注入层在重构后悄悄失配。</p>
+<p>浏览器端则分别检查首页、长文、带目录文章、归档、标签/分类、搜索、404、加密和重定向页面，并覆盖夜间、日间和系统跟随模式。重点视口包括常规桌面、短高度窗口、横向平板、手机和 4K 宽屏。对于天体安全区这类几何问题，还需要在真实构建页面中检查卡片中心线、侧栏距离和天体边界，而不能只相信 CSS 的字面公式。</p>
+<h2 id="六、小结">六、小结</h2>
+<p>这次主要补齐了日间配色，整理了颜色配置和脚本位置，并把文章滚动、目录进度和回顶统一到内容区域。修改主题布局时，短窗口和宽屏都需要单独检查，尤其是日月背景与正文之间的留白，只看常规桌面尺寸容易漏掉问题。</p>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/09/52265/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/09/52265/">https://www.superheaoz.top/2026/09/52265/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/40338/"><span>Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/51763/"><span>Homelab 搭建手记（8）通过 Apache Guacamole 访问 Debian 桌面</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

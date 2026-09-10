@@ -1,0 +1,519 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Homelab 搭建手记（3）开发环境一键配置【我的个人天地】</title><meta name="description" content="Homelab 搭建手记（3）开发环境一键配置"><meta name="keywords" content="Linux,Homelab,Debian,开发环境"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Homelab 搭建手记（3）开发环境一键配置【我的个人天地】"><meta property="og:description" content="Homelab 搭建手记（3）开发环境一键配置"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/06/3470/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Homelab 搭建手记（3）开发环境一键配置",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-06-18T14:00:00.000Z",
+  "dateModified": "2026-09-10T10:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/06/3470/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="toc-text">一、设计思路</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%A0%B8%E5%BF%83%E5%8E%9F%E5%88%99"><span class="toc-text">1.1 核心原则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="toc-text">1.2 目录结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="toc-text">二、使用方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B"><span class="toc-text">2.1 快速开始</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E4%BA%A4%E4%BA%92%E5%BC%8F%E8%8F%9C%E5%8D%95"><span class="toc-text">2.2 交互式菜单</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%9D%99%E9%BB%98%E6%A8%A1%E5%BC%8F"><span class="toc-text">2.3 静默模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE"><span class="toc-text">2.3 代理配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%A8%A1%E5%9D%97%E8%AF%A6%E8%A7%A3"><span class="toc-text">三、模块详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD"><span class="toc-text">3.1 基础设施</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%AE%B9%E5%99%A8%E4%B8%8E%E8%BF%90%E8%A1%8C%E6%97%B6"><span class="toc-text">3.2 容器与运行时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E8%AF%AD%E8%A8%80%E5%B7%A5%E5%85%B7%E9%93%BE"><span class="toc-text">3.3 语言工具链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E6%A1%8C%E9%9D%A2%E4%B8%8E%E5%B7%A5%E5%85%B7"><span class="toc-text">3.4 桌面与工具</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82"><span class="toc-text">四、技术细节</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%BA%A4%E4%BA%92%E5%B7%A5%E5%85%B7"><span class="toc-text">4.1 交互工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%B9%82%E7%AD%89%E6%80%A7%E8%AE%BE%E8%AE%A1"><span class="toc-text">4.2 幂等性设计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E7%AE%A1%E7%90%86"><span class="toc-text">4.3 环境变量管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E9%95%9C%E5%83%8F%E6%BA%90%E6%B1%87%E6%80%BB"><span class="toc-text">4.4 镜像源汇总</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">五、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color4"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color1"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Homelab 搭建手记（3）开发环境一键配置</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-18</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-10</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Linux/">Linux</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Homelab/">Homelab</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Debian/">Debian</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">开发环境</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">4682 字 · 约 16 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>前两篇记录了迷你主机的选购和 <code>Debian</code> 系统的安装。系统装好后，接下来面临的问题是：如何快速配置完整的开发环境？之前在 <code>WSL</code> 下每次重装都要手动装 <code>Go</code>、<code>Java</code>、<code>Node.js</code>，还要配各种镜像源，流程繁琐且容易遗漏。这次决定把所有配置脚本化，形成一套可重复执行的 <code>setup</code> 工具，一键完成环境部署。本文记录整个配置体系的设计和实现过程。</p>
+<span id="more"></span>
+<ul>
+<li>20260621：<code>01-apt-sources</code> 模块新增 <code>chrony</code> 时间同步服务安装，解决新装系统时间未校准导致 SSL 证书验证失败等问题。</li>
+</ul>
+<h2 id="一、设计思路">一、设计思路</h2>
+<h3 id="1-1-核心原则">1.1 核心原则</h3>
+<p>配置脚本的设计遵循几条基本原则：</p>
+<ul>
+<li><strong>幂等性</strong> — 每个脚本可反复执行，已安装的跳过、配置相同的跳过，不会产生覆盖或冗余</li>
+<li><strong>缓存统一</strong> — 包管理器缓存（<code>apt</code>、<code>npm</code>、<code>pip</code>、<code>Go</code>、<code>Maven</code>）统一放在 <code>cache/</code> 目录下，重装系统不丢失</li>
+<li><strong>安装包归档</strong> — 下载的安装包存放在 <code>packages/</code> 目录，按软件分类，支持离线部署</li>
+<li><strong>国内镜像加速</strong> — 所有包管理器统一配置清华/阿里云镜像，解决国内下载慢的问题</li>
+<li><strong>交互/静默双模式</strong> — 支持交互式菜单选择执行，也支持 <code>--silent</code> 参数用于自动化部署</li>
+</ul>
+<h3 id="1-2-目录结构">1.2 目录结构</h3>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div></div><code class="language-text">workspace/
+├── setup/
+│   ├── common.sh          # 公共函数（日志、路径、交互工具）
+│   ├── init.sh            # 入口脚本（菜单/静默模式）
+│   ├── modules/           # 模块脚本，按编号顺序执行
+│   │   ├── 00-ssh.sh
+│   │   ├── 01-apt-sources.sh
+│   │   └── ...
+│   ├── keys/              # SSH 公钥目录
+│   └── README.md          # 完整文档
+├── cache/                 # 运行时缓存
+│   ├── go/
+│   ├── maven/
+│   └── npm/
+└── packages/              # 安装包离线归档
+    ├── golang/
+    ├── miniconda/
+    ├── texlive/
+    └── zellij/</code></div></pre>
+<h2 id="二、使用方式">二、使用方式</h2>
+<h3 id="2-1-快速开始">2.1 快速开始</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-bash"># 克隆仓库
+mkdir -p &quot;$HOME/workspace&quot;
+git clone https://github.com/DoraTiger/homelab-setup.git &quot;$HOME/workspace/setup&quot;
+cd &quot;$HOME/workspace/setup&quot;
+
+# 交互式菜单
+bash init.sh
+
+# 静默执行全部
+bash init.sh --silent</code></div></pre>
+<p>默认数据工作区为 <code>~/workspace</code>，可通过菜单中的 <code>w</code>、<code>--workspace-root</code> 参数或 <code>HOMELAB_WORKSPACE_ROOT</code> 环境变量修改。缓存和安装包默认放在工作区的 <code>cache/</code>、<code>packages/</code> 中；备份和公钥目录分别位于当前 setup 仓库的 <code>backup/</code>、<code>keys/</code>，不随数据工作区切换。</p>
+<h3 id="2-2-交互式菜单">2.2 交互式菜单</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">bash init.sh</code></div></pre>
+<p>启动后显示路径信息和模块列表，输入编号选择执行。以下按默认目录示意，使用 <code>~</code> 代指用户主目录；实际菜单显示展开后的绝对路径，模块列表作了省略：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div></div><code class="language-text">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Homelab Debian + Xfce 环境配置
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Setup:    ~/workspace/setup
+  工作区:   ~/workspace
+  缓存:     ~/workspace/cache
+  安装包:   ~/workspace/packages
+  备份:     ~/workspace/setup/backup
+  代理:     未配置
+  升级模式: 关闭
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  可用模块:
+  ────────────────────────────────────────────────
+    [ 0] 00-ssh.sh            SSH 密钥生成与 authorized_keys 配置
+    [ 1] 01-apt-sources.sh    APT 软件源配置
+    [ 2] 02-git-config.sh     Git 全局配置
+    ...
+    [13] 13-zellij.sh         Zellij 终端复用器安装
+  ────────────────────────────────────────────────
+    [a] 全部  [p] 代理  [u] 升级模式  [w] 工作区  [q] 退出</code></div></pre>
+<h3 id="2-3-静默模式">2.3 静默模式</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash"># 执行全部模块
+bash init.sh --silent
+
+# 执行指定模块（按编号）
+bash init.sh --silent 1 3
+
+# 使用代理
+bash init.sh --silent --proxy socks5://127.0.0.1:7890</code></div></pre>
+<h3 id="2-3-代理配置">2.3 代理配置</h3>
+<p>网络受限时可通过代理确保下载稳定。支持 <code>http://</code>、<code>https://</code>、<code>socks5://</code> 格式。模块中的 <code>wget</code>/<code>curl</code> 下载会自动走代理。</p>
+<h2 id="三、模块详解">三、模块详解</h2>
+<h3 id="3-1-基础设施">3.1 基础设施</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>模块</th>
+<th>功能</th>
+<th>升级方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00</td>
+<td>ssh</td>
+<td>生成密钥 + 合并远程公钥 + 自动设权限</td>
+<td>—</td>
+</tr>
+<tr>
+<td>01</td>
+<td>apt-sources</td>
+<td>清华镜像源（自动 DEB822/传统）+ 基础工具 + apt upgrade + chrony 时间同步</td>
+<td>apt upgrade</td>
+</tr>
+<tr>
+<td>02</td>
+<td>git-config</td>
+<td>交互式配置用户名/邮箱/默认分支/常用别名</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-2-容器与运行时">3.2 容器与运行时</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>模块</th>
+<th>功能</th>
+<th>升级方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>03</td>
+<td>docker</td>
+<td>Docker CE + Compose + Buildx + 镜像加速 + daemon 配置</td>
+<td>apt --only-upgrade</td>
+</tr>
+<tr>
+<td>04</td>
+<td>miniconda</td>
+<td>Miniconda3 + conda/pip 清华镜像 + Shell 初始化</td>
+<td>conda update --all</td>
+</tr>
+<tr>
+<td>05</td>
+<td>golang</td>
+<td>Go 多版本管理 + GOPROXY 清华镜像 + symlink 切换</td>
+<td>自动下载最新版</td>
+</tr>
+<tr>
+<td>06</td>
+<td>java</td>
+<td>SDKMAN + Java 21 (Temurin) + Maven + 阿里云镜像</td>
+<td>sdk selfupdate + sdk upgrade</td>
+</tr>
+<tr>
+<td>07</td>
+<td>nodejs</td>
+<td>fnm + Node.js LTS + npmmirror + npm 全局目录</td>
+<td>fnm upgrade + npm install -g npm@latest</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-3-语言工具链">3.3 语言工具链</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>模块</th>
+<th>功能</th>
+<th>升级方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>08</td>
+<td>perl-cpan</td>
+<td>CPAN 清华镜像 + local::lib 用户级模块管理</td>
+<td>—</td>
+</tr>
+<tr>
+<td>09</td>
+<td>r-lang</td>
+<td>CRAN 清华镜像 + r-base-dev</td>
+<td>apt upgrade</td>
+</tr>
+<tr>
+<td>10</td>
+<td>rust</td>
+<td>rustup + Rust stable + <a target="_blank" rel="noopener" href="http://crates.io" class="external-link" data-redirect="http%3A%2F%2Fcrates.io">crates.io</a> 清华镜像</td>
+<td>rustup update stable</td>
+</tr>
+<tr>
+<td>11</td>
+<td>texlive</td>
+<td>TeX Live 全量安装 + CTAN 清华镜像 + tlmgr</td>
+<td>tlmgr update --all</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-4-桌面与工具">3.4 桌面与工具</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>模块</th>
+<th>功能</th>
+<th>升级方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td>xrdp</td>
+<td>XRDP + XFCE4 + polkit WiFi 修复</td>
+<td>apt upgrade</td>
+</tr>
+<tr>
+<td>13</td>
+<td>zellij</td>
+<td>预编译二进制 + dracula 主题 + 快捷别名</td>
+<td>重新下载覆盖</td>
+</tr>
+</tbody>
+</table>
+<h2 id="四、技术细节">四、技术细节</h2>
+<h3 id="4-1-交互工具">4.1 交互工具</h3>
+<p><code>common.sh</code> 提供统一的交互函数，所有模块共享：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-bash"># 单选菜单
+type=$(prompt_choice &quot;选择密钥类型:&quot; &quot;ed25519&quot; &quot;ed25519&quot; &quot;rsa-4096&quot; &quot;ecdsa&quot;)
+
+# 是/否确认
+if prompt_yesno &quot;是否配置镜像源?&quot; &quot;y&quot;; then ... fi
+
+# 文本输入
+name=$(prompt_input &quot;用户名:&quot; &quot;$(whoami)&quot;)
+
+# 密码输入（隐藏回显）
+pass=$(prompt_secret &quot;请输入密码&quot;)
+
+# 表格展示
+prompt_table &quot;文件名|类型|说明&quot; &quot;id_ed25519.pub|ed25519|本机密钥&quot;</code></div></pre>
+<p>静默模式下所有函数自动使用默认值，不阻塞等待输入。</p>
+<h3 id="4-2-幂等性设计">4.2 幂等性设计</h3>
+<p>每个模块脚本遵循统一的幂等模式：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash"># 检测是否已安装
+if [ -f &quot;$INSTALL_DIR/bin/xxx&quot; ]; then
+    log_success &quot;xxx 已安装&quot;
+
+    # 检测是否需要升级
+    log_info &quot;检查升级...&quot;
+    xxx upgrade 2&gt;/dev/null || true
+else
+    # 执行安装
+    log_info &quot;安装 xxx...&quot;
+fi</code></div></pre>
+<h3 id="4-3-环境变量管理">4.3 环境变量管理</h3>
+<p>所有环境变量通过 <code>.bashrc.d/</code> 目录管理，每个模块一个文件：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-text">~/.bashrc.d/
+├── conda.sh       # Miniconda
+├── go.sh          # Go
+├── nodejs.sh      # fnm + Node.js
+├── perl.sh        # Perl local::lib
+├── rust.sh        # Rust
+├── sdkman.sh      # SDKMAN
+├── texlive.sh     # TeX Live
+└── zellij.sh      # Zellij 别名</code></div></pre>
+<p><code>.bashrc</code> 中通过统一的加载器遍历执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash"># Load environment snippets
+if [ -d &quot;$HOME/.bashrc.d&quot; ]; then
+    for f in &quot;$HOME&quot;/.bashrc.d/*.sh; do
+        [ -f &quot;$f&quot; ] &amp;&amp; . &quot;$f&quot;
+    done
+fi</code></div></pre>
+<h3 id="4-4-镜像源汇总">4.4 镜像源汇总</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>镜像源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>APT</td>
+<td><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/debian" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2Fdebian">https://mirrors.tuna.tsinghua.edu.cn/debian</a></td>
+</tr>
+<tr>
+<td>Docker</td>
+<td><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/docker-ce" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2Fdocker-ce">https://mirrors.tuna.tsinghua.edu.cn/docker-ce</a></td>
+</tr>
+<tr>
+<td>conda</td>
+<td><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/anaconda" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2Fanaconda">https://mirrors.tuna.tsinghua.edu.cn/anaconda</a></td>
+</tr>
+<tr>
+<td>pip</td>
+<td><a target="_blank" rel="noopener" href="https://pypi.tuna.tsinghua.edu.cn" class="external-link" data-redirect="https%3A%2F%2Fpypi.tuna.tsinghua.edu.cn">https://pypi.tuna.tsinghua.edu.cn</a></td>
+</tr>
+<tr>
+<td>Go</td>
+<td><a target="_blank" rel="noopener" href="https://goproxy.cn" class="external-link" data-redirect="https%3A%2F%2Fgoproxy.cn">https://goproxy.cn</a></td>
+</tr>
+<tr>
+<td>Maven</td>
+<td><a target="_blank" rel="noopener" href="https://maven.aliyun.com" class="external-link" data-redirect="https%3A%2F%2Fmaven.aliyun.com">https://maven.aliyun.com</a></td>
+</tr>
+<tr>
+<td>npm</td>
+<td><a target="_blank" rel="noopener" href="https://registry.npmmirror.com" class="external-link" data-redirect="https%3A%2F%2Fregistry.npmmirror.com">https://registry.npmmirror.com</a></td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://crates.io" class="external-link" data-redirect="http%3A%2F%2Fcrates.io">crates.io</a></td>
+<td><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/crates.io-index" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2Fcrates.io-index">https://mirrors.tuna.tsinghua.edu.cn/crates.io-index</a></td>
+</tr>
+<tr>
+<td>CRAN</td>
+<td><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/CRAN" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2FCRAN">https://mirrors.tuna.tsinghua.edu.cn/CRAN</a></td>
+</tr>
+<tr>
+<td>CTAN</td>
+<td><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/CTAN" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2FCTAN">https://mirrors.tuna.tsinghua.edu.cn/CTAN</a></td>
+</tr>
+<tr>
+<td>rustup</td>
+<td><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/rustup" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2Frustup">https://mirrors.tuna.tsinghua.edu.cn/rustup</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="五、总结">五、总结</h2>
+<p>整套 <code>setup</code> 工具覆盖了从 <code>SSH</code> 密钥到桌面环境的全链路配置，14 个模块脚本按依赖优先级排序，支持交互式选择和静默批量执行。所有工具统一安装到 <code>~/.local/opt/</code>，环境变量通过 <code>.bashrc.d/</code> 管理，国内镜像源统一配置，重复执行安全无副作用。后续新增模块只需在 <code>modules/</code> 下添加脚本，菜单自动识别。</p>
+<p>本文涉及的所有脚本已开源在 <a target="_blank" rel="noopener" href="https://github.com/DoraTiger/homelab-setup" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FDoraTiger%2Fhomelab-setup">homelab-setup</a> 仓库中，欢迎 <code>clone</code> 使用和反馈。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/DoraTiger/homelab-setup" title="homelab-setup GitHub 仓库" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FDoraTiger%2Fhomelab-setup">homelab-setup GitHub</a></li>
+<li><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/" title="清华大学开源软件镜像站" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2F">清华大学开源软件镜像站</a></li>
+<li><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/help/docker-ce/" title="Docker CE 清华镜像" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2Fhelp%2Fdocker-ce%2F">Docker CE 清华镜像</a></li>
+<li><a target="_blank" rel="noopener" href="https://sdkman.io/install" title="SDKMAN 安装文档" class="external-link" data-redirect="https%3A%2F%2Fsdkman.io%2Finstall">SDKMAN 安装文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Schniz/fnm" title="fnm GitHub" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FSchniz%2Ffnm">fnm GitHub</a></li>
+<li><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/texlive/tlnet/" title="TeX Live 清华镜像" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2FCTAN%2Fsystems%2Ftexlive%2Ftlnet%2F">TeX Live 清华镜像</a></li>
+<li><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/CTAN/info/install-latex-guide-zh-cn/install-latex-guide-zh-cn.pdf" title="TeX Live 安装指南（中文）" class="external-link" data-redirect="https%3A%2F%2Fmirrors.tuna.tsinghua.edu.cn%2FCTAN%2Finfo%2Finstall-latex-guide-zh-cn%2Finstall-latex-guide-zh-cn.pdf">TeX Live 安装指南</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/06/3470/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/06/3470/">https://www.superheaoz.top/2026/06/3470/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/06/5806/"><span>HEXO 开发笔记（3）进阶功能</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/06/35187/"><span>Homelab 搭建手记（2）更换无线网卡与 XRDP WiFi 扫描授权问题</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

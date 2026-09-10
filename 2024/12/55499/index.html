@@ -1,0 +1,934 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>HEXO 开发笔记（2）插件【我的个人天地】</title><meta name="description" content="HEXO 开发笔记（2）插件"><meta name="keywords" content="hexo,插件,开发"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（2）插件【我的个人天地】"><meta property="og:description" content="HEXO 开发笔记（2）插件"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2024/12/55499/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HEXO 开发笔记（2）插件",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2024-12-28T13:45:38.000Z",
+  "dateModified": "2025-11-23T04:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2024/12/55499/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%8F%92%E4%BB%B6%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5"><span class="toc-text">一、插件基础概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%8F%92%E4%BB%B6%E5%88%86%E7%B1%BB%E4%B8%8E%E4%BD%9C%E7%94%A8"><span class="toc-text">1.1 插件分类与作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F"><span class="toc-text">1.2 插件安装方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%8F%92%E4%BB%B6%E9%85%8D%E7%BD%AE%E4%BD%8D%E7%BD%AE"><span class="toc-text">1.3 插件配置位置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%B8%B8%E7%94%A8%E6%8F%92%E4%BB%B6%E5%AE%9E%E6%88%98"><span class="toc-text">二、常用插件实战</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%AB%99%E7%82%B9%E5%9C%B0%E5%9B%BE%E7%94%9F%E6%88%90%EF%BC%9Ahexo-generator-sitemap"><span class="toc-text">2.1 站点地图生成：hexo-generator-sitemap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2%EF%BC%9Ahexo-deployer-git"><span class="toc-text">2.2 自动部署：hexo-deployer-git</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E6%96%87%E7%AB%A0%E5%8A%A0%E5%AF%86%EF%BC%9Ahexo-blog-encrypt"><span class="toc-text">2.3 文章加密：hexo-blog-encrypt</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E6%B0%B8%E4%B9%85%E9%93%BE%E6%8E%A5%E7%9F%AD-ID%EF%BC%9Ahexo-abbrlink"><span class="toc-text">2.4 永久链接短 ID：hexo-abbrlink</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-RSS-%E8%AE%A2%E9%98%85%EF%BC%9Ahexo-generator-feed"><span class="toc-text">2.5 RSS 订阅：hexo-generator-feed</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6-%E5%85%B6%E4%BB%96%E5%AE%9E%E7%94%A8%E6%8F%92%E4%BB%B6%E6%8E%A8%E8%8D%90"><span class="toc-text">2.6 其他实用插件推荐</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%8F%92%E4%BB%B6%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-text">三、插件配置管理最佳实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%BB%84%E7%BB%87"><span class="toc-text">3.1 配置文件组织</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%8E%AF%E5%A2%83%E5%8C%BA%E5%88%86%E9%85%8D%E7%BD%AE"><span class="toc-text">3.2 环境区分配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E6%8F%92%E4%BB%B6%E5%86%B2%E7%AA%81%E6%8E%92%E6%9F%A5"><span class="toc-text">3.3 插件冲突排查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91"><span class="toc-text">四、自定义插件开发</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E6%8F%92%E4%BB%B6%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="toc-text">4.1 插件基本结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%BC%80%E5%8F%91%E7%94%9F%E6%88%90%E5%99%A8%E6%8F%92%E4%BB%B6"><span class="toc-text">4.2 开发生成器插件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%BC%80%E5%8F%91%E8%BF%87%E6%BB%A4%E5%99%A8%E6%8F%92%E4%BB%B6"><span class="toc-text">4.3 开发过滤器插件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E5%BC%80%E5%8F%91%E6%A0%87%E7%AD%BE%E6%8F%92%E4%BB%B6"><span class="toc-text">4.4 开发标签插件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-%E5%BC%80%E5%8F%91%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0%EF%BC%88Helper%EF%BC%89"><span class="toc-text">4.5 开发辅助函数（Helper）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-6-%E5%BC%80%E5%8F%91%E6%B8%B2%E6%9F%93%E5%99%A8%E6%8F%92%E4%BB%B6"><span class="toc-text">4.6 开发渲染器插件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-7-%E6%8F%92%E4%BB%B6%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="toc-text">4.7 插件调试技巧</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-8-%E6%8F%92%E4%BB%B6%E5%8F%91%E5%B8%83"><span class="toc-text">4.8 插件发布</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-text">五、插件开发最佳实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83"><span class="toc-text">5.1 命名规范</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-text">5.2 性能优化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86"><span class="toc-text">5.3 错误处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E9%85%8D%E7%BD%AE%E9%AA%8C%E8%AF%81"><span class="toc-text">5.4 配置验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E5%85%BC%E5%AE%B9%E6%80%A7%E8%80%83%E8%99%91"><span class="toc-text">5.5 兼容性考虑</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%EF%BC%9A%E5%BC%80%E5%8F%91%E6%96%87%E7%AB%A0%E5%AD%97%E6%95%B0%E7%BB%9F%E8%AE%A1%E6%8F%92%E4%BB%B6"><span class="toc-text">六、实战案例：开发文章字数统计插件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%8F%92%E4%BB%B6%E7%94%9F%E6%80%81%E4%B8%8E%E8%B5%84%E6%BA%90"><span class="toc-text">七、插件生态与资源</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%AE%98%E6%96%B9%E6%8F%92%E4%BB%B6%E5%88%97%E8%A1%A8"><span class="toc-text">7.1 官方插件列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E9%80%89%E6%8B%A9%E6%8F%92%E4%BB%B6%E7%9A%84%E6%A0%87%E5%87%86"><span class="toc-text">7.2 选择插件的标准</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E5%8F%82%E8%80%83"><span class="toc-text">7.3 插件开发参考</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color10"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（2）插件</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2024-12-28</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2025-11-23</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E6%8F%92%E4%BB%B6/">插件</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E5%BC%80%E5%8F%91/">开发</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">11506 字 · 约 39 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>在上一篇 <a href="/2024/12/58077/" title="HEXO 开发笔记（1）主题">HEXO 开发笔记（1）主题</a> 中简要提到了 <code>Hexo</code> 的插件体系，本文将深入探讨插件的安装、配置、使用与自定义开发。<code>Hexo</code> 的强大之处在于其丰富的插件生态，通过插件可以扩展：SEO 优化、部署自动化、内容加密、搜索功能、RSS 订阅等。</p>
+<p>本文将结合实际已安装的插件（<code>hexo-generator-sitemap</code>、<code>hexo-deployer-git</code>、<code>hexo-blog-encrypt</code>、<code>hexo-abbrlink</code> 等）进行讲解，并介绍如何开发自己的插件。撰写参考官方文档版本：<code>Hexo 7.x</code>。</p>
+<span id="more"></span>
+<h2 id="一、插件基础概念">一、插件基础概念</h2>
+<h3 id="1-1-插件分类与作用">1.1 插件分类与作用</h3>
+<p><code>Hexo</code> 插件按功能可分为以下类型：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">作用</th>
+<th style="text-align:left">典型插件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>生成器（Generator）</strong></td>
+<td style="text-align:left">生成额外的静态页面或数据</td>
+<td style="text-align:left"><code>hexo-generator-sitemap</code>、<code>hexo-generator-feed</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>渲染器（Renderer）</strong></td>
+<td style="text-align:left">扩展模板引擎或预处理器支持</td>
+<td style="text-align:left"><code>hexo-renderer-pug</code>、<code>hexo-renderer-stylus</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>部署器（Deployer）</strong></td>
+<td style="text-align:left">自动化部署到各种平台</td>
+<td style="text-align:left"><code>hexo-deployer-git</code>、<code>hexo-deployer-s3</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>过滤器（Filter）</strong></td>
+<td style="text-align:left">对内容进行预处理或后处理</td>
+<td style="text-align:left"><code>hexo-filter-*</code> 系列</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>标签（Tag）</strong></td>
+<td style="text-align:left">在 Markdown 中使用自定义语法</td>
+<td style="text-align:left">各种嵌入式扩展（视频、图表等）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>辅助函数（Helper）</strong></td>
+<td style="text-align:left">在模板中使用的工具函数</td>
+<td style="text-align:left">主题内置或插件提供</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>功能增强</strong></td>
+<td style="text-align:left">特定功能实现</td>
+<td style="text-align:left"><code>hexo-blog-encrypt</code>（加密）、<code>hexo-abbrlink</code>（短链接）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1-2-插件安装方式">1.2 插件安装方式</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash"># 方式一：npm 安装（推荐）
+npm install &lt;plugin-name&gt; --save
+
+# 方式二：yarn 安装
+yarn add &lt;plugin-name&gt;
+
+# 卸载插件
+npm uninstall &lt;plugin-name&gt;
+
+# 查看已安装插件
+npm list --depth=0 | grep hexo</code></div></pre>
+<p>安装后插件会记录在 <code>package.json</code> 的 <code>dependencies</code> 中，<code>Hexo</code> 启动时会自动加载所有 <code>hexo-*</code> 命名的包。</p>
+<h3 id="1-3-插件配置位置">1.3 插件配置位置</h3>
+<p>插件配置通常写在根目录 <code>_config.yml</code> 中，部分插件也支持独立配置文件。配置结构：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml"># _config.yml
+plugin_name:
+  option1: value1
+  option2: value2</code></div></pre>
+<h2 id="二、常用插件实战">二、常用插件实战</h2>
+<h3 id="2-1-站点地图生成：hexo-generator-sitemap">2.1 站点地图生成：hexo-generator-sitemap</h3>
+<h4 id="安装">安装</h4>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">npm install hexo-generator-sitemap --save</code></div></pre>
+<h4 id="配置">配置</h4>
+<p>在 <code>_config.yml</code> 中添加：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">sitemap:
+  path:
+    - sitemap.xml
+    - sitemap.txt
+  template: ./plugins/hexo-generator-sitemap/sitemap_template.xml
+  template_txt: ./plugins/hexo-generator-sitemap/sitemap_template.txt
+  rel: false
+  tags: true
+  categories: true</code></div></pre>
+<p><strong>字段说明</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>path</code></td>
+<td style="text-align:left">生成的文件路径（可同时生成 XML 和 TXT 格式）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>template</code></td>
+<td style="text-align:left">自定义 XML 模板路径（可选）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>template_txt</code></td>
+<td style="text-align:left">自定义 TXT 模板路径（可选）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>rel</code></td>
+<td style="text-align:left">是否在 <code>&lt;head&gt;</code> 中添加 <code>&lt;link rel=&quot;sitemap&quot;&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>tags</code></td>
+<td style="text-align:left">是否包含标签页</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>categories</code></td>
+<td style="text-align:left">是否包含分类页</td>
+</tr>
+</tbody>
+</table>
+<h4 id="使用">使用</h4>
+<p>执行 <code>hexo generate</code> 后，会在 <code>public/</code> 目录生成 <code>sitemap.xml</code> 和 <code>sitemap.txt</code>，提交给搜索引擎以提升 SEO。</p>
+<p><strong>自定义模板示例</strong>（<code>plugins/hexo-generator-sitemap/sitemap_template.xml</code>）：</p>
+<pre><div class="code-header"><span class="code-header-type">xml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;urlset xmlns=&quot;http://www.sitemaps.org/schemas/sitemap/0.9&quot;&gt;
+  &#123;% for post in posts %&#125;
+  <url>
+    <loc>&#123;&#123; post.permalink &#125;&#125;</loc>
+    <lastmod>&#123;&#123; post.updated.toISOString() &#125;&#125;</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  &#123;% endfor %&#125;
+&lt;/urlset&gt;</code></div></pre>
+<h3 id="2-2-自动部署：hexo-deployer-git">2.2 自动部署：hexo-deployer-git</h3>
+<h4 id="安装-2">安装</h4>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">npm install hexo-deployer-git --save</code></div></pre>
+<h4 id="配置-2">配置</h4>
+<p>在 <code>_config.yml</code> 的 <code>deploy</code> 段落配置：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-yaml">deploy:
+  type: git
+  message: &quot;Site updated: &#123;&#123; now('YYYY-MM-DD HH:mm:ss') &#125;&#125;&quot;
+  repo:
+    origin: ssh://git@example.com/home/git/hexo.git   # 示例占位，替换为实际仓库
+    # 可配置多个仓库同时部署
+    github: git@github.com:example/example.github.io.git   # 示例 GitHub Pages
+  branch: master</code></div></pre>
+<p><strong>字段说明</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>type</code></td>
+<td style="text-align:left">部署器类型（<code>git</code>、<code>s3</code>、<code>ftp</code> 等）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>message</code></td>
+<td style="text-align:left">Git commit 信息（支持模板变量）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>repo</code></td>
+<td style="text-align:left">仓库地址（可配置多个，实现多平台部署）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>branch</code></td>
+<td style="text-align:left">目标分支</td>
+</tr>
+</tbody>
+</table>
+<h4 id="使用-2">使用</h4>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash"># 一键部署
+hexo deploy
+
+# 或组合命令
+hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</code></div></pre>
+<p><strong>工作原理</strong>：</p>
+<ol>
+<li>将 <code>public/</code> 目录内容推送到指定 Git 仓库</li>
+<li>服务器端配置 Git Hooks 自动更新网站目录</li>
+</ol>
+<p><strong>SSH 密钥配置</strong>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash"># 生成密钥对
+ssh-keygen -t rsa -C &quot;your_email@example.com&quot;
+
+# 将公钥添加到服务器 ~/.ssh/authorized_keys
+cat ~/.ssh/id_rsa.pub
+
+# 测试连接
+# 测试连接（示例占位）
+ssh git@example.com
+# 如使用自定义端口：
+# ssh -p 2222 git@example.com</code></div></pre>
+<h3 id="2-3-文章加密：hexo-blog-encrypt">2.3 文章加密：hexo-blog-encrypt</h3>
+<h4 id="安装-3">安装</h4>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">npm install hexo-blog-encrypt --save</code></div></pre>
+<h4 id="配置-3">配置</h4>
+<p>在 <code>_config.yml</code> 中启用：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml">encrypt:
+  enable: true
+  # 全局默认密码（不推荐，建议文章单独设置）
+  # password: default_password</code></div></pre>
+<h4 id="使用-3">使用</h4>
+<p>在文章的 Front Matter 中添加加密字段：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">---
+title: 敏感内容文章
+date: 2025-11-23 10:00:00
+password: your_secure_password
+abstract: 这是一篇加密文章，请输入密码查看
+message: 请输入密码访问
+wrong_pass_message: 密码错误，请重试
+wrong_hash_message: 文章不能被校验，请联系作者
+---</code></div></pre>
+<p><strong>字段说明</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>password</code></td>
+<td style="text-align:left">访问密码</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>abstract</code></td>
+<td style="text-align:left">加密提示摘要（显示在首页）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>message</code></td>
+<td style="text-align:left">密码输入框上方提示</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>wrong_pass_message</code></td>
+<td style="text-align:left">密码错误提示</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>wrong_hash_message</code></td>
+<td style="text-align:left">校验失败提示</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注意事项</strong>：</p>
+<ul>
+<li>密码存储在 <code>public/</code> 的 JS 中，是客户端加密，安全性有限</li>
+<li>适用于分享给特定人群，不适合高安全需求</li>
+<li>加密后的文章仍会生成在 sitemap 中（可通过配置排除）</li>
+</ul>
+<h3 id="2-4-永久链接短-ID：hexo-abbrlink">2.4 永久链接短 ID：hexo-abbrlink</h3>
+<h4 id="安装-4">安装</h4>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">npm install hexo-abbrlink --save</code></div></pre>
+<h4 id="配置-4">配置</h4>
+<p>在 <code>_config.yml</code> 中修改：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-yaml">permalink: :year/:month/:abbrlink/
+# 或纯短链接
+# permalink: posts/:abbrlink/
+
+# 插件配置（可选）
+abbrlink:
+  alg: crc32  # 算法：crc16 或 crc32
+  rep: dec    # 进制：dec(十进制) 或 hex(十六进制)</code></div></pre>
+<h4 id="使用-4">使用</h4>
+<p>创建文章后，插件会自动在 Front Matter 中生成 <code>abbrlink</code> 字段：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-yaml">---
+title: 示例文章
+date: 2025-11-23 10:00:00
+abbrlink: 5139  # 自动生成
+---</code></div></pre>
+<p><strong>优势</strong>：</p>
+<ul>
+<li>✅ URL 超短且稳定（修改标题不影响链接）</li>
+<li>✅ 避免中文 URL 转码问题</li>
+<li>✅ 方便迁移与分享</li>
+</ul>
+<p><strong>算法对比</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">配置</th>
+<th style="text-align:left">示例 ID</th>
+<th style="text-align:left">特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>crc32 + dec</code></td>
+<td style="text-align:left"><code>5139</code></td>
+<td style="text-align:left">短数字，易记</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>crc32 + hex</code></td>
+<td style="text-align:left"><code>a5f2b</code></td>
+<td style="text-align:left">字母数字混合</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>crc16 + dec</code></td>
+<td style="text-align:left"><code>1234</code></td>
+<td style="text-align:left">更短但碰撞概率高</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-5-RSS-订阅：hexo-generator-feed">2.5 RSS 订阅：hexo-generator-feed</h3>
+<h4 id="安装-5">安装</h4>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">npm install hexo-generator-feed --save</code></div></pre>
+<h4 id="配置-5">配置</h4>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-yaml">feed:
+  enable: true
+  type: atom  # atom 或 rss2
+  path: atom.xml
+  limit: 20  # 最多包含文章数（0 或 false 为全部）
+  hub:
+  content: true  # 是否包含文章全文
+  content_limit: 140  # 摘要字数限制
+  content_limit_delim: ' '
+  order_by: -date
+  icon: /images/favicon.png
+  autodiscovery: true  # 自动在 &lt;head&gt; 中添加 RSS 链接</code></div></pre>
+<h4 id="使用-5">使用</h4>
+<p>生成后访问 <code>https://yoursite.com/atom.xml</code> 即可订阅。</p>
+<h3 id="2-6-其他实用插件推荐">2.6 其他实用插件推荐</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">插件名称</th>
+<th style="text-align:left">功能</th>
+<th style="text-align:left">场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><a target="_blank" rel="noopener" href="https://github.com/wzpan/hexo-generator-search" title="hexo-generator-search" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fwzpan%2Fhexo-generator-search">hexo-generator-search</a></td>
+<td style="text-align:left">本地搜索数据生成</td>
+<td style="text-align:left">静态博客站内搜索</td>
+</tr>
+<tr>
+<td style="text-align:left"><a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo-filter-nofollow" title="hexo-filter-nofollow" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fhexojs%2Fhexo-filter-nofollow">hexo-filter-nofollow</a></td>
+<td style="text-align:left">外链自动添加 <code>rel=&quot;nofollow&quot;</code></td>
+<td style="text-align:left">SEO 优化</td>
+</tr>
+<tr>
+<td style="text-align:left"><a target="_blank" rel="noopener" href="https://github.com/willin/hexo-wordcount" title="hexo-wordcount" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fwillin%2Fhexo-wordcount">hexo-wordcount</a></td>
+<td style="text-align:left">字数统计与阅读时长</td>
+<td style="text-align:left">文章信息展示</td>
+</tr>
+<tr>
+<td style="text-align:left"><a target="_blank" rel="noopener" href="https://github.com/Troy-Yang/hexo-lazyload-image" title="hexo-lazyload-image" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FTroy-Yang%2Fhexo-lazyload-image">hexo-lazyload-image</a></td>
+<td style="text-align:left">图片懒加载</td>
+<td style="text-align:left">性能优化</td>
+</tr>
+</tbody>
+</table>
+<h2 id="三、插件配置管理最佳实践">三、插件配置管理最佳实践</h2>
+<h3 id="3-1-配置文件组织">3.1 配置文件组织</h3>
+<p>对于大型站点，可将插件配置分离：</p>
+<pre><div class="code-header"><span class="code-header-type">code</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code>.
+├── _config.yml               # 主配置
+├── _config.plugins.yml       # 插件专用配置（可选）
+└── plugins/                  # 自定义插件目录
+    └── custom-plugin/</code></div></pre>
+<h3 id="3-2-环境区分配置">3.2 环境区分配置</h3>
+<p>通过环境变量区分开发与生产配置：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-yaml"># _config.yml
+deploy:
+  type: git
+  repo: &lt;%= process.env.DEPLOY_REPO %&gt;
+  branch: &lt;%= process.env.DEPLOY_BRANCH || 'master' %&gt;</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash"># 使用
+export DEPLOY_REPO=&quot;git@github.com:user/repo.git&quot;
+hexo deploy</code></div></pre>
+<h3 id="3-3-插件冲突排查">3.3 插件冲突排查</h3>
+<p>常见问题：</p>
+<ol>
+<li>
+<p><strong>渲染器冲突</strong>：同时安装 <code>hexo-renderer-marked</code> 和 <code>hexo-renderer-markdown-it</code> 可能冲突</p>
+<ul>
+<li>解决：卸载其中一个</li>
+</ul>
+</li>
+<li>
+<p><strong>生成器重复</strong>：多个插件生成同名文件</p>
+<ul>
+<li>解决：检查 <code>path</code> 配置，避免重复</li>
+</ul>
+</li>
+<li>
+<p><strong>执行顺序问题</strong>：过滤器执行顺序影响结果</p>
+<ul>
+<li>解决：使用优先级参数（见下文自定义开发）</li>
+</ul>
+</li>
+</ol>
+<h2 id="四、自定义插件开发">四、自定义插件开发</h2>
+<h3 id="4-1-插件基本结构">4.1 插件基本结构</h3>
+<p>最简单的插件只需一个 <code>index.js</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">code</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code>plugins/my-custom-plugin/
+├── index.js          # 插件入口
+├── package.json      # 插件元信息
+└── README.md         # 说明文档</code></div></pre>
+<p><strong>package.json 示例</strong>：</p>
+<pre><div class="code-header"><span class="code-header-type">json</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-json">&#123;
+  &quot;name&quot;: &quot;hexo-custom-plugin&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;My custom Hexo plugin&quot;,
+  &quot;main&quot;: &quot;index.js&quot;,
+  &quot;keywords&quot;: [&quot;hexo&quot;, &quot;plugin&quot;],
+  &quot;author&quot;: &quot;Your Name&quot;,
+  &quot;license&quot;: &quot;MIT&quot;
+&#125;</code></div></pre>
+<h3 id="4-2-开发生成器插件">4.2 开发生成器插件</h3>
+<p>生成自定义页面示例（生成 <code>about.html</code>）：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-javascript">// plugins/hexo-generator-about/index.js
+'use strict';
+
+hexo.extend.generator.register('about', function(locals) &#123;
+  return &#123;
+    path: 'about/index.html',
+    data: &#123;
+      title: '关于我',
+      content: '&lt;p&gt;这是关于页面&lt;/p&gt;'
+    &#125;,
+    layout: 'page'
+  &#125;;
+&#125;);</code></div></pre>
+<p><strong>注册方式</strong>：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-javascript">hexo.extend.generator.register(name, function(locals) &#123;
+  // locals 包含：posts, pages, categories, tags
+  return &#123;
+    path: 'output/path.html',  // 输出路径
+    data: &#123;&#125;,                    // 传递给模板的数据
+    layout: 'layout-name'        // 使用的布局模板
+  &#125;;
+&#125;);</code></div></pre>
+<h3 id="4-3-开发过滤器插件">4.3 开发过滤器插件</h3>
+<p>在内容渲染前后进行处理：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-javascript">// plugins/hexo-filter-example/index.js
+'use strict';
+
+// 在渲染后处理 HTML（添加版权声明）
+hexo.extend.filter.register('after_post_render', function(data) &#123;
+  const copyright = '&lt;p class=&quot;copyright&quot;&gt;本文版权归作者所有&lt;/p&gt;';
+  data.content += copyright;
+  return data;
+&#125;);
+
+// 设置优先级（数字越小越先执行，默认 10）
+hexo.extend.filter.register('before_post_render', function(data) &#123;
+  // 预处理 Markdown
+  return data;
+&#125;, 5);</code></div></pre>
+<p><strong>常用过滤器钩子</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">钩子名称</th>
+<th style="text-align:left">触发时机</th>
+<th style="text-align:left">参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>before_post_render</code></td>
+<td style="text-align:left">文章渲染前</td>
+<td style="text-align:left"><code>data</code>（文章对象）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>after_post_render</code></td>
+<td style="text-align:left">文章渲染后</td>
+<td style="text-align:left"><code>data</code>（包含 <code>content</code> HTML）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>before_generate</code></td>
+<td style="text-align:left">生成静态文件前</td>
+<td style="text-align:left">无</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>after_generate</code></td>
+<td style="text-align:left">生成静态文件后</td>
+<td style="text-align:left">无</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>server_middleware</code></td>
+<td style="text-align:left">本地服务器中间件</td>
+<td style="text-align:left"><code>app</code>（Express 实例）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="4-4-开发标签插件">4.4 开发标签插件</h3>
+<p>在 Markdown 中使用自定义语法：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-javascript">// plugins/hexo-tag-note/index.js
+'use strict';
+
+hexo.extend.tag.register('note', function(args, content) &#123;
+  const type = args[0] || 'info';
+  return `&lt;div class=&quot;note note-$&#123;type&#125;&quot;&gt;$&#123;hexo.render.renderSync(&#123;text: content, engine: 'markdown'&#125;)&#125;&lt;/div&gt;`;
+&#125;, &#123;ends: true&#125;);</code></div></pre>
+<p><strong>使用示例</strong>：</p>
+<pre><div class="code-header"><span class="code-header-type">markdown</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-markdown">&#123;% note warning %&#125;
+这是一个警告提示框
+&#123;% endnote %&#125;</code></div></pre>
+<p><strong>标签类型</strong>：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-javascript">// 行内标签（不处理内容）
+hexo.extend.tag.register('myTag', function(args) &#123;
+  return `&lt;span&gt;$&#123;args.join(' ')&#125;&lt;/span&gt;`;
+&#125;);
+
+// 块级标签（处理内容）
+hexo.extend.tag.register('myBlock', function(args, content) &#123;
+  return `&lt;div&gt;$&#123;content&#125;&lt;/div&gt;`;
+&#125;, &#123;ends: true&#125;);
+
+// 异步标签
+hexo.extend.tag.register('asyncTag', function(args) &#123;
+  return Promise.resolve('&lt;span&gt;异步内容&lt;/span&gt;');
+&#125;, &#123;async: true&#125;);</code></div></pre>
+<h3 id="4-5-开发辅助函数（Helper）">4.5 开发辅助函数（Helper）</h3>
+<p>在模板中使用的工具函数：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-javascript">// plugins/hexo-helper-reading-time/index.js
+'use strict';
+
+hexo.extend.helper.register('reading_time', function(content) &#123;
+  const wordsPerMinute = 200;
+  const words = content.split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return `$&#123;minutes&#125; 分钟`;
+&#125;);</code></div></pre>
+<p><strong>在模板中使用</strong>（EJS）：</p>
+<pre><div class="code-header"><span class="code-header-type">ejs</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-ejs">&lt;p&gt;阅读时长：&lt;%= reading_time(page.content) %&gt;&lt;/p&gt;</code></div></pre>
+<p><strong>在模板中使用</strong>（Pug）：</p>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-pug">p 阅读时长：#&#123;reading_time(page.content)&#125;</code></div></pre>
+<h3 id="4-6-开发渲染器插件">4.6 开发渲染器插件</h3>
+<p>扩展新的文件类型支持：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-javascript">// plugins/hexo-renderer-custom/index.js
+'use strict';
+
+const customCompiler = require('custom-compiler');
+
+hexo.extend.renderer.register('custom', 'html', function(data, options) &#123;
+  return customCompiler.compile(data.text);
+&#125;, true);</code></div></pre>
+<p><strong>参数说明</strong>：</p>
+<ul>
+<li>第一个参数：输入文件扩展名</li>
+<li>第二个参数：输出文件扩展名</li>
+<li>第三个参数：渲染函数</li>
+<li>第四个参数：是否同步（<code>true</code> 为同步，省略或 <code>false</code> 为异步）</li>
+</ul>
+<h3 id="4-7-插件调试技巧">4.7 插件调试技巧</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-javascript">// 添加日志输出
+hexo.log.info('插件已加载');
+hexo.log.warn('警告信息');
+hexo.log.error('错误信息');
+
+// 调试时输出数据
+console.log('Debug:', data);
+
+// 使用 hexo 内置工具
+const &#123; stripHTML, escapeHTML, slugize &#125; = hexo.extend.helper.list();</code></div></pre>
+<p><strong>本地测试插件</strong>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash"># 在项目根目录创建插件
+mkdir -p scripts/custom-plugin
+cat &gt; scripts/custom-plugin/index.js &lt;&lt; 'EOF'
+hexo.extend.filter.register('after_post_render', function(data) &#123;
+  console.log('自定义插件运行');
+  return data;
+&#125;);
+EOF
+
+# 启动调试
+hexo s --debug</code></div></pre>
+<h3 id="4-8-插件发布">4.8 插件发布</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash"># 1. 完善 package.json
+# 2. 添加 README.md 与 LICENSE
+# 3. 发布到 npm
+npm login
+npm publish
+
+# 4. 提交到 Hexo 插件列表
+# https://hexo.io/plugins/</code></div></pre>
+<h2 id="五、插件开发最佳实践">五、插件开发最佳实践</h2>
+<h3 id="5-1-命名规范">5.1 命名规范</h3>
+<ul>
+<li>使用 <code>hexo-</code> 前缀（自动加载）</li>
+<li>功能明确：<code>hexo-generator-*</code>、<code>hexo-deployer-*</code>、<code>hexo-filter-*</code></li>
+<li>小写字母 + 连字符</li>
+</ul>
+<h3 id="5-2-性能优化">5.2 性能优化</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code class="language-javascript">// ❌ 避免：每次都重新计算
+hexo.extend.filter.register('after_post_render', function(data) &#123;
+  data.content = heavyComputation(data.content);
+  return data;
+&#125;);
+
+// ✅ 推荐：使用缓存
+const cache = new Map();
+hexo.extend.filter.register('after_post_render', function(data) &#123;
+  const key = data._id;
+  if (!cache.has(key)) &#123;
+    cache.set(key, heavyComputation(data.content));
+  &#125;
+  data.content = cache.get(key);
+  return data;
+&#125;);</code></div></pre>
+<h3 id="5-3-错误处理">5.3 错误处理</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-javascript">hexo.extend.filter.register('my_filter', function(data) &#123;
+  try &#123;
+    // 处理逻辑
+    return processData(data);
+  &#125; catch (err) &#123;
+    hexo.log.error('插件错误：', err);
+    return data; // 返回原始数据，避免中断构建
+  &#125;
+&#125;);</code></div></pre>
+<h3 id="5-4-配置验证">5.4 配置验证</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div></div><code class="language-javascript">// plugins/hexo-plugin-example/index.js
+const defaultConfig = &#123;
+  enable: true,
+  option1: 'default'
+&#125;;
+
+const config = Object.assign(&#123;&#125;, defaultConfig, hexo.config.my_plugin);
+
+if (!config.enable) &#123;
+  hexo.log.info('插件已禁用');
+  return;
+&#125;
+
+// 验证必需配置
+if (!config.required_option) &#123;
+  throw new Error('缺少必需配置项：required_option');
+&#125;</code></div></pre>
+<h3 id="5-5-兼容性考虑">5.5 兼容性考虑</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-javascript">// 检查 Hexo 版本
+const hexoVersion = hexo.version;
+if (hexoVersion &lt; '6.0.0') &#123;
+  hexo.log.warn('插件建议在 Hexo 6.0+ 环境使用');
+&#125;
+
+// 检查依赖插件
+const hasMarkdownIt = hexo.extend.renderer.get('md');
+if (!hasMarkdownIt) &#123;
+  throw new Error('需要安装 hexo-renderer-markdown-it');
+&#125;</code></div></pre>
+<h2 id="六、实战案例：开发文章字数统计插件">六、实战案例：开发文章字数统计插件</h2>
+<p>完整示例：开发一个显示文章字数和阅读时长的插件。</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div></div><code class="language-javascript">// scripts/wordcount.js
+'use strict';
+
+function stripHTML(str) &#123;
+  return str.replace(/&lt;[^&gt;]+&gt;/g, '');
+&#125;
+
+function countWords(str) &#123;
+  const content = stripHTML(str);
+  const cn = (content.match(/[\u4E00-\u9FA5]/g) || []).length;
+  const en = (content.replace(/[\u4E00-\u9FA5]/g, '').match(/[a-zA-Z0-9_\u0392-\u03c9\u0400-\u04FF]+/g) || []).length;
+  return cn + en;
+&#125;
+
+function readingTime(count) &#123;
+  const wordsPerMinute = 200;
+  return Math.ceil(count / wordsPerMinute);
+&#125;
+
+// 注册辅助函数
+hexo.extend.helper.register('wordcount', function(content) &#123;
+  return countWords(content);
+&#125;);
+
+hexo.extend.helper.register('reading_time', function(content) &#123;
+  const count = countWords(content);
+  return readingTime(count);
+&#125;);
+
+// 在文章数据中添加统计信息
+hexo.extend.filter.register('before_post_render', function(data) &#123;
+  const count = countWords(data.content);
+  data.wordcount = count;
+  data.reading_time = readingTime(count);
+  return data;
+&#125;);</code></div></pre>
+<p><strong>在模板中使用</strong>（Pug）：</p>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-pug">article
+  header
+    h1= page.title
+    .meta
+      span.wordcount #&#123;wordcount(page.content)&#125; 字
+      span.reading-time 阅读时长 #&#123;reading_time(page.content)&#125; 分钟
+  .content!= page.content</code></div></pre>
+<h2 id="七、插件生态与资源">七、插件生态与资源</h2>
+<h3 id="7-1-官方插件列表">7.1 官方插件列表</h3>
+<p>访问 <a target="_blank" rel="noopener" href="https://hexo.io/plugins/" title="Hexo 插件列表" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fplugins%2F">Hexo 插件目录</a> 查看社区维护的插件列表，包含：</p>
+<ul>
+<li>功能分类</li>
+<li>下载量统计</li>
+<li>最近更新时间</li>
+<li>GitHub Stars</li>
+</ul>
+<h3 id="7-2-选择插件的标准">7.2 选择插件的标准</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">维度</th>
+<th style="text-align:left">推荐标准</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">维护状态</td>
+<td style="text-align:left">最近 6 个月内有更新</td>
+</tr>
+<tr>
+<td style="text-align:left">下载量</td>
+<td style="text-align:left">npm 周下载 &gt; 100</td>
+</tr>
+<tr>
+<td style="text-align:left">文档完整性</td>
+<td style="text-align:left">有详细的 README 和配置说明</td>
+</tr>
+<tr>
+<td style="text-align:left">Issue 响应</td>
+<td style="text-align:left">Maintainer 活跃处理问题</td>
+</tr>
+<tr>
+<td style="text-align:left">代码质量</td>
+<td style="text-align:left">有测试、遵循 ESLint 规范</td>
+</tr>
+</tbody>
+</table>
+<h3 id="7-3-插件开发参考">7.3 插件开发参考</h3>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/api/plugins" title="Hexo 插件开发指南" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fapi%2Fplugins">Hexo 插件开发文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/api/" title="Hexo API 参考" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fapi%2F">Hexo API 文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://nodejs.org/docs/latest/api/" title="Node.js 官方文档" class="external-link" data-redirect="https%3A%2F%2Fnodejs.org%2Fdocs%2Flatest%2Fapi%2F">Node.js 官方文档</a></li>
+</ul>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/docs/" title="Hexo 官方文档" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fdocs%2F">Hexo 官方文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/plugins/" title="Hexo 插件列表" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fplugins%2F">Hexo 插件列表</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/api/plugins" title="Hexo 插件开发指南" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fapi%2Fplugins">Hexo 插件开发指南</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/api/" title="Hexo API 参考" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fapi%2F">Hexo API 参考</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo-generator-sitemap" title="hexo-generator-sitemap" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fhexojs%2Fhexo-generator-sitemap">hexo-generator-sitemap</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo-deployer-git" title="hexo-deployer-git" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fhexojs%2Fhexo-deployer-git">hexo-deployer-git</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/D0n9X1n/hexo-blog-encrypt" title="hexo-blog-encrypt" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FD0n9X1n%2Fhexo-blog-encrypt">hexo-blog-encrypt</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/rozbo/hexo-abbrlink" title="hexo-abbrlink" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Frozbo%2Fhexo-abbrlink">hexo-abbrlink</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2024/12/55499/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2024/12/55499/">https://www.superheaoz.top/2024/12/55499/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2025/05/5139/"><span>服务器操作指北（7）本地部署 overleaf</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2024/12/58077/"><span>HEXO 开发笔记（1）主题</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

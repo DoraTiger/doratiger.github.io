@@ -1,0 +1,376 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>HEXO 开发笔记（5）自建主题：视觉系统【我的个人天地】</title><meta name="description" content="HEXO 开发笔记（5）自建主题：视觉系统"><meta name="keywords" content="hexo,主题开发,CSS,Canvas"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（5）自建主题：视觉系统【我的个人天地】"><meta property="og:description" content="HEXO 开发笔记（5）自建主题：视觉系统"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/06/50649/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HEXO 开发笔记（5）自建主题：视觉系统",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-06-19T03:00:00.000Z",
+  "dateModified": "2026-09-08T16:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/06/50649/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%9A%97%E8%89%B2%E4%B8%BB%E9%A2%98%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80"><span class="toc-text">一、暗色主题设计语言</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF%E6%9A%97%E8%89%B2%E4%B8%BB%E9%A2%98"><span class="toc-text">1.1 为什么是暗色主题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E9%A2%9C%E8%89%B2%E4%BD%93%E7%B3%BB"><span class="toc-text">1.2 颜色体系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%AF%9B%E7%8E%BB%E7%92%83%E6%95%88%E6%9E%9C"><span class="toc-text">1.3 毛玻璃效果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E9%9A%8F%E6%9C%BA%E8%89%B2%E6%9D%BF"><span class="toc-text">1.4 随机色板</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Canvas-%E5%8A%A8%E7%94%BB%E7%B3%BB%E7%BB%9F"><span class="toc-text">二、Canvas 动画系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%98%9F%E7%A9%BA%E8%83%8C%E6%99%AF"><span class="toc-text">2.1 星空背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Hero-%E6%96%87%E5%AD%97%E6%B8%B2%E6%9F%93"><span class="toc-text">2.2 Hero 文字渲染</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-404-%E9%A1%B5%E9%9D%A2"><span class="toc-text">2.3 404 页面</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%93%8D%E5%BA%94%E5%BC%8F%E5%B8%83%E5%B1%80"><span class="toc-text">三、响应式布局</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8-JS-%E8%80%8C%E9%9D%9E%E5%AA%92%E4%BD%93%E6%9F%A5%E8%AF%A2"><span class="toc-text">3.1 为什么用 JS 而非媒体查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E4%BE%A7%E8%BE%B9%E6%A0%8F%E6%8A%98%E5%8F%A0"><span class="toc-text">3.2 侧边栏折叠</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-Meta-%E9%A1%B9%E8%87%AA%E5%8A%A8%E6%8D%A2%E8%A1%8C"><span class="toc-text">3.3 Meta 项自动换行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%8F%AF%E5%A4%8D%E7%94%A8%E5%8A%A8%E7%94%BB-Mixin"><span class="toc-text">四、可复用动画 Mixin</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%B8%8B%E5%88%92%E7%BA%BF%E5%B1%95%E5%BC%80"><span class="toc-text">4.1 下划线展开</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%9B%9B%E8%BE%B9%E6%A1%86%E5%8A%A8%E7%94%BB"><span class="toc-text">4.2 四边框动画</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%85%89%E6%89%AB%E6%8C%89%E9%92%AE"><span class="toc-text">4.3 光扫按钮</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%AE%BE%E8%AE%A1%E4%BB%A4%E7%89%8C%E7%B3%BB%E7%BB%9F"><span class="toc-text">五、设计令牌系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">六、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color3"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color8"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（5）自建主题：视觉系统</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%B8%BB%E9%A2%98%E5%BC%80%E5%8F%91/">主题开发</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/CSS/">CSS</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Canvas/">Canvas</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">5132 字 · 约 18 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>上一篇整理了主题架构，这篇记录配色、背景动画和布局的实现。<code>DoraTiger</code> 最初沿用了 <code>Fan</code> 的暗色风格，后来逐步把颜色和尺寸提取成配置，也尝试用 <code>Canvas</code> 绘制星空和首页文字。</p>
+<span id="more"></span>
+<h2 id="一、暗色主题设计语言">一、暗色主题设计语言</h2>
+<h3 id="1-1-为什么是暗色主题">1.1 为什么是暗色主题</h3>
+<p><code>DoraTiger</code> 的暗色主题继承自 <code>Fan</code> 主题 — <code>Fan</code> 本身就采用了星空背景，整体偏暗色风格。从 <code>Fan</code> 重构时延续了这个基调，一方面视觉上已经习惯了，另一方面星空背景确实很适合 <code>Canvas</code> 动画的发挥。</p>
+<p>中间考虑过加一个亮色主题，但一直没想好亮色对应的背景该用什么。纯白太单调，渐变又容易和内容区域冲突，就搁置了。所以目前只有暗色方案。</p>
+<h3 id="1-2-颜色体系">1.2 颜色体系</h3>
+<p>所有颜色通过 <code>theme-config()</code> 从配置文件读取，支持运行时覆盖：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-stylus">// source/css/_variable/variable.styl
+$color-theme = theme-config('style.color.theme', 'rgba(230, 119, 0, 1)');         // 强调色（橙）
+$color-sub-theme = theme-config('style.color.sub_theme', 'rgba(7, 144, 232, 1)'); // 辅助色（蓝）
+$color-text = theme-config('style.color.text', 'rgba(255, 255, 255, 1)');         // 主文字（白）
+$color-background = theme-config('style.color.background',
+  'radial-gradient(100% 100% at 70% 120%, rgba(33, 39, 80, 1) 10%, #020409 100%)');</code></div></pre>
+<p>配色方案同样继承自 <code>Fan</code> 主题 — 橙色强调 + 蓝色辅助的组合在暗色背景下辨识度很高，一直沿用至今。亮色方案因为没找到合适的背景搭配，所以配色也没有重新调整。</p>
+<p>设计原则：</p>
+<ul>
+<li><strong>深蓝黑径向渐变</strong>背景，不是纯黑 — 径向渐变让视觉有纵深感</li>
+<li><strong>白色文字</strong> + <code>rgba</code> 透明度控制层级 — 主文字 <code>1.0</code>，次要文字 <code>0.6</code></li>
+<li><strong>橙色强调</strong>用于交互反馈（<code>hover</code>、激活态），<strong>蓝色辅助</strong>用于链接</li>
+</ul>
+<h3 id="1-3-毛玻璃效果">1.3 毛玻璃效果</h3>
+<p>内容区域使用半透明白色背景，配合边框和阴影实现毛玻璃感：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-stylus">$color-content-background = theme-config('style.color.content_background',
+  'rgba(255, 255, 255, 0.1)');</code></div></pre>
+<h3 id="1-4-随机色板">1.4 随机色板</h3>
+<p>自动生成 11 个颜色 class，用于社交链接圆点等动态着色场景：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-stylus">$colors = #495057 #f03e3e #ae3ec9 #7048e8 #4263eb #1098ad
+          #0ca678 #37b24d #f59f00 #f76707 #6f42c1;
+for color, i in $colors &#123;
+  .bg-color&#123;i&#125; &#123; background: color; &#125;
+&#125;</code></div></pre>
+<h2 id="二、Canvas-动画系统">二、Canvas 动画系统</h2>
+<h3 id="2-1-星空背景">2.1 星空背景</h3>
+<p>全屏 <code>&lt;canvas&gt;</code> 元素 <code>#universe</code>，通过 <code>requestAnimationFrame</code> 驱动三种粒子效果：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-javascript">// source/js/layout/background.js
+class Background &#123;
+    constructor() &#123;
+        this.canva = document.getElementById(&quot;universe&quot;);
+        this.starDensity = 0.001; // 每像素星星密度
+        this.createUniverse();
+    &#125;
+
+    createUniverse() &#123;
+        // 三种星星：
+        // 1. 巨星：大尺寸，缓慢水平漂移
+        // 2. 彗星：快速对角线划过，带拖尾
+        // 3. 普通星：随机闪烁（opacity 变化）
+    &#125;
+&#125;</code></div></pre>
+<p>画布覆盖在所有内容之下（<code>z-index: -1</code>），不影响交互。星星数量根据屏幕尺寸动态计算（<code>starDensity * width</code>），保证不同设备上都有合适的粒子密度。</p>
+<p>移动端的 <code>Canvas</code> 性能表现一般 — 粒子数量虽然会根据屏幕缩小，但在低端设备上仍然有掉帧。目前没有做更激进的降级处理（比如关闭动画），算是一个已知的体验短板。</p>
+<h3 id="2-2-Hero-文字渲染">2.2 Hero 文字渲染</h3>
+<p>首页顶部的标题和副标题使用 <code>Canvas</code> 渲染，配合 <code>pretext</code> 排版引擎做精确文字布局：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div></div><code class="language-javascript">// source/js/layout/hero.js
+class Hero &#123;
+    resize() &#123;
+        const rect = this.canvas.parentElement.getBoundingClientRect();
+        this.width = rect.width;
+        // 根据容器宽度动态计算字体大小
+        const titleFontSize = Math.min(this.width / 10, 64);
+        // 使用 pretext 做精确排版（支持自动换行）
+        const prepared = prepareWithSegments(this.title, font);
+        const &#123; lines &#125; = layoutWithLines(prepared, maxWidth * dpr, lineHeight * dpr);
+    &#125;
+
+    draw(progress) &#123;
+        // 每行文字渐入动画（stagger + easeOutExpo）
+        const lineDelay = line.type === 'title' ? i * 0.08 : 0.4 + i * 0.06;
+        ctx.globalAlpha = eased;
+        ctx.translate(0, (1 - eased) * 20); // 滑入效果
+    &#125;
+&#125;</code></div></pre>
+<p><code>pretext</code> 库是前一阵刷技术博客时偶然发现的，看着能做 <code>Canvas</code> 文字排版就随手加进来了，没有做太多调研。实际用下来基本能用，但在响应式布局上还有一些小 <code>bug</code>（比如侧边栏切换时文字居中计算不准确），目前还没完全修好。</p>
+<h3 id="2-3-404-页面">2.3 404 页面</h3>
+<p>Canvas 绘制发光的 “404” 文字 + 浮动粒子，倒计时后自动跳转首页：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-javascript">// source/js/layout/page404.js
+class Page404 &#123;
+    draw() &#123;
+        // 文字描边 + 发光效果
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        ctx.shadowBlur = 20;
+        ctx.strokeText('404', ...);
+        // 浮动粒子
+    &#125;
+&#125;</code></div></pre>
+<h2 id="三、响应式布局">三、响应式布局</h2>
+<h3 id="3-1-为什么用-JS-而非媒体查询">3.1 为什么用 JS 而非媒体查询</h3>
+<p>最初考虑过媒体查询方案，但实际对比后选择了 <code>JS</code> 动态计算，原因有两个：</p>
+<p><strong>媒体查询的局限</strong>：断点是固定的（比如 <code>768px</code>、<code>1024px</code>），但实际布局中每个区域的可用宽度不同。<code>header</code> 的宽度不等于 <code>sidebar</code> 的宽度，用统一的断点无法精确控制每个区域的行为。</p>
+<p><strong>JS 的灵活性</strong>：通过 <code>getBoundingClientRect()</code> 获取实际可用宽度，可以精确到像素级别控制显示/隐藏。而且 <code>JS</code> 可以通过 <code>hook</code> 机制按需嵌入，媒体查询则需要在 <code>CSS</code> 中写死所有断点规则，维护成本更高。</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-javascript">// source/js/layout/header.js
+function autoResizeHeaderRight() &#123;
+    const containerWidth = headerWrapper.getBoundingClientRect().width;
+    // 空间不足时依次隐藏：搜索按钮 → 站点标题 → 时钟
+    if (containerWidth &lt; 600) searchButton.style.display = 'none';
+    if (containerWidth &lt; 400) titleElement.style.display = 'none';
+&#125;</code></div></pre>
+<p>不过移动端的自适应效果一般 — 主要是因为之前开发 <code>Spring Boot</code> + <code>Bootstrap</code> 项目时习惯了容器化排版，对 <code>flex</code> 布局有一种天然的偏好，所以做了自适应。但移动端屏幕尺寸有限，很多在桌面端好看的效果在手机上效果平平，算是一个妥协。</p>
+<h3 id="3-2-侧边栏折叠">3.2 侧边栏折叠</h3>
+<p>侧边栏通过 <code>CSS class</code> 切换控制显隐，配合 <code>transition</code> 实现平滑动画：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-stylus">// CSS
+#sidebar-container
+  width $sidebar-width
+  transition $transition-delay
+
+  &amp;.closed
+    width 0
+    min-width 0
+    visibility hidden</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-javascript">// JS — 切换时通知其他组件
+function toggleSidebar() &#123;
+    sidebarContainer.classList.toggle(&quot;closed&quot;);
+    window.dispatchEvent(new Event('layoutchange'));
+&#125;</code></div></pre>
+<p><code>layoutchange</code> 事件让 <code>Hero</code> 等组件感知布局变化，重新计算尺寸。</p>
+<h3 id="3-3-Meta-项自动换行">3.3 Meta 项自动换行</h3>
+<p>文章列表中，日期、分类、标签等 <code>meta</code> 项在内容过多时自动换行：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-stylus">.post-item-header-meta
+  display flex
+  flex-direction row
+  flex-wrap wrap        // 关键：内容超宽时换行
+  gap 0.25rem 0        // 行间垂直间距</code></div></pre>
+<h2 id="四、可复用动画-Mixin">四、可复用动画 Mixin</h2>
+<p>三个核心 <code>Mixin</code> 覆盖了大部分交互动画场景：</p>
+<h3 id="4-1-下划线展开">4.1 下划线展开</h3>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-stylus">hover-underline($left = 0)
+  &amp;:after
+    left $left; width 0; height 0.125rem
+    background $color-theme
+  &amp;:hover
+    &amp;:after
+      left 0; width 100%</code></div></pre>
+<p>下划线从指定位置展开到全宽，用于菜单项、链接等。</p>
+<h3 id="4-2-四边框动画">4.2 四边框动画</h3>
+<p>四个子元素 <code>.line-top/right/bottom/left</code>，<code>hover</code> 时从外部展开到完整边框。用于统计数字、友情链接等卡片。</p>
+<h3 id="4-3-光扫按钮">4.3 光扫按钮</h3>
+<p><code>::before</code> 伪元素实现光扫效果：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-stylus">button-hover-effect()
+  &amp;::before
+    left -100%
+    background linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,0.5), rgba(255,255,255,0))
+  &amp;:hover::before
+    left 100%; transition left 0.5s ease</code></div></pre>
+<p><code>CSS</code> 的动画语法确实绕，尤其是 <code>::before</code>/<code>::after</code> 伪元素配合 <code>transition</code> 的各种组合，踩了不少坑。最终真正熟练掌握的主要是 <code>Stylus</code> 的变量、<code>Mixin</code> 和函数体系，底层 <code>CSS</code> 动画还是在实践中慢慢摸索出来的。</p>
+<h2 id="五、设计令牌系统">五、设计令牌系统</h2>
+<p>所有视觉参数通过 <code>theme-config()</code> 从配置文件读取，用户可在 <code>_config.hexo-theme-doratiger.yml</code> 中覆盖：</p>
+<table>
+<thead>
+<tr>
+<th>令牌</th>
+<th>默认值</th>
+<th>可配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$color-theme</code></td>
+<td>橙色</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>$color-background</code></td>
+<td>深蓝黑径向渐变</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>$sidebar-width</code></td>
+<td>300px</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>$main-content-max-width</code></td>
+<td>800px</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>$transition-delay</code></td>
+<td>all 0.5s</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>最初写样式的时候，颜色值直接写在各个 <code>.styl</code> 文件里：<code>post.styl</code> 里写一个 <code>rgba(230, 119, 0, 1)</code>，<code>sidebar.styl</code> 里又写一个，<code>header.styl</code> 里再来一个。后来想让主题色可配置，才发现到处都要改，费了不少功夫把十几个文件里的颜色逐一换成 <code>theme-config()</code> 引用，集中到 <code>_variable/variable.styl</code> 中管理。</p>
+<p>这意味着用户无需修改任何 <code>Stylus</code> 代码，只改配置文件就能调整整个主题的视觉风格。</p>
+<h2 id="六、总结">六、总结</h2>
+<p>写这篇时，暗色方案已经能日常使用，亮色背景还没有想好。移动端的动画性能和布局效果一般，<code>pretext</code> 在侧边栏切换时也还有排版问题。这些地方仍需要继续调整。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.stylus-lang.cn/" title="Stylus 中文文档" class="external-link" data-redirect="https%3A%2F%2Fwww.stylus-lang.cn%2F">Stylus 中文文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/nicholasgasior/gopher-pretext" title="pretext Canvas 排版引擎" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fnicholasgasior%2Fgopher-pretext">pretext Canvas 排版引擎</a></li>
+<li><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API" title="MDN Canvas API" class="external-link" data-redirect="https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FAPI%2FCanvas_API">MDN Canvas API</a></li>
+<li><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Flexible_Box_Layout" title="CSS Flexbox 布局" class="external-link" data-redirect="https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FCSS%2FCSS_Flexible_Box_Layout">CSS Flexbox 布局</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/06/50649/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/06/50649/">https://www.superheaoz.top/2026/06/50649/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/06/1626/"><span>HEXO 开发笔记（6）自建主题：核心功能实现</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/06/13838/"><span>HEXO 开发笔记（4）自建主题：架构与设计哲学</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

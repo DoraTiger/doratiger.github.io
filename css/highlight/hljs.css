@@ -1,0 +1,104 @@
+pre {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 1rem 0;
+  border-radius: 4px;
+  background: $color-code-background;
+}
+pre .code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: $color-text;
+  user-select: none;
+  background: $color-code-header-background;
+}
+pre .code-header-type {
+  margin-left: 1rem;
+  color: $color-theme;
+}
+pre .code-header-copy {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+}
+pre .code-header-copy-tips {
+  margin-right: 0.5rem;
+  text-align: center;
+  color: $color-theme;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+pre .code-header-copy-tips.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+pre .code-header-copy-button {
+  padding: 0.25rem 0.5rem;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  background: $color-button-background;
+}
+pre .code-content {
+  display: flex;
+  flex-direction: row;
+}
+pre .code-content .line-numbers {
+  display: flex;
+  flex-direction: column;
+  width: 2.5rem;
+  text-align: right;
+  color: $color-text-muted;
+  user-select: none;
+  padding: 1rem 0.5rem 1rem 0;
+}
+pre .code-content code {
+  padding: 1rem 0.5rem 1rem 0 !important;
+  border-radius: 0px !important;
+  background: none !important;
+  overflow-x: auto;
+}
+#content .hljs {
+  color: $color-text;
+}
+#content .hljs span {
+  color: inherit;
+}
+#content .hljs .hljs-comment,
+#content .hljs .hljs-quote {
+  color: var(--dt-code-comment);
+}
+#content .hljs .hljs-keyword,
+#content .hljs .hljs-selector-tag,
+#content .hljs .hljs-deletion,
+#content .hljs .hljs-name,
+#content .hljs .hljs-doctag {
+  color: var(--dt-code-keyword);
+}
+#content .hljs .hljs-string,
+#content .hljs .hljs-regexp,
+#content .hljs .hljs-addition,
+#content .hljs .hljs-attribute {
+  color: var(--dt-code-string);
+}
+#content .hljs .hljs-number,
+#content .hljs .hljs-literal,
+#content .hljs .hljs-variable,
+#content .hljs .hljs-attr,
+#content .hljs .hljs-built_in,
+#content .hljs .hljs-type {
+  color: var(--dt-code-number);
+}
+#content .hljs .hljs-title,
+#content .hljs .hljs-section,
+#content .hljs .hljs-symbol,
+#content .hljs .hljs-bullet,
+#content .hljs .hljs-meta,
+#content .hljs .hljs-selector-class {
+  color: var(--dt-code-title);
+}

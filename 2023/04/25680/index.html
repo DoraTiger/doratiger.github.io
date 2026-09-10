@@ -1,0 +1,2103 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Tendermint 学习随笔（2）P2P 源码阅读与分析【我的个人天地】</title><meta name="description" content="Tendermint 学习随笔（2）P2P 源码阅读与分析"><meta name="keywords" content="Tendermint,blockchain,network"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Tendermint 学习随笔（2）P2P 源码阅读与分析【我的个人天地】"><meta property="og:description" content="Tendermint 学习随笔（2）P2P 源码阅读与分析"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2023/04/25680/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Tendermint 学习随笔（2）P2P 源码阅读与分析",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2023-04-02T12:25:15.000Z",
+  "dateModified": "2023-10-25T12:25:15.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2023/04/25680/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%95%B4%E4%BD%93%E6%A1%86%E6%9E%B6"><span class="toc-text">一、整体框架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">二、源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-P2P-%E5%8A%9F%E8%83%BD%E7%BB%93%E6%9E%84"><span class="toc-text">2.1 P2P 功能结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Peer"><span class="toc-text">2.2 Peer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-Connection"><span class="toc-text">2.3 Connection</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-transport"><span class="toc-text">2.4 transport</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-switch"><span class="toc-text">2.5 switch</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">三、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color5"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color8"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Tendermint 学习随笔（2）P2P 源码阅读与分析</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2023-04-02</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2023-10-25</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Tendermint/">Tendermint</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/blockchain/">blockchain</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/network/">network</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">54346 字 · 约 182 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<a href="/2022/10/1036/" title="Tendermint 学习随笔（1）环境配置">Tendermint 学习随笔（1）环境配置</a> 中对该系统进行了基本的介绍，并配置了开发环境。本文将基于目前最新的 `release` 版本`v0.34.24`进行分析。
+<span id="more"></span>
+<h2 id="一、整体框架">一、整体框架</h2>
+<p><code>Tendermint</code> 是一个用于构建区块链应用程序的开源软件，其核心是共识引擎，同时也提供了用于实现应用的 <code>ABCI 接口</code>。整个系统架构可以自顶向下分为以下四个部分：</p>
+<ol>
+<li>
+<p>应用层：应用程序定义了在区块链上运行的业务逻辑。它们可以使用任何编程语言来编写，并与 <code>Tendermint</code> 接口进行交互。</p>
+</li>
+<li>
+<p><code>共识层：Tendermint</code> 实现了一个 <code>BFT 共识算法</code>，称为 <code>Tendermint Core</code>，该算法确保所有节点达成一致的状态转换。共识层处理节点之间的通信和同步，维护网络的安全性和一致性，以及验证和打包交易。</p>
+</li>
+<li>
+<p>网络层：网络层负责传输信息，包括交易和区块。<code>Tendermint</code> 采用 <code>P2P 网络协议</code>，以便节点之间可以互相通信，并启用了<code> TLS 加密</code>和身份验证。</p>
+</li>
+<li>
+<p>存储层：存储层负责维护区块链数据。<code>Tendermint</code> 提供了两种数据库选择：<code>内存数据库</code> 或 <code>LevelDB</code>。数据存储方式使用 <code>Merkle 树</code> 的结构组织。</p>
+</li>
+</ol>
+<h2 id="二、源码分析">二、源码分析</h2>
+<h3 id="2-1-P2P-功能结构">2.1 P2P 功能结构</h3>
+<p><code>P2P 目录</code> 结构与分析如下所示：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div></div><code class="language-bash">.
+├── README.md
+├── base_reactor.go
+├── conn # 最底层的连接功能实现
+│   ├── conn_go110.go
+│   ├── conn_notgo110.go
+│   ├── connection.go # 基本连接
+│   ├── connection_test.go
+│   ├── evil_secret_connection_test.go
+│   ├── secret_connection.go # 加密连接
+│   ├── secret_connection_test.go
+│   └── testdata
+│       └── TestDeriveSecretsAndChallengeGolden.golden
+├── conn_set.go
+├── errors.go
+├── fuzz.go
+├── key.go
+├── key_test.go
+├── metrics.go
+├── mock
+│   ├── peer.go
+│   └── reactor.go
+├── mocks
+│   └── peer.go
+├── netaddress.go # 网络地址存储
+├── netaddress_test.go
+├── node_info.go # 节点基本信息
+├── node_info_test.go
+├── peer.go # reactor对等连接
+├── peer_set.go # 对等连接集合,每个node有多个peer
+├── peer_set_test.go
+├── peer_test.go
+├── pex # pex reactor 用于处理节点之间的 P2P 交换
+│   ├── addrbook.go
+│   ├── addrbook_test.go
+│   ├── errors.go
+│   ├── file.go
+│   ├── known_address.go
+│   ├── params.go
+│   ├── pex_reactor.go
+│   └── pex_reactor_test.go
+├── switch.go # 负责管理节点之间的 P2P 连接
+├── switch_test.go
+├── test_util.go
+├── transport.go # 提供了底层的网络传输能力的管理
+├── transport_test.go
+├── trust # 用于节点信任度量,目前未启用
+│   ├── config.go
+│   ├── metric.go
+│   ├── metric_test.go
+│   ├── store.go
+│   ├── store_test.go
+│   └── ticker.go
+├── types.go
+└── upnp # 测试UPnP功能
+    ├── probe.go
+    └── upnp.go</code></div></pre>
+<p><code>P2P</code> 提供了节点间点对点通信的封装，根据 <code>/p2p</code> 目录下 <code>readme.md</code> 文件的描述描述，核心功能有五个。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/tendermint/tendermint/blob/v0.34.x/spec/p2p/connection.md" title="Connection" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ftendermint%2Ftendermint%2Fblob%2Fv0.34.x%2Fspec%2Fp2p%2Fconnection.md">Connection</a> 该组件是 <code>tendermint</code> 网络通信的基础，消息的写入和读取都是通过此组件完成的。</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/tendermint/tendermint/blob/v0.34.x/spec/p2p/peer.md" title="Peer" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ftendermint%2Ftendermint%2Fblob%2Fv0.34.x%2Fspec%2Fp2p%2Fpeer.md">Peer</a> 该组件是 <code>tendermint</code> 系统中的基本通信实体单位，所有节点之间的通信和节点与应用程序的通信都通过 <code>peer</code> 进行。</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/tendermint/tendermint/blob/v0.34.x/spec/p2p/node.md" title="Node" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ftendermint%2Ftendermint%2Fblob%2Fv0.34.x%2Fspec%2Fp2p%2Fnode.md">Node</a> <code>Tendermint</code> 的 <code>P2P 网络</code> 具有不同类型的节点，对彼此的连接有不同的要求。该组件对 <code>tendermint</code> 系统中不同的节点工作需求进行定义。</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/tendermint/tendermint/blob/v0.34.x/spec/p2p/messages/pex.md" title="Pex" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ftendermint%2Ftendermint%2Fblob%2Fv0.34.x%2Fspec%2Fp2p%2Fmessages%2Fpex.md">Pex</a> 该功能的作用是定义进行节点发现和交换工作的数据包。</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/tendermint/tendermint/blob/v0.34.x/spec/p2p/config.md" title="Config" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ftendermint%2Ftendermint%2Fblob%2Fv0.34.x%2Fspec%2Fp2p%2Fconfig.md">Config</a> 该功能主要针对 <code>tendermint</code> 的配置信息进行定义。</li>
+</ul>
+<h3 id="2-2-Peer">2.2 Peer</h3>
+<p>从 <code>/p2p</code> 这个目录来看，首先注意到的就是 <code>peer.go</code> 这个文件，在 <code>p2p 网络</code> 中， <code>peer</code> 应该是对等通信的最小实体。</p>
+<p>首先来看 <code>peer</code> 接口的定义，他继承自 <code>service.Service</code> 接口，并声明了一系列方法用于获取节点的各种信息，如 <code>ID</code>、<code>IP 地址</code>、<code>连接状态</code> 等。同时，<code>Peer</code> 也定义了一些方法用于管理节点连接，例如关闭连接、设置或获取某些属性等。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div></div><code class="language-golang">// Peer is an interface representing a peer connected on a reactor.
+type Peer interface &#123;
+ service.Service
+ FlushStop()
+
+ ID() ID               // peer's cryptographic ID
+ RemoteIP() net.IP     // remote IP of the connection
+ RemoteAddr() net.Addr // remote address of the connection
+
+ IsOutbound() bool   // did we dial the peer
+ IsPersistent() bool // do we redial this peer when we disconnect
+
+ CloseConn() error // close original connection
+
+ NodeInfo() NodeInfo // peer's info
+ Status() tmconn.ConnectionStatus
+ SocketAddr() *NetAddress // actual address of the socket
+
+ // Deprecated: entities looking to act as peers should implement SendEnvelope instead.
+ // Send will be removed in v0.37.
+ Send(byte, []byte) bool
+
+ // Deprecated: entities looking to act as peers should implement TrySendEnvelope instead.
+ // TrySend will be removed in v0.37.
+ TrySend(byte, []byte) bool
+
+ Set(string, interface&#123;&#125;)
+ Get(string) interface&#123;&#125;
+
+ SetRemovalFailed()
+ GetRemovalFailed() bool
+&#125;
+
+type EnvelopeSender interface &#123;
+ SendEnvelope(Envelope) bool
+ TrySendEnvelope(Envelope) bool
+&#125;</code></div></pre>
+<p>接下来是对应的 <code>peer</code> 结构体，用于实现 <code>Peer</code> 接口。该结构体包含了一些字段和方法，用于管理与其他节点的连接和信息，并提供了一些额外的功能，如度量指标记录等。</p>
+<p>具体来说，该结构体继承了 <code>service.BaseService</code> 类型，并包含了一个 <code>peerConn</code> 类型的字段 <code>peerConn</code> 和一个 <code>tmconn.MConnection</code> 类型的字段 <code>mconn</code>，分别表示节点之间的原始连接和多路复用连接。</p>
+<p>除此之外，<code>peer</code> 结构体还包含了一些其他的字段和方法，如 <code>nodeInfo</code> 和 <code>channels</code> 字段，用于保存节点信息和通道信息；<code>Data</code> 字段，用于保存用户自定义数据；<code>metrics</code> 和<code>metricsTicker</code> 字段，用于记录节点的度量指标；<code>mlc</code> 字段，用于缓存度量指标的标签等。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div></div><code class="language-golang">// peer implements Peer.
+//
+// Before using a peer, you will need to perform a handshake on connection.
+type peer struct &#123;
+ service.BaseService
+
+ // raw peerConn and the multiplex connection
+ peerConn
+ mconn *tmconn.MConnection
+
+ // peer's node info and the channel it knows about
+ // channels = nodeInfo.Channels
+ // cached to avoid copying nodeInfo in hasChannel
+ nodeInfo NodeInfo
+ channels []byte
+
+ // User data
+ Data *cmap.CMap
+
+ metrics       *Metrics
+ metricsTicker *time.Ticker
+ mlc           *metricsLabelCache
+
+ // When removal of a peer fails, we set this flag
+ removalAttemptFailed bool
+&#125;</code></div></pre>
+<p>进一步的，跟踪分析 <code>peerConn</code> 和 <code>mconn</code> 这两个成员变量。<code>mconn</code> 是 <code>tendermint</code> 所有连接通信的技术，相关内容将在 <code>Connection.go</code> 的分析中具体展开，这里首先看以下 <code>peerConn</code> 的相关代码。</p>
+<p>结合 <code>outbound</code> 这个参数，不难猜测，<code>tendermint</code> 中的连接应该有两类，一类是传入，一类是传出。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div></div><code class="language-golang">//----------------------------------------------------------
+
+// peerConn contains the raw connection and its config.
+type peerConn struct &#123;
+ outbound   bool //表示该连接是否为主动发起的出站连接（即由本地节点主动连接远程节点）。
+ persistent bool //表示该连接是否为持久化连接，即在断开连接后是否需要重新建立连接。
+ conn       net.Conn // source connection 表示底层的网络连接。在通讯过程中，该对象会被封装成mconn连接。
+
+ socketAddr *NetAddress //一个指向NetAddress类型的指针，表示连接的实际地址。
+
+ // cached RemoteIP()
+ ip net.IP //一个net.IP类型的对象，表示连接对应的远程IP地址
+&#125;
+
+func newPeerConn(
+ outbound, persistent bool,
+ conn net.Conn,
+ socketAddr *NetAddress,
+) peerConn &#123;
+
+ return peerConn&#123;
+  outbound:   outbound,
+  persistent: persistent,
+  conn:       conn,
+  socketAddr: socketAddr,
+ &#125;
+&#125;
+
+// ID only exists for SecretConnection.
+// NOTE: Will panic if conn is not *SecretConnection.
+func (pc peerConn) ID() ID &#123;
+ return PubKeyToID(pc.conn.(*tmconn.SecretConnection).RemotePubKey())
+&#125;
+
+// Return the IP from the connection RemoteAddr
+func (pc peerConn) RemoteIP() net.IP &#123;
+ if pc.ip != nil &#123;
+  return pc.ip
+ &#125;
+
+ host, _, err := net.SplitHostPort(pc.conn.RemoteAddr().String())
+ if err != nil &#123;
+  panic(err)
+ &#125;
+
+ ips, err := net.LookupIP(host)
+ if err != nil &#123;
+  panic(err)
+ &#125;
+
+ pc.ip = ips[0]
+
+ return pc.ip
+&#125;</code></div></pre>
+<p><code>newPeerConn</code> 函数后续会在 <code>transport.go</code> 中被 <code>wrapPeer</code> 函数调用，进而被 <code>Accept</code> 和 <code>Dial</code> 两个函数调用，两个函数进而被 <code>switch.go</code> 中的 <code>acceptRoutine</code> 和 <code>addOutboundPeerWithConfig</code> 调用，前者负责循环接收传入连接，后者负责主动发出传出连接。据此不难看出，在 <code>tendermint</code> 系统的 <code>p2p</code> 架构中最底层的网络连接实现是 <code>/p2p/conn/connection.go</code>，在此基础上在 <code>/p2p/peer.go</code> 中构建 <code>peer</code> 连接对，并通过 <code>/p2p/transport.go</code> 对连接进行操作，随后所有的 <code>peer</code> 连接及系统操作的路由都由 <code>/p2p/switch.go</code> 文件负责维护。<br>
+后续也将会对这些文件进行分析，这里继续看 <code>peer</code> 的构造逻辑。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div></div><code class="language-golang">type PeerOption func(*peer)
+
+func newPeer(
+ pc peerConn,
+ mConfig tmconn.MConnConfig,
+ nodeInfo NodeInfo,
+ reactorsByCh map[byte]Reactor,
+ msgTypeByChID map[byte]proto.Message,
+ chDescs []*tmconn.ChannelDescriptor,
+ onPeerError func(Peer, interface&#123;&#125;),
+ mlc *metricsLabelCache,
+ options ...PeerOption,
+) *peer &#123;
+ p := &amp;peer&#123;
+  peerConn:      pc,
+  nodeInfo:      nodeInfo,
+  channels:      nodeInfo.(DefaultNodeInfo).Channels,
+  Data:          cmap.NewCMap(),
+  metricsTicker: time.NewTicker(metricsTickerDuration),
+  metrics:       NopMetrics(),
+  mlc:           mlc,
+ &#125;
+
+ p.mconn = createMConnection(
+  pc.conn,
+  p,
+  reactorsByCh,
+  msgTypeByChID,
+  chDescs,
+  onPeerError,
+  mConfig,
+ )
+ p.BaseService = *service.NewBaseService(nil, &quot;Peer&quot;, p)
+ for _, option := range options &#123;
+  option(p)
+ &#125;
+
+ return p
+&#125;</code></div></pre>
+<p>这个函数中，除了基本的参数传递和服务注册外外，就是 <code>mconn</code> 的构建，接下来看一下 <code>createMConnection</code> 函数。</p>
+<p>这个函数会首先构建 <code>onReceive</code> 和 <code>onError</code> 两个传输回调方法。<code>onReceive</code> 回调会根据 <code>chID</code> 调用具体的 <code>reactor</code> 实现，相关 <code>reactor</code> 的添加函数都在 <code>switch.go</code> 中，并在 <code>node.go</code> 中被调用。<code>onError</code> 回调实现依然是根据参数传递过来的，通过调用追踪，最后定位在了 <code>switch.go</code> 的 <code>StopPeerForError</code> 函数，具体分析将在后续展开。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div></div><code class="language-golang">//------------------------------------------------------------------
+// helper funcs
+
+func createMConnection(
+ conn net.Conn,
+ p *peer,
+ reactorsByCh map[byte]Reactor,
+ msgTypeByChID map[byte]proto.Message,
+ chDescs []*tmconn.ChannelDescriptor,
+ onPeerError func(Peer, interface&#123;&#125;),
+ config tmconn.MConnConfig,
+) *tmconn.MConnection &#123;
+
+ onReceive := func(chID byte, msgBytes []byte) &#123;
+  reactor := reactorsByCh[chID]
+  if reactor == nil &#123;
+   // Note that its ok to panic here as it's caught in the conn._recover,
+   // which does onPeerError.
+   panic(fmt.Sprintf(&quot;Unknown channel %X&quot;, chID))
+  &#125;
+  mt := msgTypeByChID[chID]
+  msg := proto.Clone(mt)
+  err := proto.Unmarshal(msgBytes, msg)
+  if err != nil &#123;
+   panic(fmt.Errorf(&quot;unmarshaling message: %s into type: %s&quot;, err, reflect.TypeOf(mt)))
+  &#125;
+  labels := []string&#123;
+   &quot;peer_id&quot;, string(p.ID()),
+   &quot;chID&quot;, fmt.Sprintf(&quot;%#x&quot;, chID),
+  &#125;
+  if w, ok := msg.(Unwrapper); ok &#123;
+   msg, err = w.Unwrap()
+   if err != nil &#123;
+    panic(fmt.Errorf(&quot;unwrapping message: %s&quot;, err))
+   &#125;
+  &#125;
+  p.metrics.PeerReceiveBytesTotal.With(labels...).Add(float64(len(msgBytes)))
+  p.metrics.MessageReceiveBytesTotal.With(&quot;message_type&quot;, p.mlc.ValueToMetricLabel(msg)).Add(float64(len(msgBytes)))
+  if nr, ok := reactor.(EnvelopeReceiver); ok &#123;
+   nr.ReceiveEnvelope(Envelope&#123;
+    ChannelID: chID,
+    Src:       p,
+    Message:   msg,
+   &#125;)
+  &#125; else &#123;
+   reactor.Receive(chID, p, msgBytes)
+  &#125;
+ &#125;
+
+ onError := func(r interface&#123;&#125;) &#123;
+  onPeerError(p, r)
+ &#125;
+
+ return tmconn.NewMConnectionWithConfig(
+  conn,
+  chDescs,
+  onReceive,
+  onError,
+  config,
+ )
+&#125;</code></div></pre>
+<p>接下来再看一下 <code>peer</code> 的启停函数。该函数主要就是启动 <code>peer</code> 的服务，随后启动连接和统计功能。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div></div><code class="language-golang">// OnStart implements BaseService.
+func (p *peer) OnStart() error &#123;
+ if err := p.BaseService.OnStart(); err != nil &#123;
+  return err
+ &#125;
+
+ if err := p.mconn.Start(); err != nil &#123;
+  return err
+ &#125;
+
+ go p.metricsReporter()
+ return nil
+&#125;
+
+// FlushStop mimics OnStop but additionally ensures that all successful
+// SendEnvelope() calls will get flushed before closing the connection.
+// NOTE: it is not safe to call this method more than once.
+func (p *peer) FlushStop() &#123;
+ p.metricsTicker.Stop()
+ p.BaseService.OnStop()
+ p.mconn.FlushStop() // stop everything and close the conn
+&#125;
+
+// OnStop implements BaseService.
+func (p *peer) OnStop() &#123;
+ p.metricsTicker.Stop()
+ p.BaseService.OnStop()
+ if err := p.mconn.Stop(); err != nil &#123; // stop everything and close the conn
+  p.Logger.Debug(&quot;Error while stopping peer&quot;, &quot;err&quot;, err)
+ &#125;
+&#125;</code></div></pre>
+<p>接下来<code>peer.go</code>文件内部还由其他相关的参数设置，消息收发等函数都是统一的设计思路，这里就不再进行分析。</p>
+<h3 id="2-3-Connection">2.3 Connection</h3>
+<p>由对<code>peer.go</code>的分析可知，他的底层通信都由<code>/p2p/conn/connection.go</code>实现，由<code>/p2p/transport.go</code>维护，并由<code>/p2p/switch.go</code>进行路由管理，为此，我们先分析其底层通信实现。</p>
+<p><code>connection.go</code>首先定义了一个用于多路复用传输的<code>MConnection</code> (multiplex connection) 结构。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div></div><code class="language-golang">type MConnection struct &#123;
+ service.BaseService
+
+ conn          net.Conn
+ bufConnReader *bufio.Reader
+ bufConnWriter *bufio.Writer
+ sendMonitor   *flow.Monitor
+ recvMonitor   *flow.Monitor
+ send          chan struct&#123;&#125;
+ pong          chan struct&#123;&#125;
+ channels      []*Channel
+ channelsIdx   map[byte]*Channel
+ onReceive     receiveCbFunc
+ onError       errorCbFunc
+ errored       uint32
+ config        MConnConfig
+
+ // Closing quitSendRoutine will cause the sendRoutine to eventually quit.
+ // doneSendRoutine is closed when the sendRoutine actually quits.
+ quitSendRoutine chan struct&#123;&#125;
+ doneSendRoutine chan struct&#123;&#125;
+
+ // Closing quitRecvRouting will cause the recvRouting to eventually quit.
+ quitRecvRoutine chan struct&#123;&#125;
+
+ // used to ensure FlushStop and OnStop
+ // are safe to call concurrently.
+ stopMtx tmsync.Mutex
+
+ flushTimer *timer.ThrottleTimer // flush writes as necessary but throttled.
+ pingTimer  *time.Ticker         // send pings periodically
+
+ // close conn if pong is not received in pongTimeout
+ pongTimer     *time.Timer
+ pongTimeoutCh chan bool // true - timeout, false - peer sent pong
+
+ chStatsTimer *time.Ticker // update channel stats periodically
+
+ created time.Time // time of creation
+
+ _maxPacketMsgSize int
+&#125;</code></div></pre>
+<p>其中大部分参数顾名思义：</p>
+<ul>
+<li><code>conn</code>是一个通用的面向流的网络连接。</li>
+<li><code>bufConnReader</code>,<code>bufConnWriter</code>是面向数据通信的字节流读写对象，将基本的 net.conn 数据读写操作进行封装，可以利用类似文件 IO 的方式来对 TCP 数据量进行操作。</li>
+<li><code>sendMonitor</code>,<code>recvMonitor</code>分别用于监控数据的接受和发送状态。</li>
+<li><code>channels</code>,<code>channelsIdx</code>存储通道相关信息。</li>
+<li><code>onReceive</code>,<code>onError</code>是相关传输结束的回调方法。</li>
+<li><code>config</code>使用了一个<code>MConnConfig</code>结构定义连接的配置信息。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code class="language-golang">type MConnConfig struct &#123;
+ SendRate int64 `mapstructure:&quot;send_rate&quot;`
+ RecvRate int64 `mapstructure:&quot;recv_rate&quot;`
+
+ // Maximum payload size
+ MaxPacketMsgPayloadSize int `mapstructure:&quot;max_packet_msg_payload_size&quot;`
+
+ // Interval to flush writes (throttled)
+ FlushThrottle time.Duration `mapstructure:&quot;flush_throttle&quot;`
+
+ // Interval to send pings
+ PingInterval time.Duration `mapstructure:&quot;ping_interval&quot;`
+
+ // Maximum wait time for pongs
+ PongTimeout time.Duration `mapstructure:&quot;pong_timeout&quot;`
+&#125;</code></div></pre>
+<p>在定义完数据结构后，该包提供了<code>MConnection</code>的构建方法，首先是提供默认配置信息的<code>DefaultMConnConfig</code>函数，然后是进行构建的<code>NewMConnection</code>和<code>NewMConnectionWithConfig</code>函数，两者的区别是配置信息是否通过默认配置信息函数进行创建。同时前者最终调用了后者。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div></div><code class="language-golang">// NewMConnectionWithConfig wraps net.Conn and creates multiplex connection with a config
+func NewMConnectionWithConfig(
+ conn net.Conn,
+ chDescs []*ChannelDescriptor,
+ onReceive receiveCbFunc,
+ onError errorCbFunc,
+ config MConnConfig,
+) *MConnection &#123;
+ if config.PongTimeout &gt;= config.PingInterval &#123;
+  panic(&quot;pongTimeout must be less than pingInterval (otherwise, next ping will reset pong timer)&quot;)
+ &#125;
+
+ mconn := &amp;MConnection&#123;
+  conn:          conn,
+  bufConnReader: bufio.NewReaderSize(conn, minReadBufferSize),
+  bufConnWriter: bufio.NewWriterSize(conn, minWriteBufferSize),
+  sendMonitor:   flow.New(0, 0),
+  recvMonitor:   flow.New(0, 0),
+  send:          make(chan struct&#123;&#125;, 1),
+  pong:          make(chan struct&#123;&#125;, 1),
+  onReceive:     onReceive,
+  onError:       onError,
+  config:        config,
+  created:       time.Now(),
+ &#125;
+
+ // Create channels
+ var channelsIdx = map[byte]*Channel&#123;&#125;
+ var channels = []*Channel&#123;&#125;
+
+ for _, desc := range chDescs &#123;
+  channel := newChannel(mconn, *desc)
+  channelsIdx[channel.desc.ID] = channel
+  channels = append(channels, channel)
+ &#125;
+ mconn.channels = channels
+ mconn.channelsIdx = channelsIdx
+
+ mconn.BaseService = *service.NewBaseService(nil, &quot;MConnection&quot;, mconn)
+
+ // maxPacketMsgSize() is a bit heavy, so call just once
+ mconn._maxPacketMsgSize = mconn.maxPacketMsgSize()
+
+ return mconn
+&#125;</code></div></pre>
+<p>这里重点分析<code>NewMConnectionWithConfig</code>函数。该函数内容如前文所示，其中<code>chDescs</code>用于创建通道，涉及到<code>Channel</code>这个数据结构。函数首先创建<code>MConnection</code>对象，然后从<code>chDescs</code>获取通道信息，构建通道并赋予<code>MConnection</code>对象，最后将该对象注册到相应的服务中并配置最大消息大小。接下来就进一步分析<code>Channel</code>.</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div></div><code class="language-golang">// TODO: lowercase.
+// NOTE: not goroutine-safe.
+type Channel struct &#123;
+ conn          *MConnection
+ desc          ChannelDescriptor
+ sendQueue     chan []byte
+ sendQueueSize int32 // atomic.
+ recving       []byte
+ sending       []byte
+ recentlySent  int64 // exponential moving average
+
+ maxPacketMsgPayloadSize int
+
+ Logger log.Logger
+&#125;
+
+func newChannel(conn *MConnection, desc ChannelDescriptor) *Channel &#123;
+ desc = desc.FillDefaults()
+ if desc.Priority &lt;= 0 &#123;
+  panic(&quot;Channel default priority must be a positive integer&quot;)
+ &#125;
+ return &amp;Channel&#123;
+  conn:                    conn,
+  desc:                    desc,
+  sendQueue:               make(chan []byte, desc.SendQueueCapacity),
+  recving:                 make([]byte, 0, desc.RecvBufferCapacity),
+  maxPacketMsgPayloadSize: conn.config.MaxPacketMsgPayloadSize,
+ &#125;
+&#125;</code></div></pre>
+<p><code>Channel</code>结构体中，<code>sendQueue</code>是发送队列，<code>recving</code>是接收缓冲区，<code>sending</code>是发送缓冲区。构造函数也是基本的参数传递，那么数据相关操作层，相对应的，就是<code>Channel</code>相关的数据收发函数。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div></div><code class="language-golang">// Queues message to send to this channel.
+// Goroutine-safe
+// Times out (and returns false) after defaultSendTimeout
+func (ch *Channel) sendBytes(bytes []byte) bool &#123;
+ select &#123;
+ case ch.sendQueue &lt;- bytes:
+  atomic.AddInt32(&amp;ch.sendQueueSize, 1)
+  return true
+ case &lt;-time.After(defaultSendTimeout):
+  return false
+ &#125;
+&#125;
+
+// Queues message to send to this channel.
+// Nonblocking, returns true if successful.
+// Goroutine-safe
+func (ch *Channel) trySendBytes(bytes []byte) bool &#123;
+ select &#123;
+ case ch.sendQueue &lt;- bytes:
+  atomic.AddInt32(&amp;ch.sendQueueSize, 1)
+  return true
+ default:
+  return false
+ &#125;
+&#125;
+
+// Goroutine-safe
+func (ch *Channel) loadSendQueueSize() (size int) &#123;
+ return int(atomic.LoadInt32(&amp;ch.sendQueueSize))
+&#125;
+
+// Goroutine-safe
+// Use only as a heuristic.
+func (ch *Channel) canSend() bool &#123;
+ return ch.loadSendQueueSize() &lt; defaultSendQueueCapacity
+&#125;
+
+// Returns true if any PacketMsgs are pending to be sent.
+// Call before calling nextPacketMsg()
+// Goroutine-safe
+func (ch *Channel) isSendPending() bool &#123;
+ if len(ch.sending) == 0 &#123;
+  if len(ch.sendQueue) == 0 &#123;
+   return false
+  &#125;
+  ch.sending = &lt;-ch.sendQueue
+ &#125;
+ return true
+&#125;
+
+// Creates a new PacketMsg to send.
+// Not goroutine-safe
+func (ch *Channel) nextPacketMsg() tmp2p.PacketMsg &#123;
+ packet := tmp2p.PacketMsg&#123;ChannelID: int32(ch.desc.ID)&#125;
+ maxSize := ch.maxPacketMsgPayloadSize
+ packet.Data = ch.sending[:tmmath.MinInt(maxSize, len(ch.sending))]
+ if len(ch.sending) &lt;= maxSize &#123;
+  packet.EOF = true
+  ch.sending = nil
+  atomic.AddInt32(&amp;ch.sendQueueSize, -1) // decrement sendQueueSize
+ &#125; else &#123;
+  packet.EOF = false
+  ch.sending = ch.sending[tmmath.MinInt(maxSize, len(ch.sending)):]
+ &#125;
+ return packet
+&#125;
+
+// Writes next PacketMsg to w and updates c.recentlySent.
+// Not goroutine-safe
+func (ch *Channel) writePacketMsgTo(w io.Writer) (n int, err error) &#123;
+ packet := ch.nextPacketMsg()
+ n, err = protoio.NewDelimitedWriter(w).WriteMsg(mustWrapPacket(&amp;packet))
+ atomic.AddInt64(&amp;ch.recentlySent, int64(n))
+ return
+&#125;
+
+// Handles incoming PacketMsgs. It returns a message bytes if message is
+// complete. NOTE message bytes may change on next call to recvPacketMsg.
+// Not goroutine-safe
+func (ch *Channel) recvPacketMsg(packet tmp2p.PacketMsg) ([]byte, error) &#123;
+ ch.Logger.Debug(&quot;Read PacketMsg&quot;, &quot;conn&quot;, ch.conn, &quot;packet&quot;, packet)
+ var recvCap, recvReceived = ch.desc.RecvMessageCapacity, len(ch.recving) + len(packet.Data)
+ if recvCap &lt; recvReceived &#123;
+  return nil, fmt.Errorf(&quot;received message exceeds available capacity: %v &lt; %v&quot;, recvCap, recvReceived)
+ &#125;
+ ch.recving = append(ch.recving, packet.Data...)
+ if packet.EOF &#123;
+  msgBytes := ch.recving
+
+  // clear the slice without re-allocating.
+  // http://stackoverflow.com/questions/16971741/how-do-you-clear-a-slice-in-go
+  //   suggests this could be a memory leak, but we might as well keep the memory for the channel until it closes,
+  // at which point the recving slice stops being used and should be garbage collected
+  ch.recving = ch.recving[:0] // make([]byte, 0, ch.desc.RecvBufferCapacity)
+  return msgBytes, nil
+ &#125;
+ return nil, nil
+&#125;
+
+// Call this periodically to update stats for throttling purposes.
+// Not goroutine-safe
+func (ch *Channel) updateStats() &#123;
+ // Exponential decay of stats.
+ // TODO: optimize.
+ atomic.StoreInt64(&amp;ch.recentlySent, int64(float64(atomic.LoadInt64(&amp;ch.recentlySent))*0.8))
+&#125;</code></div></pre>
+<p>这些函数中，首先注意到的是发送函数<code>sendBytes</code>和<code>trySendBytes</code>两者的区别是是否由超时的控制。<br>
+随后还有关于<code>PacketMsgs</code>收发的<code>writePacketMsgTo</code>和<code>recvPacketMsg</code>.<code>PacketMsg</code>是基于 ABCI 的自定义消息类型，其中系统相关的有<code>ping</code>和<code>pong</code>两类，用于节点之间的心跳检测。具体来说，当一个节点想要向另外一个节点发送心跳检测消息时，它会将一个 PacketPing 消息打包，并通过多路复用连接（MConnection）对象发送给目标节点。在收到这个 PacketPing 消息后，目标节点会立即回复一个 PacketPong 消息，以表明自己仍然存活和可达。这样一来，节点之间就可以通过周期性的心跳检测，确保彼此之间的连接状态正常。其他节点之间的消息，也都会封装成<code>PacketMsgs</code>进行传输。</p>
+<p>结束<code>Channel</code>的分析后，再回到<code>mconnection</code>中，接下来看他的启停函数。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div></div><code class="language-golang">// OnStart implements BaseService
+func (c *MConnection) OnStart() error &#123;
+ if err := c.BaseService.OnStart(); err != nil &#123;
+  return err
+ &#125;
+ c.flushTimer = timer.NewThrottleTimer(&quot;flush&quot;, c.config.FlushThrottle)
+ c.pingTimer = time.NewTicker(c.config.PingInterval)
+ c.pongTimeoutCh = make(chan bool, 1)
+ c.chStatsTimer = time.NewTicker(updateStats)
+ c.quitSendRoutine = make(chan struct&#123;&#125;)
+ c.doneSendRoutine = make(chan struct&#123;&#125;)
+ c.quitRecvRoutine = make(chan struct&#123;&#125;)
+ go c.sendRoutine()
+ go c.recvRoutine()
+ return nil
+&#125;
+
+// stopServices stops the BaseService and timers and closes the quitSendRoutine.
+// if the quitSendRoutine was already closed, it returns true, otherwise it returns false.
+// It uses the stopMtx to ensure only one of FlushStop and OnStop can do this at a time.
+func (c *MConnection) stopServices() (alreadyStopped bool) &#123;
+ c.stopMtx.Lock()
+ defer c.stopMtx.Unlock()
+
+ select &#123;
+ case &lt;-c.quitSendRoutine:
+  // already quit
+  return true
+ default:
+ &#125;
+
+ select &#123;
+ case &lt;-c.quitRecvRoutine:
+  // already quit
+  return true
+ default:
+ &#125;
+
+ c.BaseService.OnStop()
+ c.flushTimer.Stop()
+ c.pingTimer.Stop()
+ c.chStatsTimer.Stop()
+
+ // inform the recvRouting that we are shutting down
+ close(c.quitRecvRoutine)
+ close(c.quitSendRoutine)
+ return false
+&#125;
+
+// FlushStop replicates the logic of OnStop.
+// It additionally ensures that all successful
+// .Send() calls will get flushed before closing
+// the connection.
+func (c *MConnection) FlushStop() &#123;
+ if c.stopServices() &#123;
+  return
+ &#125;
+
+ // this block is unique to FlushStop
+ &#123;
+  // wait until the sendRoutine exits
+  // so we dont race on calling sendSomePacketMsgs
+  &lt;-c.doneSendRoutine
+
+  // Send and flush all pending msgs.
+  // Since sendRoutine has exited, we can call this
+  // safely
+  eof := c.sendSomePacketMsgs()
+  for !eof &#123;
+   eof = c.sendSomePacketMsgs()
+  &#125;
+  c.flush()
+
+  // Now we can close the connection
+ &#125;
+
+ c.conn.Close()
+
+ // We can't close pong safely here because
+ // recvRoutine may write to it after we've stopped.
+ // Though it doesn't need to get closed at all,
+ // we close it @ recvRoutine.
+
+ // c.Stop()
+&#125;
+
+// OnStop implements BaseService
+func (c *MConnection) OnStop() &#123;
+ if c.stopServices() &#123;
+  return
+ &#125;
+
+ c.conn.Close()
+
+ // We can't close pong safely here because
+ // recvRoutine may write to it after we've stopped.
+ // Though it doesn't need to get closed at all,
+ // we close it @ recvRoutine.
+&#125;</code></div></pre>
+<p>不难看出，启停函数主要是对相关计时器的维护以及建立数据发送和接收的两个协程<code>sendRoutine</code>和<code>recvRoutine</code>.</p>
+<p>接下来首先看<code>sendRoutine</code>的实现。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div><div class="line-numbers-item">130</div><div class="line-numbers-item">131</div><div class="line-numbers-item">132</div><div class="line-numbers-item">133</div><div class="line-numbers-item">134</div></div><code class="language-golang">// sendRoutine polls for packets to send from channels.
+func (c *MConnection) sendRoutine() &#123;
+ defer c._recover()
+
+ protoWriter := protoio.NewDelimitedWriter(c.bufConnWriter)
+
+FOR_LOOP:
+ for &#123;
+  var _n int
+  var err error
+ SELECTION:
+  select &#123;
+  case &lt;-c.flushTimer.Ch:
+   // NOTE: flushTimer.Set() must be called every time
+   // something is written to .bufConnWriter.
+   c.flush()
+  case &lt;-c.chStatsTimer.C:
+   for _, channel := range c.channels &#123;
+    channel.updateStats()
+   &#125;
+  case &lt;-c.pingTimer.C:
+   c.Logger.Debug(&quot;Send Ping&quot;)
+   _n, err = protoWriter.WriteMsg(mustWrapPacket(&amp;tmp2p.PacketPing&#123;&#125;))
+   if err != nil &#123;
+    c.Logger.Error(&quot;Failed to send PacketPing&quot;, &quot;err&quot;, err)
+    break SELECTION
+   &#125;
+   c.sendMonitor.Update(_n)
+   c.Logger.Debug(&quot;Starting pong timer&quot;, &quot;dur&quot;, c.config.PongTimeout)
+   c.pongTimer = time.AfterFunc(c.config.PongTimeout, func() &#123;
+    select &#123;
+    case c.pongTimeoutCh &lt;- true:
+    default:
+    &#125;
+   &#125;)
+   c.flush()
+  case timeout := &lt;-c.pongTimeoutCh:
+   if timeout &#123;
+    c.Logger.Debug(&quot;Pong timeout&quot;)
+    err = errors.New(&quot;pong timeout&quot;)
+   &#125; else &#123;
+    c.stopPongTimer()
+   &#125;
+  case &lt;-c.pong:
+   c.Logger.Debug(&quot;Send Pong&quot;)
+   _n, err = protoWriter.WriteMsg(mustWrapPacket(&amp;tmp2p.PacketPong&#123;&#125;))
+   if err != nil &#123;
+    c.Logger.Error(&quot;Failed to send PacketPong&quot;, &quot;err&quot;, err)
+    break SELECTION
+   &#125;
+   c.sendMonitor.Update(_n)
+   c.flush()
+  case &lt;-c.quitSendRoutine:
+   break FOR_LOOP
+  case &lt;-c.send:
+   // Send some PacketMsgs
+   eof := c.sendSomePacketMsgs()
+   if !eof &#123;
+    // Keep sendRoutine awake.
+    select &#123;
+    case c.send &lt;- struct&#123;&#125;&#123;&#125;:
+    default:
+    &#125;
+   &#125;
+  &#125;
+
+  if !c.IsRunning() &#123;
+   break FOR_LOOP
+  &#125;
+  if err != nil &#123;
+   c.Logger.Error(&quot;Connection failed @ sendRoutine&quot;, &quot;conn&quot;, c, &quot;err&quot;, err)
+   c.stopForError(err)
+   break FOR_LOOP
+  &#125;
+ &#125;
+
+ // Cleanup
+ c.stopPongTimer()
+ close(c.doneSendRoutine)
+&#125;
+
+// Returns true if messages from channels were exhausted.
+// Blocks in accordance to .sendMonitor throttling.
+func (c *MConnection) sendSomePacketMsgs() bool &#123;
+ // Block until .sendMonitor says we can write.
+ // Once we're ready we send more than we asked for,
+ // but amortized it should even out.
+ c.sendMonitor.Limit(c._maxPacketMsgSize, atomic.LoadInt64(&amp;c.config.SendRate), true)
+
+ // Now send some PacketMsgs.
+ for i := 0; i &lt; numBatchPacketMsgs; i++ &#123;
+  if c.sendPacketMsg() &#123;
+   return true
+  &#125;
+ &#125;
+ return false
+&#125;
+
+// Returns true if messages from channels were exhausted.
+func (c *MConnection) sendPacketMsg() bool &#123;
+ // Choose a channel to create a PacketMsg from.
+ // The chosen channel will be the one whose recentlySent/priority is the least.
+ var leastRatio float32 = math.MaxFloat32
+ var leastChannel *Channel
+ for _, channel := range c.channels &#123;
+  // If nothing to send, skip this channel
+  if !channel.isSendPending() &#123;
+   continue
+  &#125;
+  // Get ratio, and keep track of lowest ratio.
+  ratio := float32(channel.recentlySent) / float32(channel.desc.Priority)
+  if ratio &lt; leastRatio &#123;
+   leastRatio = ratio
+   leastChannel = channel
+  &#125;
+ &#125;
+
+ // Nothing to send?
+ if leastChannel == nil &#123;
+  return true
+ &#125;
+ // c.Logger.Info(&quot;Found a msgPacket to send&quot;)
+
+ // Make &amp; send a PacketMsg from this channel
+ _n, err := leastChannel.writePacketMsgTo(c.bufConnWriter)
+ if err != nil &#123;
+  c.Logger.Error(&quot;Failed to write PacketMsg&quot;, &quot;err&quot;, err)
+  c.stopForError(err)
+  return true
+ &#125;
+ c.sendMonitor.Update(_n)
+ c.flushTimer.Set()
+ return false
+&#125;</code></div></pre>
+<p><code>sendRoutine</code>在一个独立的 Go routine 中处理在 <code>MConnection</code> 上发送的消息。函数包含一个循环，该循环会一直运行直到连接不再运行或出现错误为止。在循环中，该函数使用 <code>select</code> 语句监听多个通道，通道之间是顺序执行的关系：</p>
+<p>如果 <code>flushTimer.Ch</code> 通道接收到值（即指定的超时已经发生），则函数将调用 <code>flush()</code> 函数以将任何缓冲的数据发送到连接上。</p>
+<p>如果 <code>chStatsTimer.C</code> 通道接收到值（即指定的通道状态更新周期已更新）,则函数将调用<code>channel.updateStats()</code>对多路复用连接中的每个<code>channel</code>进行更新。</p>
+<p>如果 <code>pingTimer.C</code> 通道接收到值（即指定的<code>channel</code>查询周期已更新），该函数将发送一个 <code>PacketPing</code> 消息，并等待相应的 <code>PacketPong</code> 消息。<code>pongTimer</code>函数在<code>c.config.PongTimeout</code>的持续时间内都未收到相应的<code>PacketPong</code>消息，则会向<code>pongTimeoutCh</code>通道注入<code>true</code>标志。</p>
+<p>如果 <code>pongTimeoutCh</code> 通道接收到值（即获取到了对应<code>channel</code>的响应），该函数将检查是否发生了 pong 超时错误 (由<code>pingTimer.C</code>通道注入)，如果发生了超时错误，则函数将触发 Pong 超时错误并退出循环，否则默认收到了<code>PacketPong</code>消息，将重置<code>pongTimer</code>函数。</p>
+<p>如果 <code>pong</code> 通道接收到值（即收到了 <code>PacketPong</code> 消息），该函数将更新 <code>sendMonitor</code>并写入消息，刷新缓存的数据。</p>
+<p>如果 <code>quitSendRoutine</code> 通道接收到值（即关闭连接），该函数将退出循环。</p>
+<p>如果 <code>send</code> 通道接收到值（即有数据需要发送），该函数将调用 <code>sendSomePacketMsgs()</code> 函数以尽可能多地发送 <code>PacketMsg</code> 消息。如果还有更多数据要发送，则函数将再次唤醒 <code>send</code> 通道。</p>
+<p>在<code>SELECTION</code>代码块执行完成后，如果 <code>c.IsRunning()</code>标志位被修改为<code>false</code>,则停止循环。如果循环中的任何时刻发生错误，该函数也将记录错误信息，并退出循环。</p>
+<p>一旦循环完成，该函数将停止 pong 定时器，并关闭 doneSendRoutine 通道。</p>
+<p>可以看到，除了对通道状态的检测，核心的数据发送函数就是<code>sendSomePacketMsgs</code>,这个函数发送消息的核心是调用<code>sendPacketMsg</code>.在<code>sendPacketMsg</code>中，会遍历每一个通道，获取消息权重<code>ratio := float32(channel.recentlySent) / float32(channel.desc.Priority)</code>最小的且含有待发送消息的通道，将数据通过<code>writePacketMsgTo</code>封装成<code>PacketMsg</code>进行数据发送。</p>
+<p>接下来再看对应的<code>recvRoutine</code>实现。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div></div><code class="language-golang">// recvRoutine reads PacketMsgs and reconstructs the message using the channels' &quot;recving&quot; buffer.
+// After a whole message has been assembled, it's pushed to onReceive().
+// Blocks depending on how the connection is throttled.
+// Otherwise, it never blocks.
+func (c *MConnection) recvRoutine() &#123;
+ defer c._recover()
+
+ protoReader := protoio.NewDelimitedReader(c.bufConnReader, c._maxPacketMsgSize)
+
+FOR_LOOP:
+ for &#123;
+  // Block until .recvMonitor says we can read.
+  c.recvMonitor.Limit(c._maxPacketMsgSize, atomic.LoadInt64(&amp;c.config.RecvRate), true)
+
+  // Peek into bufConnReader for debugging
+  /*
+   if numBytes := c.bufConnReader.Buffered(); numBytes &gt; 0 &#123;
+    bz, err := c.bufConnReader.Peek(tmmath.MinInt(numBytes, 100))
+    if err == nil &#123;
+     // return
+    &#125; else &#123;
+     c.Logger.Debug(&quot;Error peeking connection buffer&quot;, &quot;err&quot;, err)
+     // return nil
+    &#125;
+    c.Logger.Info(&quot;Peek connection buffer&quot;, &quot;numBytes&quot;, numBytes, &quot;bz&quot;, bz)
+   &#125;
+  */
+
+  // Read packet type
+  var packet tmp2p.Packet
+
+  _n, err := protoReader.ReadMsg(&amp;packet)
+  c.recvMonitor.Update(_n)
+  if err != nil &#123;
+   // stopServices was invoked and we are shutting down
+   // receiving is excpected to fail since we will close the connection
+   select &#123;
+   case &lt;-c.quitRecvRoutine:
+    break FOR_LOOP
+   default:
+   &#125;
+
+   if c.IsRunning() &#123;
+    if err == io.EOF &#123;
+     c.Logger.Info(&quot;Connection is closed @ recvRoutine (likely by the other side)&quot;, &quot;conn&quot;, c)
+    &#125; else &#123;
+     c.Logger.Debug(&quot;Connection failed @ recvRoutine (reading byte)&quot;, &quot;conn&quot;, c, &quot;err&quot;, err)
+    &#125;
+    c.stopForError(err)
+   &#125;
+   break FOR_LOOP
+  &#125;
+
+  // Read more depending on packet type.
+  switch pkt := packet.Sum.(type) &#123;
+  case *tmp2p.Packet_PacketPing:
+   // TODO: prevent abuse, as they cause flush()'s.
+   // https://github.com/tendermint/tendermint/issues/1190
+   c.Logger.Debug(&quot;Receive Ping&quot;)
+   select &#123;
+   case c.pong &lt;- struct&#123;&#125;&#123;&#125;:
+   default:
+    // never block
+   &#125;
+  case *tmp2p.Packet_PacketPong:
+   c.Logger.Debug(&quot;Receive Pong&quot;)
+   select &#123;
+   case c.pongTimeoutCh &lt;- false:
+   default:
+    // never block
+   &#125;
+  case *tmp2p.Packet_PacketMsg:
+   channelID := byte(pkt.PacketMsg.ChannelID)
+   channel, ok := c.channelsIdx[channelID]
+   if pkt.PacketMsg.ChannelID &lt; 0 || pkt.PacketMsg.ChannelID &gt; math.MaxUint8 || !ok || channel == nil &#123;
+    err := fmt.Errorf(&quot;unknown channel %X&quot;, pkt.PacketMsg.ChannelID)
+    c.Logger.Debug(&quot;Connection failed @ recvRoutine&quot;, &quot;conn&quot;, c, &quot;err&quot;, err)
+    c.stopForError(err)
+    break FOR_LOOP
+   &#125;
+
+   msgBytes, err := channel.recvPacketMsg(*pkt.PacketMsg)
+   if err != nil &#123;
+    if c.IsRunning() &#123;
+     c.Logger.Debug(&quot;Connection failed @ recvRoutine&quot;, &quot;conn&quot;, c, &quot;err&quot;, err)
+     c.stopForError(err)
+    &#125;
+    break FOR_LOOP
+   &#125;
+   if msgBytes != nil &#123;
+    c.Logger.Debug(&quot;Received bytes&quot;, &quot;chID&quot;, channelID, &quot;msgBytes&quot;, msgBytes)
+    // NOTE: This means the reactor.Receive runs in the same thread as the p2p recv routine
+    c.onReceive(channelID, msgBytes)
+   &#125;
+  default:
+   err := fmt.Errorf(&quot;unknown message type %v&quot;, reflect.TypeOf(packet))
+   c.Logger.Error(&quot;Connection failed @ recvRoutine&quot;, &quot;conn&quot;, c, &quot;err&quot;, err)
+   c.stopForError(err)
+   break FOR_LOOP
+  &#125;
+ &#125;
+
+ // Cleanup
+ close(c.pong)
+ for range c.pong &#123;
+  // Drain
+ &#125;
+&#125;</code></div></pre>
+<p><code>recvRoutine</code>在一个独立的 Go routine 中处理在 <code>MConnection</code> 上发送的消息。函数包含一个循环，该循环会一直运行直到连接不再运行或出现错误为止。</p>
+<p>在该循环中，首先通过<code>c.recvMonitor.Limit</code>函数以阻塞的方式等待完整的数据区块，在获取到<code>PacketMsg</code>首先对数据进行解压缩，然后判断数据类型，对应前文提到的<code>ping</code>,<code>ping</code>和普通消息。</p>
+<p>其中，收到<code>ping</code>消息后会立马返回<code>pong</code>消息;收到<code>pong</code>消息后会重置<code>c.pongTimeoutCh</code>为<code>false</code>;收到普通消息后，会分析对应的<code>channelID</code>并进行校验，对应<code>channel</code>存在则调用相关<code>recvPacketMsg</code>函数机械能消息处理，否则认为系统异常，跳出循环结束线程。</p>
+<p>以上就是<code>connection</code>的基本通信代码链路。</p>
+<h3 id="2-4-transport">2.4 transport</h3>
+<p>接下来分析用来封装和注册<code>peer</code>的<code>transport.go</code>文件。</p>
+<p>该文件首先定义了<code>accept</code>和<code>peerConfig</code>两个结构体，前者用于在异步通信中更新通信连接<code>net.conn</code>和节点信息<code>NodeInfo</code>,后者用于保存配置<code>peer</code>所需信息。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div></div><code class="language-golang">// accept is the container to carry the upgraded connection and NodeInfo from an
+// asynchronously running routine to the Accept method.
+type accept struct &#123;
+ netAddr  *NetAddress
+ conn     net.Conn
+ nodeInfo NodeInfo
+ err      error
+&#125;
+
+// peerConfig is used to bundle data we need to fully setup a Peer with an
+// MConn, provided by the caller of Accept and Dial (currently the Switch). This
+// a temporary measure until reactor setup is less dynamic and we introduce the
+// concept of PeerBehaviour to communicate about significant Peer lifecycle
+// events.
+// TODO(xla): Refactor out with more static Reactor setup and PeerBehaviour.
+type peerConfig struct &#123;
+ chDescs     []*conn.ChannelDescriptor
+ onPeerError func(Peer, interface&#123;&#125;)
+ outbound    bool
+ // isPersistent allows you to set a function, which, given socket address
+ // (for outbound peers) OR self-reported address (for inbound peers), tells
+ // if the peer is persistent or not.
+ isPersistent  func(*NetAddress) bool
+ reactorsByCh  map[byte]Reactor
+ msgTypeByChID map[byte]proto.Message
+ metrics       *Metrics
+ mlc           *metricsLabelCache
+&#125;</code></div></pre>
+<p>随后定义了<code>Transport</code>和<code>transportLifecycle</code>接口，前者包含用于<code>peer</code>间注册和通信的<code>NetAddress</code>,<code>Accept</code>,<code>Dial</code>等方法，后者用于管理生命周期，提供<code>close</code>和<code>listen</code>方法。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div></div><code class="language-golang">// Transport emits and connects to Peers. The implementation of Peer is left to
+// the transport. Each transport is also responsible to filter establishing
+// peers specific to its domain.
+type Transport interface &#123;
+ // Listening address.
+ NetAddress() NetAddress
+
+ // Accept returns a newly connected Peer.
+ Accept(peerConfig) (Peer, error)
+
+ // Dial connects to the Peer for the address.
+ Dial(NetAddress, peerConfig) (Peer, error)
+
+ // Cleanup any resources associated with Peer.
+ Cleanup(Peer)
+&#125;
+
+// transportLifecycle bundles the methods for callers to control start and stop
+// behaviour.
+type transportLifecycle interface &#123;
+ Close() error
+ Listen(NetAddress) error
+&#125;
+
+// Test multiplexTransport for interface completeness.
+var _ Transport = (*MultiplexTransport)(nil)
+var _ transportLifecycle = (*MultiplexTransport)(nil)</code></div></pre>
+<p>从上述 test 的两行代码中，可以看出，<code>Transport</code>和<code>transportLifecycle</code>接口都是抽象接口，具体的实现则是<code>MultiplexTransport</code>这个结构体中。接下来看一下这个结构体的定义及其创建方法。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div></div><code class="language-golang">// ConnFilterFunc to be implemented by filter hooks after a new connection has
+// been established. The set of exisiting connections is passed along together
+// with all resolved IPs for the new connection.
+type ConnFilterFunc func(ConnSet, net.Conn, []net.IP) error
+
+// ConnDuplicateIPFilter resolves and keeps all ips for an incoming connection
+// and refuses new ones if they come from a known ip.
+func ConnDuplicateIPFilter() ConnFilterFunc &#123;
+ return func(cs ConnSet, c net.Conn, ips []net.IP) error &#123;
+  for _, ip := range ips &#123;
+   if cs.HasIP(ip) &#123;
+    return ErrRejected&#123;
+     conn:        c,
+     err:         fmt.Errorf(&quot;ip&lt;%v&gt; already connected&quot;, ip),
+     isDuplicate: true,
+    &#125;
+   &#125;
+  &#125;
+
+  return nil
+ &#125;
+&#125;
+
+// MultiplexTransport accepts and dials tcp connections and upgrades them to
+// multiplexed peers.
+type MultiplexTransport struct &#123;
+ netAddr                NetAddress
+ listener               net.Listener
+ maxIncomingConnections int // see MaxIncomingConnections
+
+ acceptc chan accept
+ closec  chan struct&#123;&#125;
+
+ // Lookup table for duplicate ip and id checks.
+ conns       ConnSet
+ connFilters []ConnFilterFunc
+
+ dialTimeout      time.Duration
+ filterTimeout    time.Duration
+ handshakeTimeout time.Duration
+ nodeInfo         NodeInfo
+ nodeKey          NodeKey
+ resolver         IPResolver
+
+ // TODO(xla): This config is still needed as we parameterise peerConn and
+ // peer currently. All relevant configuration should be refactored into options
+ // with sane defaults.
+ mConfig conn.MConnConfig
+&#125;
+
+// NewMultiplexTransport returns a tcp connected multiplexed peer.
+func NewMultiplexTransport(
+ nodeInfo NodeInfo,
+ nodeKey NodeKey,
+ mConfig conn.MConnConfig,
+) *MultiplexTransport &#123;
+ return &amp;MultiplexTransport&#123;
+  acceptc:          make(chan accept),
+  closec:           make(chan struct&#123;&#125;),
+  dialTimeout:      defaultDialTimeout,
+  filterTimeout:    defaultFilterTimeout,
+  handshakeTimeout: defaultHandshakeTimeout,
+  mConfig:          mConfig,
+  nodeInfo:         nodeInfo,
+  nodeKey:          nodeKey,
+  conns:            NewConnSet(),
+  resolver:         net.DefaultResolver,
+ &#125;
+&#125;</code></div></pre>
+<p>其中<code>accepts</code>和<code>closes</code>两个管道，前者用于传递接受到的连接请求，后者用于用于关闭该 MultiplexTransport.<code>conns</code>是一个链接的集合，用于存储查找&quot;连接及其所有 ip 的表&quot;,具体内容在<code>conn_set.go</code>文件中，可自行阅读。<code>connFilters</code>用于过滤链接，默认实现<code>ConnDuplicateIPFilter</code>函数的功能为过滤重复 IP,<code>resolver</code>是一个 golang 提供的用于解析 ip 地址的工具。接下来具体看之前提到的几个核心函数的实现。</p>
+<p>首先是，<code>accept</code>函数，通过解析<code>peerconfig</code>,利用<code>wrapPeer</code>获取并构建<code>peer</code>.</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div></div><code class="language-golang">// Accept implements Transport.
+func (mt *MultiplexTransport) Accept(cfg peerConfig) (Peer, error) &#123;
+ select &#123;
+ // This case should never have any side-effectful/blocking operations to
+ // ensure that quality peers are ready to be used.
+ case a := &lt;-mt.acceptc:
+  if a.err != nil &#123;
+   return nil, a.err
+  &#125;
+
+  cfg.outbound = false
+
+  return mt.wrapPeer(a.conn, a.nodeInfo, cfg, a.netAddr), nil
+ case &lt;-mt.closec:
+  return nil, ErrTransportClosed&#123;&#125;
+ &#125;
+&#125;
+
+func (mt *MultiplexTransport) wrapPeer(
+ c net.Conn,
+ ni NodeInfo,
+ cfg peerConfig,
+ socketAddr *NetAddress,
+) Peer &#123;
+
+ persistent := false
+ if cfg.isPersistent != nil &#123;
+  if cfg.outbound &#123;
+   persistent = cfg.isPersistent(socketAddr)
+  &#125; else &#123;
+   selfReportedAddr, err := ni.NetAddress()
+   if err == nil &#123;
+    persistent = cfg.isPersistent(selfReportedAddr)
+   &#125;
+  &#125;
+ &#125;
+
+ peerConn := newPeerConn(
+  cfg.outbound,
+  persistent,
+  c,
+  socketAddr,
+ )
+
+ p := newPeer(
+  peerConn,
+  mt.mConfig,
+  ni,
+  cfg.reactorsByCh,
+  cfg.msgTypeByChID,
+  cfg.chDescs,
+  cfg.onPeerError,
+  cfg.mlc,
+  PeerMetrics(cfg.metrics),
+ )
+
+ return p
+&#125;</code></div></pre>
+<p>接下来是<code>dial</code>函数，用于构建连接，首先通过<code>netadress.go</code>的<code>DialTimeout</code>函数在指定时间内构建连接，然后通过<code>filterConn</code>对连接进行过过滤并利用<code>resolveIPs</code>解析 ip 地址，接下来通过<code>upgrade</code>函数尝试将连接通过证书升级加密，并利用<code>handshake</code>函数进行握手，最终建立连接。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div><div class="line-numbers-item">130</div><div class="line-numbers-item">131</div><div class="line-numbers-item">132</div><div class="line-numbers-item">133</div><div class="line-numbers-item">134</div><div class="line-numbers-item">135</div><div class="line-numbers-item">136</div><div class="line-numbers-item">137</div><div class="line-numbers-item">138</div><div class="line-numbers-item">139</div><div class="line-numbers-item">140</div><div class="line-numbers-item">141</div><div class="line-numbers-item">142</div><div class="line-numbers-item">143</div><div class="line-numbers-item">144</div><div class="line-numbers-item">145</div><div class="line-numbers-item">146</div><div class="line-numbers-item">147</div><div class="line-numbers-item">148</div><div class="line-numbers-item">149</div><div class="line-numbers-item">150</div><div class="line-numbers-item">151</div><div class="line-numbers-item">152</div><div class="line-numbers-item">153</div><div class="line-numbers-item">154</div><div class="line-numbers-item">155</div><div class="line-numbers-item">156</div><div class="line-numbers-item">157</div><div class="line-numbers-item">158</div><div class="line-numbers-item">159</div><div class="line-numbers-item">160</div><div class="line-numbers-item">161</div><div class="line-numbers-item">162</div><div class="line-numbers-item">163</div><div class="line-numbers-item">164</div><div class="line-numbers-item">165</div><div class="line-numbers-item">166</div><div class="line-numbers-item">167</div><div class="line-numbers-item">168</div><div class="line-numbers-item">169</div><div class="line-numbers-item">170</div><div class="line-numbers-item">171</div><div class="line-numbers-item">172</div><div class="line-numbers-item">173</div><div class="line-numbers-item">174</div><div class="line-numbers-item">175</div><div class="line-numbers-item">176</div><div class="line-numbers-item">177</div><div class="line-numbers-item">178</div><div class="line-numbers-item">179</div><div class="line-numbers-item">180</div><div class="line-numbers-item">181</div><div class="line-numbers-item">182</div><div class="line-numbers-item">183</div><div class="line-numbers-item">184</div><div class="line-numbers-item">185</div><div class="line-numbers-item">186</div><div class="line-numbers-item">187</div><div class="line-numbers-item">188</div><div class="line-numbers-item">189</div><div class="line-numbers-item">190</div><div class="line-numbers-item">191</div><div class="line-numbers-item">192</div><div class="line-numbers-item">193</div><div class="line-numbers-item">194</div><div class="line-numbers-item">195</div><div class="line-numbers-item">196</div><div class="line-numbers-item">197</div><div class="line-numbers-item">198</div><div class="line-numbers-item">199</div><div class="line-numbers-item">200</div><div class="line-numbers-item">201</div><div class="line-numbers-item">202</div><div class="line-numbers-item">203</div><div class="line-numbers-item">204</div><div class="line-numbers-item">205</div><div class="line-numbers-item">206</div><div class="line-numbers-item">207</div><div class="line-numbers-item">208</div><div class="line-numbers-item">209</div><div class="line-numbers-item">210</div><div class="line-numbers-item">211</div><div class="line-numbers-item">212</div><div class="line-numbers-item">213</div><div class="line-numbers-item">214</div><div class="line-numbers-item">215</div><div class="line-numbers-item">216</div><div class="line-numbers-item">217</div><div class="line-numbers-item">218</div><div class="line-numbers-item">219</div><div class="line-numbers-item">220</div><div class="line-numbers-item">221</div><div class="line-numbers-item">222</div><div class="line-numbers-item">223</div><div class="line-numbers-item">224</div><div class="line-numbers-item">225</div><div class="line-numbers-item">226</div><div class="line-numbers-item">227</div><div class="line-numbers-item">228</div><div class="line-numbers-item">229</div><div class="line-numbers-item">230</div><div class="line-numbers-item">231</div><div class="line-numbers-item">232</div><div class="line-numbers-item">233</div><div class="line-numbers-item">234</div><div class="line-numbers-item">235</div><div class="line-numbers-item">236</div><div class="line-numbers-item">237</div><div class="line-numbers-item">238</div><div class="line-numbers-item">239</div><div class="line-numbers-item">240</div><div class="line-numbers-item">241</div><div class="line-numbers-item">242</div><div class="line-numbers-item">243</div><div class="line-numbers-item">244</div><div class="line-numbers-item">245</div><div class="line-numbers-item">246</div><div class="line-numbers-item">247</div><div class="line-numbers-item">248</div><div class="line-numbers-item">249</div><div class="line-numbers-item">250</div><div class="line-numbers-item">251</div><div class="line-numbers-item">252</div><div class="line-numbers-item">253</div><div class="line-numbers-item">254</div><div class="line-numbers-item">255</div><div class="line-numbers-item">256</div><div class="line-numbers-item">257</div><div class="line-numbers-item">258</div><div class="line-numbers-item">259</div><div class="line-numbers-item">260</div><div class="line-numbers-item">261</div><div class="line-numbers-item">262</div><div class="line-numbers-item">263</div><div class="line-numbers-item">264</div><div class="line-numbers-item">265</div><div class="line-numbers-item">266</div><div class="line-numbers-item">267</div><div class="line-numbers-item">268</div><div class="line-numbers-item">269</div><div class="line-numbers-item">270</div><div class="line-numbers-item">271</div><div class="line-numbers-item">272</div><div class="line-numbers-item">273</div><div class="line-numbers-item">274</div><div class="line-numbers-item">275</div><div class="line-numbers-item">276</div><div class="line-numbers-item">277</div><div class="line-numbers-item">278</div><div class="line-numbers-item">279</div></div><code class="language-golang">// Dial implements Transport.
+func (mt *MultiplexTransport) Dial(
+ addr NetAddress,
+ cfg peerConfig,
+) (Peer, error) &#123;
+ c, err := addr.DialTimeout(mt.dialTimeout)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ // TODO(xla): Evaluate if we should apply filters if we explicitly dial.
+ if err := mt.filterConn(c); err != nil &#123;
+  return nil, err
+ &#125;
+
+ secretConn, nodeInfo, err := mt.upgrade(c, &amp;addr)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ cfg.outbound = true
+
+ p := mt.wrapPeer(secretConn, nodeInfo, cfg, &amp;addr)
+
+ return p, nil
+&#125;
+
+func (mt *MultiplexTransport) filterConn(c net.Conn) (err error) &#123;
+ defer func() &#123;
+  if err != nil &#123;
+   _ = c.Close()
+  &#125;
+ &#125;()
+
+ // Reject if connection is already present.
+ if mt.conns.Has(c) &#123;
+  return ErrRejected&#123;conn: c, isDuplicate: true&#125;
+ &#125;
+
+ // Resolve ips for incoming conn.
+ ips, err := resolveIPs(mt.resolver, c)
+ if err != nil &#123;
+  return err
+ &#125;
+
+ errc := make(chan error, len(mt.connFilters))
+
+ for _, f := range mt.connFilters &#123;
+  go func(f ConnFilterFunc, c net.Conn, ips []net.IP, errc chan&lt;- error) &#123;
+   errc &lt;- f(mt.conns, c, ips)
+  &#125;(f, c, ips, errc)
+ &#125;
+
+ for i := 0; i &lt; cap(errc); i++ &#123;
+  select &#123;
+  case err := &lt;-errc:
+   if err != nil &#123;
+    return ErrRejected&#123;conn: c, err: err, isFiltered: true&#125;
+   &#125;
+  case &lt;-time.After(mt.filterTimeout):
+   return ErrFilterTimeout&#123;&#125;
+  &#125;
+
+ &#125;
+
+ mt.conns.Set(c, ips)
+
+ return nil
+&#125;
+
+func resolveIPs(resolver IPResolver, c net.Conn) ([]net.IP, error) &#123;
+ host, _, err := net.SplitHostPort(c.RemoteAddr().String())
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ addrs, err := resolver.LookupIPAddr(context.Background(), host)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ ips := []net.IP&#123;&#125;
+
+ for _, addr := range addrs &#123;
+  ips = append(ips, addr.IP)
+ &#125;
+
+ return ips, nil
+&#125;
+
+func (mt *MultiplexTransport) upgrade(
+ c net.Conn,
+ dialedAddr *NetAddress,
+) (secretConn *conn.SecretConnection, nodeInfo NodeInfo, err error) &#123;
+ defer func() &#123;
+  if err != nil &#123;
+   _ = mt.cleanup(c)
+  &#125;
+ &#125;()
+
+ secretConn, err = upgradeSecretConn(c, mt.handshakeTimeout, mt.nodeKey.PrivKey)
+ if err != nil &#123;
+  return nil, nil, ErrRejected&#123;
+   conn:          c,
+   err:           fmt.Errorf(&quot;secret conn failed: %v&quot;, err),
+   isAuthFailure: true,
+  &#125;
+ &#125;
+
+ // For outgoing conns, ensure connection key matches dialed key.
+ connID := PubKeyToID(secretConn.RemotePubKey())
+ if dialedAddr != nil &#123;
+  if dialedID := dialedAddr.ID; connID != dialedID &#123;
+   return nil, nil, ErrRejected&#123;
+    conn: c,
+    id:   connID,
+    err: fmt.Errorf(
+     &quot;conn.ID (%v) dialed ID (%v) mismatch&quot;,
+     connID,
+     dialedID,
+    ),
+    isAuthFailure: true,
+   &#125;
+  &#125;
+ &#125;
+
+ nodeInfo, err = handshake(secretConn, mt.handshakeTimeout, mt.nodeInfo)
+ if err != nil &#123;
+  return nil, nil, ErrRejected&#123;
+   conn:          c,
+   err:           fmt.Errorf(&quot;handshake failed: %v&quot;, err),
+   isAuthFailure: true,
+  &#125;
+ &#125;
+
+ if err := nodeInfo.Validate(); err != nil &#123;
+  return nil, nil, ErrRejected&#123;
+   conn:              c,
+   err:               err,
+   isNodeInfoInvalid: true,
+  &#125;
+ &#125;
+
+ // Ensure connection key matches self reported key.
+ if connID != nodeInfo.ID() &#123;
+  return nil, nil, ErrRejected&#123;
+   conn: c,
+   id:   connID,
+   err: fmt.Errorf(
+    &quot;conn.ID (%v) NodeInfo.ID (%v) mismatch&quot;,
+    connID,
+    nodeInfo.ID(),
+   ),
+   isAuthFailure: true,
+  &#125;
+ &#125;
+
+ // Reject self.
+ if mt.nodeInfo.ID() == nodeInfo.ID() &#123;
+  return nil, nil, ErrRejected&#123;
+   addr:   *NewNetAddress(nodeInfo.ID(), c.RemoteAddr()),
+   conn:   c,
+   id:     nodeInfo.ID(),
+   isSelf: true,
+  &#125;
+ &#125;
+
+ if err := mt.nodeInfo.CompatibleWith(nodeInfo); err != nil &#123;
+  return nil, nil, ErrRejected&#123;
+   conn:           c,
+   err:            err,
+   id:             nodeInfo.ID(),
+   isIncompatible: true,
+  &#125;
+ &#125;
+
+ return secretConn, nodeInfo, nil
+&#125;
+
+func upgradeSecretConn(
+ c net.Conn,
+ timeout time.Duration,
+ privKey crypto.PrivKey,
+) (*conn.SecretConnection, error) &#123;
+ if err := c.SetDeadline(time.Now().Add(timeout)); err != nil &#123;
+  return nil, err
+ &#125;
+
+ sc, err := conn.MakeSecretConnection(c, privKey)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ return sc, sc.SetDeadline(time.Time&#123;&#125;)
+&#125;
+
+func handshake(
+ c net.Conn,
+ timeout time.Duration,
+ nodeInfo NodeInfo,
+) (NodeInfo, error) &#123;
+ if err := c.SetDeadline(time.Now().Add(timeout)); err != nil &#123;
+  return nil, err
+ &#125;
+
+ var (
+  errc = make(chan error, 2)
+
+  pbpeerNodeInfo tmp2p.DefaultNodeInfo
+  peerNodeInfo   DefaultNodeInfo
+  ourNodeInfo    = nodeInfo.(DefaultNodeInfo)
+ )
+
+ go func(errc chan&lt;- error, c net.Conn) &#123;
+  _, err := protoio.NewDelimitedWriter(c).WriteMsg(ourNodeInfo.ToProto())
+  errc &lt;- err
+ &#125;(errc, c)
+ go func(errc chan&lt;- error, c net.Conn) &#123;
+  protoReader := protoio.NewDelimitedReader(c, MaxNodeInfoSize())
+  _, err := protoReader.ReadMsg(&amp;pbpeerNodeInfo)
+  errc &lt;- err
+ &#125;(errc, c)
+
+ for i := 0; i &lt; cap(errc); i++ &#123;
+  err := &lt;-errc
+  if err != nil &#123;
+   return nil, err
+  &#125;
+ &#125;
+
+ peerNodeInfo, err := DefaultNodeInfoFromToProto(&amp;pbpeerNodeInfo)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ return peerNodeInfo, c.SetDeadline(time.Time&#123;&#125;)
+&#125;
+
+func handshake(
+ c net.Conn,
+ timeout time.Duration,
+ nodeInfo NodeInfo,
+) (NodeInfo, error) &#123;
+ if err := c.SetDeadline(time.Now().Add(timeout)); err != nil &#123;
+  return nil, err
+ &#125;
+
+ var (
+  errc = make(chan error, 2)
+
+  pbpeerNodeInfo tmp2p.DefaultNodeInfo
+  peerNodeInfo   DefaultNodeInfo
+  ourNodeInfo    = nodeInfo.(DefaultNodeInfo)
+ )
+
+ go func(errc chan&lt;- error, c net.Conn) &#123;
+  _, err := protoio.NewDelimitedWriter(c).WriteMsg(ourNodeInfo.ToProto())
+  errc &lt;- err
+ &#125;(errc, c)
+ go func(errc chan&lt;- error, c net.Conn) &#123;
+  protoReader := protoio.NewDelimitedReader(c, MaxNodeInfoSize())
+  _, err := protoReader.ReadMsg(&amp;pbpeerNodeInfo)
+  errc &lt;- err
+ &#125;(errc, c)
+
+ for i := 0; i &lt; cap(errc); i++ &#123;
+  err := &lt;-errc
+  if err != nil &#123;
+   return nil, err
+  &#125;
+ &#125;
+
+ peerNodeInfo, err := DefaultNodeInfoFromToProto(&amp;pbpeerNodeInfo)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ return peerNodeInfo, c.SetDeadline(time.Time&#123;&#125;)
+&#125;</code></div></pre>
+<p>第三个来看<code>Cleanup</code>函数，用于清理连接，没什么特别的逻辑。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-golang">// Cleanup removes the given address from the connections set and
+// closes the connection.
+func (mt *MultiplexTransport) Cleanup(p Peer) &#123;
+ mt.conns.RemoveAddr(p.RemoteAddr())
+ _ = p.CloseConn()
+&#125;
+
+func (mt *MultiplexTransport) cleanup(c net.Conn) error &#123;
+ mt.conns.Remove(c)
+
+ return c.Close()
+&#125;</code></div></pre>
+<p>最后是生命周期管理的<code>close</code>与<code>listen</code>函数，前者是正常的关闭逻辑，后者要关注的就是最后启动了一个<code>acceptPeers</code>的协程，持续监听消息。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div></div><code class="language-golang">// Close implements transportLifecycle.
+func (mt *MultiplexTransport) Close() error &#123;
+ close(mt.closec)
+
+ if mt.listener != nil &#123;
+  return mt.listener.Close()
+ &#125;
+
+ return nil
+&#125;
+
+// Listen implements transportLifecycle.
+func (mt *MultiplexTransport) Listen(addr NetAddress) error &#123;
+ ln, err := net.Listen(&quot;tcp&quot;, addr.DialString())
+ if err != nil &#123;
+  return err
+ &#125;
+
+ if mt.maxIncomingConnections &gt; 0 &#123;
+  ln = netutil.LimitListener(ln, mt.maxIncomingConnections)
+ &#125;
+
+ mt.netAddr = addr
+ mt.listener = ln
+
+ go mt.acceptPeers()
+
+ return nil
+&#125;
+
+func (mt *MultiplexTransport) acceptPeers() &#123;
+ for &#123;
+  c, err := mt.listener.Accept()
+  if err != nil &#123;
+   // If Close() has been called, silently exit.
+   select &#123;
+   case _, ok := &lt;-mt.closec:
+    if !ok &#123;
+     return
+    &#125;
+   default:
+    // Transport is not closed
+   &#125;
+
+   mt.acceptc &lt;- accept&#123;err: err&#125;
+   return
+  &#125;
+
+  // Connection upgrade and filtering should be asynchronous to avoid
+  // Head-of-line blocking[0].
+  // Reference:  https://github.com/tendermint/tendermint/issues/2047
+  //
+  // [0] https://en.wikipedia.org/wiki/Head-of-line_blocking
+  go func(c net.Conn) &#123;
+   defer func() &#123;
+    if r := recover(); r != nil &#123;
+     err := ErrRejected&#123;
+      conn:          c,
+      err:           fmt.Errorf(&quot;recovered from panic: %v&quot;, r),
+      isAuthFailure: true,
+     &#125;
+     select &#123;
+     case mt.acceptc &lt;- accept&#123;err: err&#125;:
+     case &lt;-mt.closec:
+      // Give up if the transport was closed.
+      _ = c.Close()
+      return
+     &#125;
+    &#125;
+   &#125;()
+
+   var (
+    nodeInfo   NodeInfo
+    secretConn *conn.SecretConnection
+    netAddr    *NetAddress
+   )
+
+   err := mt.filterConn(c)
+   if err == nil &#123;
+    secretConn, nodeInfo, err = mt.upgrade(c, nil)
+    if err == nil &#123;
+     addr := c.RemoteAddr()
+     id := PubKeyToID(secretConn.RemotePubKey())
+     netAddr = NewNetAddress(id, addr)
+    &#125;
+   &#125;
+
+   select &#123;
+   case mt.acceptc &lt;- accept&#123;netAddr, secretConn, nodeInfo, err&#125;:
+    // Make the upgraded peer available.
+   case &lt;-mt.closec:
+    // Give up if the transport was closed.
+    _ = c.Close()
+    return
+   &#125;
+  &#125;(c)
+ &#125;
+&#125;</code></div></pre>
+<p>以上就是<code>transport.go</code>文件的整体业务逻辑，完整的提供了节点直接的通信过程，并最终通过证书将通信进行加密。</p>
+<h3 id="2-5-switch">2.5 switch</h3>
+<p>接下来分析用于路由管理的<code>switch.go</code>这个文件，顾明思意，该文件又类似交换机的作用，分析代码，该文件负责处理节点之间的连接管理、消息路由和流控等操作。它将消息从一个<code>Connection</code>转发到另一个<code>Connection</code>，并维护<code>Connection</code>的状态，以保证通信的可靠性和安全性。</p>
+<p>该文件首先对<code>Switch</code>结构进行定义，<code>Switch</code>是 Tendermint P2P 库中一个核心组件，负责管理节点之间的连接和消息路由。其中包括了多个 Reactor 实例、地址簿、节点信息、消息传输协议等多个方面，是整个 P2P 库的重要组成部分。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div></div><code class="language-golang">type Switch struct &#123;
+ service.BaseService //表明该结构继承自service.BaseService接口，表示Switch是一个基于服务的模块，可以启动、停止等。
+
+ config        *config.P2PConfig //存储Tendermint P2P配置参数的数据结构，例如最大连接数、最大广播范围等。
+ reactors      map[string]Reactor //一个map[string]Reactor类型的映射表，将Reactor名称映射到对应的Reactor实例上。
+ chDescs       []*conn.ChannelDescriptor //存储通道描述符（Channel Descriptor）的切片，用于描述不同通道的属性信息，例如带宽、延迟等。
+ reactorsByCh  map[byte]Reactor //一个map[byte]Reactor类型的映射表，将每个通道ID映射到对应的Reactor实例上。
+ msgTypeByChID map[byte]proto.Message //一个map[byte]Reactor类型的映射表，将每个通道ID映射到对应的Reactor实例上。
+ peers         *PeerSet //存储所有已连接的节点信息的PeerSet实例，包括其地址、公钥、连接状态等。
+ dialing       *cmap.CMap //一个并发安全的map，用于存储正在进行拨号的节点信息。
+ reconnecting  *cmap.CMap //一个并发安全的map，用于存储正在尝试重新建立连接的节点信息。
+ nodeInfo      NodeInfo // our node info 存储本地节点信息的结构体，包括节点ID、网络地址、版本等信息。
+ nodeKey       *NodeKey // our node privkey 存储本地节点私钥的结构体，用于加密通信数据和签名共识信息等。
+ addrBook      AddrBook //存储所有已知节点地址的AddrBook实例，用于管理节点的网络地址信息。
+ // peers addresses with whom we'll maintain constant connection
+ persistentPeersAddrs []*NetAddress //一个存储持久连接节点地址的NetAddress切片，表示需要保持长时间连接的节点信息。
+ unconditionalPeerIDs map[ID]struct&#123;&#125; //一个存储无条件连接节点ID的映射表，表示不需要进行握手验证就可以连接的节点。
+
+ transport Transport //P2P消息传输协议的实现Transport接口实例，例如TCP或QUIC等协议的实现。
+
+ filterTimeout time.Duration //过滤器超时时间，即在多长时间内没有活动的连接要关闭。
+ peerFilters   []PeerFilterFunc //一个PeerFilterFunc切片，存储了所有的PeerFilterFunc函数，用于过滤和处理不需要的消息。
+
+ rng *rand.Rand // seed for randomizing dial times and orders 一个Rand结构体实例，用于随机化拨号时间和顺序等参数。
+
+ metrics *Metrics //存储P2P性能指标的Metrics结构体实例，例如网络吞吐量、延迟、丢包率等。
+ mlc     *metricsLabelCache //一个metricsLabelCache结构体实例，用于缓存P2P性能指标的标签信息。
+&#125;
+
+// PeerFilterFunc to be implemented by filter hooks after a new Peer has been
+// fully setup.
+type PeerFilterFunc func(IPeerSet, Peer) error
+</code></div></pre>
+<p>在结构体中，有一个<code>AddrBook</code>接口，根据描述，这个接口定义了一些常见的地址簿管理操作，用于记录和管理节点的网络地址信息。由于 Tendermint P2P 库需要维护一张节点地址簿，所以这个接口在 P2P 库中得到了广泛的应用。根据具体的实现方式，这些方法可能会被多个 Reactor 或其他模块调用，以便更好地管理节点之间的连接和消息传输等相关功能。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-golang">// An AddrBook represents an address book from the pex package, which is used
+// to store peer addresses.
+type AddrBook interface &#123;
+ AddAddress(addr *NetAddress, src *NetAddress) error //添加一个节点网络地址到地址簿中，addr表示待添加的地址，src表示该地址的来源；该方法返回一个错误类型的结果。
+ AddPrivateIDs([]string) //添加一些私有ID到地址簿中，例如本地节点的ID等。
+ AddOurAddress(*NetAddress) //将一个本地节点的地址添加到地址簿中。
+ OurAddress(*NetAddress) bool //检查一个网络地址是否为本地节点的地址，如果是则返回true，否则返回false。
+ MarkGood(ID) //标记一个节点为可靠的（即“好”的）节点，以便在进行P2P连接时优先选择这些节点。
+ RemoveAddress(*NetAddress) //从地址簿中移除一个网络地址。
+
+ HasAddress(*NetAddress) bool //从地址簿中移除一个网络地址。
+
+ Save() //从地址簿中移除一个网络地址。
+&#125;</code></div></pre>
+<p>随后是<code>Switch</code>的构造函数以及相关的配置函数，重点需要关注的是<code>AddReactor</code>方法。其中的每个<code>channel</code>都是由<code>connection</code>进行维护的。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div></div><code class="language-golang">// SwitchOption sets an optional parameter on the Switch.
+type SwitchOption func(*Switch)
+
+// NewSwitch creates a new Switch with the given config.
+func NewSwitch(
+ cfg *config.P2PConfig,
+ transport Transport,
+ options ...SwitchOption,
+) *Switch &#123;
+
+ sw := &amp;Switch&#123;
+  config:               cfg,
+  reactors:             make(map[string]Reactor),
+  chDescs:              make([]*conn.ChannelDescriptor, 0),
+  reactorsByCh:         make(map[byte]Reactor),
+  msgTypeByChID:        make(map[byte]proto.Message),
+  peers:                NewPeerSet(),
+  dialing:              cmap.NewCMap(),
+  reconnecting:         cmap.NewCMap(),
+  metrics:              NopMetrics(),
+  transport:            transport,
+  filterTimeout:        defaultFilterTimeout,
+  persistentPeersAddrs: make([]*NetAddress, 0),
+  unconditionalPeerIDs: make(map[ID]struct&#123;&#125;),
+  mlc:                  newMetricsLabelCache(),
+ &#125;
+
+ // Ensure we have a completely undeterministic PRNG.
+ sw.rng = rand.NewRand()
+
+ sw.BaseService = *service.NewBaseService(nil, &quot;P2P Switch&quot;, sw)
+
+ for _, option := range options &#123;
+  option(sw)
+ &#125;
+
+ return sw
+&#125;
+
+// SwitchFilterTimeout sets the timeout used for peer filters.
+func SwitchFilterTimeout(timeout time.Duration) SwitchOption &#123;
+ return func(sw *Switch) &#123; sw.filterTimeout = timeout &#125;
+&#125;
+
+// SwitchPeerFilters sets the filters for rejection of new peers.
+func SwitchPeerFilters(filters ...PeerFilterFunc) SwitchOption &#123;
+ return func(sw *Switch) &#123; sw.peerFilters = filters &#125;
+&#125;
+
+// WithMetrics sets the metrics.
+func WithMetrics(metrics *Metrics) SwitchOption &#123;
+ return func(sw *Switch) &#123; sw.metrics = metrics &#125;
+&#125;
+
+//---------------------------------------------------------------------
+// Switch setup
+
+// AddReactor adds the given reactor to the switch.
+// NOTE: Not goroutine safe.
+func (sw *Switch) AddReactor(name string, reactor Reactor) Reactor &#123;
+ //针对reactor的每个通道信息单独处理
+ for _, chDesc := range reactor.GetChannels() &#123;
+  //首先获取通道ID并保证唯一性
+  chID := chDesc.ID
+  // No two reactors can share the same channel.
+  if sw.reactorsByCh[chID] != nil &#123;
+   panic(fmt.Sprintf(&quot;Channel %X has multiple reactors %v &amp; %v&quot;, chID, sw.reactorsByCh[chID], reactor))
+  &#125;
+  //接下来注册通道信息
+  sw.chDescs = append(sw.chDescs, chDesc)
+  sw.reactorsByCh[chID] = reactor
+  sw.msgTypeByChID[chID] = chDesc.MessageType
+ &#125;
+ sw.reactors[name] = reactor
+ //最后将switch注册到reactor中,做到交叉引用
+ reactor.SetSwitch(sw)
+ return reactor
+&#125;
+
+// RemoveReactor removes the given Reactor from the Switch.
+// NOTE: Not goroutine safe.
+func (sw *Switch) RemoveReactor(name string, reactor Reactor) &#123;
+ for _, chDesc := range reactor.GetChannels() &#123;
+  // remove channel description
+  for i := 0; i &lt; len(sw.chDescs); i++ &#123;
+   if chDesc.ID == sw.chDescs[i].ID &#123;
+    sw.chDescs = append(sw.chDescs[:i], sw.chDescs[i+1:]...)
+    break
+   &#125;
+  &#125;
+  delete(sw.reactorsByCh, chDesc.ID)
+  delete(sw.msgTypeByChID, chDesc.ID)
+ &#125;
+ delete(sw.reactors, name)
+ reactor.SetSwitch(nil)
+&#125;
+
+// Reactors returns a map of reactors registered on the switch.
+// NOTE: Not goroutine safe.
+func (sw *Switch) Reactors() map[string]Reactor &#123;
+ return sw.reactors
+&#125;
+
+// Reactor returns the reactor with the given name.
+// NOTE: Not goroutine safe.
+func (sw *Switch) Reactor(name string) Reactor &#123;
+ return sw.reactors[name]
+&#125;
+
+// SetNodeInfo sets the switch's NodeInfo for checking compatibility and handshaking with other nodes.
+// NOTE: Not goroutine safe.
+func (sw *Switch) SetNodeInfo(nodeInfo NodeInfo) &#123;
+ sw.nodeInfo = nodeInfo
+&#125;
+
+// NodeInfo returns the switch's NodeInfo.
+// NOTE: Not goroutine safe.
+func (sw *Switch) NodeInfo() NodeInfo &#123;
+ return sw.nodeInfo
+&#125;
+
+// SetNodeKey sets the switch's private key for authenticated encryption.
+// NOTE: Not goroutine safe.
+func (sw *Switch) SetNodeKey(nodeKey *NodeKey) &#123;
+ sw.nodeKey = nodeKey
+&#125;</code></div></pre>
+<p>在初始化以后，就是涉及到函数整体启停的<code>OnStart</code>和<code>OnStop</code>函数。在启动过程中，会首先启动所有的 reactor，然后通过<code>acceptRoutine</code>持续获取节点信息。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div></div><code class="language-golang">//---------------------------------------------------------------------
+// Service start/stop
+
+// OnStart implements BaseService. It starts all the reactors and peers.
+func (sw *Switch) OnStart() error &#123;
+ // Start reactors
+ //该函数首先会启动Switch中的所有reactor,reactor在node.go的createSwtich中被添加,有如下五个系统的reactor
+ //sw.AddReactor(&quot;MEMPOOL&quot;, mempoolReactor)
+ //sw.AddReactor(&quot;BLOCKCHAIN&quot;, bcReactor)
+ //sw.AddReactor(&quot;CONSENSUS&quot;, consensusReactor)
+ //sw.AddReactor(&quot;EVIDENCE&quot;, evidenceReactor)
+ //sw.AddReactor(&quot;STATESYNC&quot;, stateSyncReactor)
+ //随后在node的创建过程`newnode`中,还会添加pexreactor和CustomReactors
+ //func CustomReactors(reactors map[string]p2p.Reactor) Option 用户自定义的reactor
+ //sw.AddReactor(&quot;PEX&quot;, pexReactor) 利用`createPEXReactorAndAddToSwitch`函数添加
+ for _, reactor := range sw.reactors &#123;
+  err := reactor.Start()
+  if err != nil &#123;
+   return fmt.Errorf(&quot;failed to start %v: %w&quot;, reactor, err)
+  &#125;
+ &#125;
+
+ // Start accepting Peers.
+ //这个函数的主要作用是接受传入连接并管理新节点的添加过程，同时根据各种情况进行错误处理。
+ go sw.acceptRoutine()
+
+ return nil
+&#125;
+
+// OnStop implements BaseService. It stops all peers and reactors.
+func (sw *Switch) OnStop() &#123;
+ // Stop peers
+ for _, p := range sw.peers.List() &#123;
+  sw.stopAndRemovePeer(p, nil)
+ &#125;
+
+ // Stop reactors
+ sw.Logger.Debug(&quot;Switch: Stopping reactors&quot;)
+ for _, reactor := range sw.reactors &#123;
+  if err := reactor.Stop(); err != nil &#123;
+   sw.Logger.Error(&quot;error while stopped reactor&quot;, &quot;reactor&quot;, reactor, &quot;error&quot;, err)
+  &#125;
+ &#125;
+&#125;</code></div></pre>
+<p><code>acceptRoutine</code>函数如下，在每次循环中，函数会调用<code>sw.transport.Accept()</code>方法来获取一个传入连接。如果成功获取到连接，则会进行一系列判断来决定是否添加该连接作为新的节点，并将其加入到 peers 集合中。具体来说，函数会先检查当前已经连接的节点数是否已经达到了最大值，如果是则忽略该连接；否则，会再检查该连接对应的节点是否已经存在，如果是则忽略该连接，否则将其加入到 peers 集合中。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div></div><code class="language-golang">func (sw *Switch) acceptRoutine() &#123;
+ for &#123;
+  p, err := sw.transport.Accept(peerConfig&#123;
+   chDescs:       sw.chDescs,
+   onPeerError:   sw.StopPeerForError,
+   reactorsByCh:  sw.reactorsByCh,
+   msgTypeByChID: sw.msgTypeByChID,
+   metrics:       sw.metrics,
+   mlc:           sw.mlc,
+   isPersistent:  sw.IsPeerPersistent,
+  &#125;)
+  if err != nil &#123;
+   switch err := err.(type) &#123;
+   case ErrRejected:
+    if err.IsSelf() &#123;
+     // Remove the given address from the address book and add to our addresses
+     // to avoid dialing in the future.
+     addr := err.Addr()
+     sw.addrBook.RemoveAddress(&amp;addr)
+     sw.addrBook.AddOurAddress(&amp;addr)
+    &#125;
+
+    sw.Logger.Info(
+     &quot;Inbound Peer rejected&quot;,
+     &quot;err&quot;, err,
+     &quot;numPeers&quot;, sw.peers.Size(),
+    )
+
+    continue
+   case ErrFilterTimeout:
+    sw.Logger.Error(
+     &quot;Peer filter timed out&quot;,
+     &quot;err&quot;, err,
+    )
+
+    continue
+   case ErrTransportClosed:
+    sw.Logger.Error(
+     &quot;Stopped accept routine, as transport is closed&quot;,
+     &quot;numPeers&quot;, sw.peers.Size(),
+    )
+   default:
+    sw.Logger.Error(
+     &quot;Accept on transport errored&quot;,
+     &quot;err&quot;, err,
+     &quot;numPeers&quot;, sw.peers.Size(),
+    )
+    // We could instead have a retry loop around the acceptRoutine,
+    // but that would need to stop and let the node shutdown eventually.
+    // So might as well panic and let process managers restart the node.
+    // There's no point in letting the node run without the acceptRoutine,
+    // since it won't be able to accept new connections.
+    panic(fmt.Errorf(&quot;accept routine exited: %v&quot;, err))
+   &#125;
+
+   break
+  &#125;
+
+  if !sw.IsPeerUnconditional(p.NodeInfo().ID()) &#123;
+   // Ignore connection if we already have enough peers.
+   _, in, _ := sw.NumPeers()
+   if in &gt;= sw.config.MaxNumInboundPeers &#123;
+    sw.Logger.Info(
+     &quot;Ignoring inbound connection: already have enough inbound peers&quot;,
+     &quot;address&quot;, p.SocketAddr(),
+     &quot;have&quot;, in,
+     &quot;max&quot;, sw.config.MaxNumInboundPeers,
+    )
+
+    sw.transport.Cleanup(p)
+
+    continue
+   &#125;
+
+  &#125;
+
+  if err := sw.addPeer(p); err != nil &#123;
+   sw.transport.Cleanup(p)
+   if p.IsRunning() &#123;
+    _ = p.Stop()
+   &#125;
+   sw.Logger.Info(
+    &quot;Ignoring inbound connection: error while adding peer&quot;,
+    &quot;err&quot;, err,
+    &quot;id&quot;, p.ID(),
+   )
+  &#125;
+ &#125;
+&#125;</code></div></pre>
+<p>在<code>acceptRoutine</code>函数中，值得关注的是<code>sw.addPeer</code>这个函数调用，这里将传入连接最终构建为一个<code>peer</code>并注册在<code>switch</code>和<code>reactor</code>中。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div></div><code class="language-golang">// addPeer starts up the Peer and adds it to the Switch. Error is returned if
+// the peer is filtered out or failed to start or can't be added.
+func (sw *Switch) addPeer(p Peer) error &#123;
+ if err := sw.filterPeer(p); err != nil &#123;
+  return err
+ &#125;
+
+ p.SetLogger(sw.Logger.With(&quot;peer&quot;, p.SocketAddr()))
+
+ // Handle the shut down case where the switch has stopped but we're
+ // concurrently trying to add a peer.
+ if !sw.IsRunning() &#123;
+  // XXX should this return an error or just log and terminate?
+  sw.Logger.Error(&quot;Won't start a peer - switch is not running&quot;, &quot;peer&quot;, p)
+  return nil
+ &#125;
+
+ // Add some data to the peer, which is required by reactors.
+ for _, reactor := range sw.reactors &#123;
+  p = reactor.InitPeer(p)
+ &#125;
+
+ // Start the peer's send/recv routines.
+ // Must start it before adding it to the peer set
+ // to prevent Start and Stop from being called concurrently.
+ err := p.Start()
+ if err != nil &#123;
+  // Should never happen
+  sw.Logger.Error(&quot;Error starting peer&quot;, &quot;err&quot;, err, &quot;peer&quot;, p)
+  return err
+ &#125;
+
+ // Add the peer to PeerSet. Do this before starting the reactors
+ // so that if Receive errors, we will find the peer and remove it.
+ // Add should not err since we already checked peers.Has().
+ if err := sw.peers.Add(p); err != nil &#123;
+  switch err.(type) &#123;
+  case ErrPeerRemoval:
+   sw.Logger.Error(&quot;Error starting peer &quot;,
+    &quot; err &quot;, &quot;Peer has already errored and removal was attempted.&quot;,
+    &quot;peer&quot;, p.ID())
+  &#125;
+  return err
+ &#125;
+ sw.metrics.Peers.Add(float64(1))
+
+ // Start all the reactor protocols on the peer.
+ for _, reactor := range sw.reactors &#123;
+  reactor.AddPeer(p)
+ &#125;
+
+ sw.Logger.Info(&quot;Added peer&quot;, &quot;peer&quot;, p)
+
+ return nil
+&#125;</code></div></pre>
+<p>随后就是一系列关于 <code>peer</code> 的维护函数。整体看下来，整个 <code>switch</code> 的业务逻辑就是首先在 <code>node.go</code> 中被创建和维护，然后再 <code>swtich</code> 中维护节点自身的 <code>reactor</code> 以及监听其他 <code>peer</code> 的连接信息。</p>
+<h2 id="三、总结">三、总结</h2>
+<ul>
+<li>通过对 <code>P2P目录</code> 的整体梳理，可以掌握 tendermint 目前的基本通信过程，同时可以发现，所有的核心操作其实是通过 <code>reactor</code> 完成的。</li>
+<li><code>tendermint</code> 目前每个节点的通信都是通过证书进行加密的，保证网络传输的安全可靠。</li>
+</ul>
+<h2 id="参考">参考</h2>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2023/04/25680/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2023/04/25680/">https://www.superheaoz.top/2023/04/25680/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2023/04/12983/"><span>服务器操作指北（4）GitLab 私有化部署</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2023/03/284/"><span>服务器操作指北（3）LVM 组建 RAID5</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

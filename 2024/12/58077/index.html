@@ -1,0 +1,753 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>HEXO 开发笔记（1）主题【我的个人天地】</title><meta name="description" content="HEXO 开发笔记（1）主题"><meta name="keywords" content="hexo,theme"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（1）主题【我的个人天地】"><meta property="og:description" content="HEXO 开发笔记（1）主题"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2024/12/58077/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HEXO 开发笔记（1）主题",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2024-12-28T07:18:06.000Z",
+  "dateModified": "2025-11-23T02:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2024/12/58077/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81Hexo-%E5%9F%BA%E6%9C%AC%E5%8A%9F%E8%83%BD%E4%B8%8E%E4%BD%BF%E7%94%A8"><span class="toc-text">一、Hexo 基本功能与使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="toc-text">1.1 核心概念与目录结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%88%9D%E5%A7%8B%E5%8C%96%E6%B5%81%E7%A8%8B"><span class="toc-text">1.2 安装与初始化流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E9%80%9F%E8%A7%88"><span class="toc-text">1.3 常用命令速览</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-Front-Matter-%E8%A6%81%E7%82%B9"><span class="toc-text">1.4 Front Matter 要点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-%E6%96%87%E7%AB%A0%E4%B8%8E%E8%B5%84%E6%BA%90%E7%BB%84%E7%BB%87%E7%AD%96%E7%95%A5"><span class="toc-text">1.5 文章与资源组织策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%B8%BB%E9%A2%98%E8%8E%B7%E5%8F%96%E4%B8%8E%E9%85%8D%E7%BD%AE"><span class="toc-text">二、主题获取与配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-0-%E6%A0%B9%E7%BA%A7%E4%B8%8E%E6%8C%89%E4%B8%BB%E9%A2%98%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%AF%B4%E6%98%8E"><span class="toc-text">2.0 根级与按主题配置文件说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%98%E6%96%B9%E4%B8%BB%E9%A2%98%E7%9B%AE%E5%BD%95%E6%A3%80%E7%B4%A2"><span class="toc-text">2.1 官方主题目录检索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-GitHub-%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7"><span class="toc-text">2.2 GitHub 搜索技巧</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%90%AF%E7%94%A8%E4%B8%BB%E9%A2%98"><span class="toc-text">2.3 安装与启用主题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E5%B8%B8%E8%A7%81%E4%B8%BB%E9%A2%98%E9%85%8D%E7%BD%AE%E9%A1%B9"><span class="toc-text">2.4 常见主题配置项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-%E5%A4%9A%E4%B8%BB%E9%A2%98%E5%88%87%E6%8D%A2%E4%B8%8E%E8%B0%83%E8%AF%95"><span class="toc-text">2.5 多主题切换与调试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%BB%E9%A2%98%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83"><span class="toc-text">三、自定义主题开发规范</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%B8%BB%E9%A2%98%E7%9B%AE%E5%BD%95%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="toc-text">3.1 主题目录基本结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%BF%85%E5%A4%87%E6%A8%A1%E6%9D%BF%E4%B8%8E%E6%B8%B2%E6%9F%93%E8%A6%81%E7%82%B9"><span class="toc-text">3.2 必备模板与渲染要点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%B8%B8%E7%94%A8%E5%8F%98%E9%87%8F%E4%B8%8E%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="toc-text">3.3 常用变量与上下文</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E5%9B%BD%E9%99%85%E5%8C%96%EF%BC%88i18n%EF%BC%89%E5%A4%84%E7%90%86"><span class="toc-text">3.4 国际化（i18n）处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E4%B8%8E%E6%80%A7%E8%83%BD"><span class="toc-text">3.5 静态资源与性能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-6-%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95%E6%B5%81%E7%A8%8B%E5%BB%BA%E8%AE%AE"><span class="toc-text">3.6 开发调试流程建议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-7-%E9%80%9A%E7%94%A8%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9%E4%B8%8E%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6"><span class="toc-text">3.7 通用注意事项与版本控制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color9"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color2"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（1）主题</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2024-12-28</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2025-11-23</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/theme/">theme</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">8147 字 · 约 28 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>年底终于闲了下来，考虑到 <code>GitLab</code> 自己的种种问题，前一阵把私有代码仓库迁移到了 <code>Gitea</code>，也顺势抽空系统化整理一下 <code>Hexo</code> 主题获取与自定义开发的流程，同时开发了自己的主题。本文作为“开发笔记”系列第一篇，聚焦于：</p>
+<ol>
+<li><code>Hexo</code> 的基本功能与常用命令</li>
+<li>如何检索、获取并配置第三方主题</li>
+<li>自定义主题的目录结构、约定与最佳实践</li>
+</ol>
+<p>撰写参考官方文档版本：<code>Hexo 7.x</code>（以实际使用为准）。</p>
+<span id="more"></span>
+<h2 id="一、Hexo-基本功能与使用">一、Hexo 基本功能与使用</h2>
+<h3 id="1-1-核心概念与目录结构">1.1 核心概念与目录结构</h3>
+<p><code>Hexo</code> 是基于 <code>Node.js</code> 的快速、简洁且高效的静态博客框架，核心职责：</p>
+<ul>
+<li>将 Markdown + Front Matter 转换为静态 HTML</li>
+<li>提供扩展体系：主题、插件（过滤器、标签、渲染器、部署器等）</li>
+<li>支持多种部署方式（Git、S3、FTP 等）</li>
+</ul>
+<p>初始化后默认目录（关键子集）：</p>
+<pre><div class="code-header"><span class="code-header-type">code</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code>.
+├── _config.yml          # 站点级配置（全局）
+├── package.json         # 依赖与脚本
+├── node_modules/        # NPM 依赖
+├── source/              # 原始内容（Markdown / 资源）
+│   ├── _posts/          # 正式文章
+│   └── _drafts/         # 草稿（hexo new draft）
+├── themes/              # 主题目录（可多主题并存）
+└── public/              # 构建输出目录（hexo generate 后生成）</code></div></pre>
+<p>补充：主题内部也有自己的 <code>_config.yml</code>（主题级配置），与根配置分离。</p>
+<h3 id="1-2-安装与初始化流程">1.2 安装与初始化流程</h3>
+<h4 id="全局配置-config-yml-关键字段概览">全局配置 <code>_config.yml</code> 关键字段概览</h4>
+<p><code>_config.yml</code> 是站点级主配置文件，常用核心段落：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">分类</th>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">站点信息</td>
+<td style="text-align:left"><code>title</code> / <code>subtitle</code> / <code>description</code> / <code>author</code></td>
+<td style="text-align:left">页面 <code>&lt;head&gt;</code> 与主题引用的基本元数据</td>
+</tr>
+<tr>
+<td style="text-align:left">URL</td>
+<td style="text-align:left"><code>url</code> / <code>root</code></td>
+<td style="text-align:left">部署后站点完整地址与根路径（影响生成链接）</td>
+</tr>
+<tr>
+<td style="text-align:left">语言与时区</td>
+<td style="text-align:left"><code>language</code> / <code>timezone</code></td>
+<td style="text-align:left">语言包选择与日期渲染（如 <code>zh-CN</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left">目录结构</td>
+<td style="text-align:left"><code>source_dir</code> / <code>public_dir</code> / <code>tag_dir</code> / <code>category_dir</code></td>
+<td style="text-align:left">源文件与构建输出及标签、分类页面目录名</td>
+</tr>
+<tr>
+<td style="text-align:left">写作</td>
+<td style="text-align:left"><code>new_post_name</code> / <code>default_layout</code> / <code>post_asset_folder</code></td>
+<td style="text-align:left">新文章命名模板、默认布局、是否创建同名资源目录</td>
+</tr>
+<tr>
+<td style="text-align:left">永久链接</td>
+<td style="text-align:left"><code>permalink</code> / <code>permalink_defaults</code></td>
+<td style="text-align:left">文章最终 URL 格式与默认占位符值</td>
+</tr>
+<tr>
+<td style="text-align:left">分页</td>
+<td style="text-align:left"><code>per_page</code> / <code>pagination_dir</code></td>
+<td style="text-align:left">每页文章数与分页目录名</td>
+</tr>
+<tr>
+<td style="text-align:left">模板渲染</td>
+<td style="text-align:left"><code>highlight</code> / <code>prismjs</code></td>
+<td style="text-align:left">代码高亮配置（二选其一或关闭）</td>
+</tr>
+<tr>
+<td style="text-align:left">主题</td>
+<td style="text-align:left"><code>theme</code></td>
+<td style="text-align:left">当前使用主题名称</td>
+</tr>
+<tr>
+<td style="text-align:left">部署</td>
+<td style="text-align:left"><code>deploy:</code></td>
+<td style="text-align:left">部署方式与仓库配置（如 <code>type: git</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left">服务器</td>
+<td style="text-align:left"><code>port</code> / <code>logger</code></td>
+<td style="text-align:left">本地预览端口与日志级别</td>
+</tr>
+</tbody>
+</table>
+<p>示例片段：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div></div><code class="language-yaml"># 站点信息
+title: My Blog
+subtitle: 分享与记录
+description: Personal tech notes
+author: Tiger
+
+# URL
+url: https://example.com
+root: /
+
+# 写作与组织
+new_post_name: :year/:month/:title
+post_asset_folder: true
+permalink: :year/:month/:day/:title/
+permalink_defaults:
+  lang: zh
+
+# 分页
+per_page: 10
+pagination_dir: page
+
+# 主题
+theme: mytheme
+
+# 部署
+deploy:
+  type: git
+  repo: git@example.com:/home/git/hexo.git
+  branch: master</code></div></pre>
+<p>修改后需运行：<code>hexo clean &amp;&amp; hexo g</code> 重新生效（某些字段如 <code>theme</code> 直接影响渲染）。</p>
+<h4 id="Permalink-模式与-SEO-影响">Permalink 模式与 SEO 影响</h4>
+<p><code>permalink</code> 字段控制文章 URL 结构，不同模式对 SEO 有不同影响：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">模式</th>
+<th style="text-align:left">示例 URL</th>
+<th style="text-align:left">SEO 特性</th>
+<th style="text-align:left">适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>:year/:month/:day/:title/</code></td>
+<td style="text-align:left"><code>/2025/11/23/hexo-theme/</code></td>
+<td style="text-align:left">✅ 日期感强，利于时效性内容；URL 较长</td>
+<td style="text-align:left">新闻、日记类博客</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>:year/:month/:title/</code></td>
+<td style="text-align:left"><code>/2025/11/hexo-theme/</code></td>
+<td style="text-align:left">✅ 简洁且保留时间信息；URL 中等长度</td>
+<td style="text-align:left"><strong>推荐</strong>：技术博客、教程</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>:title/</code></td>
+<td style="text-align:left"><code>/hexo-theme/</code></td>
+<td style="text-align:left">✅ 最简洁，关键词权重高；无时间信息</td>
+<td style="text-align:left">产品文档、evergreen 内容</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>:category/:title/</code></td>
+<td style="text-align:left"><code>/tech/hexo-theme/</code></td>
+<td style="text-align:left">✅ 语义化强，利于站内结构；需维护分类</td>
+<td style="text-align:left">多主题站点</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>:id.html</code> 或 <code>:abbrlink/</code></td>
+<td style="text-align:left"><code>/12345.html</code> 或 <code>/5a2b/</code></td>
+<td style="text-align:left">⚠️ 无语义，对 SEO 不友好；URL 稳定</td>
+<td style="text-align:left">需避免中文转码或迁移保持链接</td>
+</tr>
+</tbody>
+</table>
+<p><strong>SEO 最佳实践建议</strong>：</p>
+<ol>
+<li><strong>包含关键词</strong>：<code>:title</code> 占位符确保 URL 中有文章主题（会自动转为 slug）</li>
+<li><strong>保持简短</strong>：避免过长 URL（&lt; 75 字符为佳），<code>:year/:month/:title/</code> 是平衡选择</li>
+<li><strong>使用连字符</strong>：Hexo 自动将空格转为 <code>-</code>，搜索引擎友好（优于下划线 <code>_</code>）</li>
+<li><strong>避免中文直出</strong>：中文会被 URL 编码为 <code>%E5%...</code>，可用 <code>hexo-abbrlink</code> 或手动设置 Front Matter 的 <code>slug</code> 字段</li>
+<li><strong>一旦确定不轻易改</strong>：URL 变更会导致 404 和 SEO 权重丢失，需配合 301 重定向</li>
+</ol>
+<p>示例配置（推荐用于技术博客）：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-yaml"># 简洁且有时间层级
+permalink: :year/:month/:title/
+permalink_defaults:
+  lang: zh-CN
+
+# 或使用插件生成短 ID（需安装 hexo-abbrlink）
+# permalink: posts/:abbrlink/</code></div></pre>
+<p>自定义 slug 避免中文：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml">---
+title: Hexo 主题开发指南
+slug: hexo-theme-development-guide
+---</code></div></pre>
+<p>最终 URL：<code>/2025/11/hexo-theme-development-guide/</code></p>
+<p>环境前置：<code>Node.js (LTS)</code>、<code>Git</code>。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash"># 全局安装 Hexo CLI
+npm install -g hexo-cli
+
+# 初始化站点（当前目录为空时）
+hexo init blog
+cd blog
+
+# 安装依赖
+npm install</code></div></pre>
+<h3 id="1-3-常用命令速览">1.3 常用命令速览</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div></div><code class="language-bash"># 创建新文章（正式）
+hexo new &quot;文章标题&quot;
+
+# 创建草稿
+hexo new draft &quot;草稿标题&quot;
+
+# 本地启动预览（默认端口 4000）
+hexo server      # 或 hexo s
+
+# 生成静态文件到 public/
+hexo generate    # 或 hexo g
+
+# 清理缓存与 public 输出
+hexo clean
+
+# 生成并部署（需配置 deploy）
+hexo deploy      # 或 hexo d
+
+# 组合：清理 + 生成 + 部署
+hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</code></div></pre>
+<h3 id="1-4-Front-Matter-要点">1.4 Front Matter 要点</h3>
+<p>文章元信息写于文件首部 <code>---</code> 包裹的 YAML 区域，用于：分类、标签、时间、永久链接、首页摘要截断控制。<code>abbrlink</code> 等字段通常由相关插件（如 <code>hexo-abbrlink</code>）自动生成，不建议手动填写。</p>
+<p>示例：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-yaml">---
+title: 示例文章
+date: 2025-11-23 10:00:00
+updated: 2025-11-23 10:00:00
+categories:
+  - 科技
+tags:
+  - hexo
+  - demo
+# abbrlink: (可选，由插件自动生成)
+---</code></div></pre>
+<p>在正文“前言”后添加 <code>&lt;!--more--&gt;</code> 控制首页截断。</p>
+<h3 id="1-5-文章与资源组织策略">1.5 文章与资源组织策略</h3>
+<ul>
+<li>使用 <code>source/_posts/年/月/</code> 结构提升可维护性，可通过根 <code>_config.yml</code> 的 <code>new_post_name</code> 自动生成层级，例如：<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-yaml">new_post_name: :year/:month/:title</code></div></pre>
+</li>
+<li>启用资源跟随（推荐）在 <code>_config.yml</code> 设置：<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-yaml">post_asset_folder: true</code></div></pre>
+然后新建文章后会自动生成同名资源目录（搭配 <code>![](/path)</code> 或引用式链接）。</li>
+<li>图片放同名子目录：<code>文章名/图片.png</code> 并用引用式链接集中定义</li>
+<li>草稿先放 <code>_drafts</code>，确认后执行 <code>hexo publish 草稿名</code> 转正</li>
+<li><code>scaffolds/</code> 目录可自定义新建文件的默认 Front Matter。例如修改 <code>scaffolds/post.md</code>：<pre><div class="code-header"><span class="code-header-type">markdown</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-markdown">---
+title: &#123;&#123; title &#125;&#125;
+date: &#123;&#123; date &#125;&#125;
+categories:
+  - 科技
+tags:
+---
+
+## 前言
+
+&lt;!--more--&gt;</code></div></pre>
+</li>
+</ul>
+<h2 id="二、主题获取与配置">二、主题获取与配置</h2>
+<h3 id="2-0-根级与按主题配置文件说明">2.0 根级与按主题配置文件说明</h3>
+<p>除了根 <code>_config.yml</code> 与 <code>themes/&lt;theme&gt;/_config.yml</code> 外，可以在项目根使用 <code>_config.&lt;theme&gt;.yml</code> 为指定主题添加覆盖配置信息。最终合并优先级：</p>
+<ol>
+<li><code>_config.yml</code> （基础全局配置）</li>
+<li><code>_config.&lt;theme&gt;.yml</code> （当前主题的追加/覆盖层）</li>
+<li><code>themes/&lt;theme&gt;/_config.yml</code> （主题自身默认）</li>
+</ol>
+<p>这样可以在不改动主题源码的情况下定制导航、CDN、开关项。例如：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-yaml"># _config.yml
+menu:
+  home: /
+  archives: /archives
+
+# _config.mytheme.yml （仅当 theme: mytheme 时生效）
+menu:
+  tags: /tags
+  categories: /categories
+cdn:
+  enable: true
+  js: https://cdn.example.com/js/</code></div></pre>
+<p>切换主题只需在 <code>_config.yml</code> 改 <code>theme: mytheme</code> 或运行临时命令：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">hexo s --theme mytheme</code></div></pre>
+<h3 id="2-1-官方主题目录检索">2.1 官方主题目录检索</h3>
+<p>访问 <a target="_blank" rel="noopener" href="https://hexo.io/themes/" title="Hexo 主题列表" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fthemes%2F">Hexo 官方主题目录</a> 可以基于：星级、更新时间、关键字筛选。每个条目通常附：Demo、仓库地址、安装说明。</p>
+<h3 id="2-2-GitHub-搜索技巧">2.2 GitHub 搜索技巧</h3>
+<p>常用搜索关键字：<code>hexo theme</code>、<code>hexo-theme-xxx</code>。筛选策略：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">维度</th>
+<th style="text-align:left">推荐标准</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Stars</td>
+<td style="text-align:left">&gt; 100（视冷门领域而调整）</td>
+</tr>
+<tr>
+<td style="text-align:center">最近更新</td>
+<td style="text-align:left">&lt; 6 个月更佳</td>
+</tr>
+<tr>
+<td style="text-align:center">Issue 回复</td>
+<td style="text-align:left">Maintainer 活跃，未长期无人处理</td>
+</tr>
+<tr>
+<td style="text-align:center">依赖</td>
+<td style="text-align:left">不滥用沉重前端框架（性能优先）</td>
+</tr>
+</tbody>
+</table>
+<p>可用 GitHub 高级搜索：<code>topic:hexo theme in:name,description pushed:&gt;2025-05-01</code>。</p>
+<h3 id="2-3-安装与启用主题">2.3 安装与启用主题</h3>
+<p>三种常见方式：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash"># 方式一：git clone
+cd themes
+git clone https://github.com/author/hexo-theme-example.git example
+
+# 方式二：作为子模块（便于上游同步）
+git submodule add https://github.com/author/hexo-theme-example.git themes/example
+
+# 方式三：npm（部分主题支持）
+npm install hexo-theme-example --save</code></div></pre>
+<p>在根 <code>_config.yml</code> 中设置：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-yaml">theme: example</code></div></pre>
+<p>然后：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">hexo clean &amp;&amp; hexo g &amp;&amp; hexo s</code></div></pre>
+<h3 id="2-4-常见主题配置项">2.4 常见主题配置项</h3>
+<p>主题级 <code>_config.yml</code>（位于 <code>themes/&lt;name&gt;/_config.yml</code>）常包含：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">配置项</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><code>menu</code></td>
+<td style="text-align:left">导航栏结构与顺序</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>favicon</code></td>
+<td style="text-align:left">站点图标路径</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>logo</code></td>
+<td style="text-align:left">主题 Logo（可选）</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>widgets</code></td>
+<td style="text-align:left">侧边栏组件控制</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>social</code></td>
+<td style="text-align:left">社交链接映射（GitHub/Email 等）</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>highlight</code></td>
+<td style="text-align:left">代码高亮方案（如 prism, highlight.js）</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>cdn</code></td>
+<td style="text-align:left">资源外链地址加速</td>
+</tr>
+</tbody>
+</table>
+<p>修改后需要重新生成。</p>
+<h3 id="2-5-多主题切换与调试">2.5 多主题切换与调试</h3>
+<p>Hexo 支持在根目录以 <code>_config.&lt;themeName&gt;.yml</code> 进行按主题的额外配置扩展，加载顺序为：</p>
+<p><code>_config.yml</code> → <code>_config.&lt;当前 theme&gt;.yml</code> → <code>themes/&lt;theme&gt;/_config.yml</code></p>
+<p>后者覆盖前者同名字段。</p>
+<p>示例：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-yaml"># _config.yml
+site_name: My Blog
+menu:
+  home: /
+  archives: /archives
+
+# _config.example.yml （仅在 theme: example 时生效）
+menu:
+  about: /about
+  links: /links
+highlight:
+  enable: true
+  line_number: true</code></div></pre>
+<p>切换主题只需修改：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-yaml"># _config.yml
+theme: example</code></div></pre>
+<p>或临时测试（不写入文件）：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">hexo s --theme example</code></div></pre>
+<p>推荐保留多个主题目录进行对比：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">themes/
+  ├── example/      # 当前使用
+  ├── light/        # 准备测试
+  └── legacy/       # 历史版本</code></div></pre>
+<p>调试技巧：</p>
+<ul>
+<li>使用浏览器 DevTools 观察生成后的 DOM 结构 → 对应 <code>layout/*</code> 模板文件</li>
+<li>通过 <code>hexo s --debug</code> 查看渲染与路由日志</li>
+<li>避免直接修改第三方主题核心文件，可在自定义主题中复刻再改（便于升级）</li>
+</ul>
+<h2 id="三、自定义主题开发规范">三、自定义主题开发规范</h2>
+<h3 id="3-1-主题目录基本结构">3.1 主题目录基本结构</h3>
+<p>官方规范参考：<a target="_blank" rel="noopener" href="https://hexo.io/docs/themes" title="Hexo 主题开发指南" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fdocs%2Fthemes">Theme Guide</a>。典型结构（模板文件可使用任意已安装渲染器支持的后缀，如 <code>.ejs</code> <code>.pug</code> <code>.njk</code> <code>.swig</code>）：</p>
+<pre><div class="code-header"><span class="code-header-type">code</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code>themes/my-theme/
+├── _config.yml          # 主题配置
+├── layout/              # 页面模板（EJS / Pug / Nunjucks / Swig）
+│   ├── layout.pug       # 通用外层布局（含 &lt;head&gt; / header / footer）
+│   ├── index.pug        # 首页（文章列表）
+│   ├── post.pug         # 单篇文章
+│   ├── page.pug         # 普通页面
+│   └── _partial/        # 局部片段（导航、侧栏、meta 等）
+├── source/              # 主题静态资源（会复制到 public）
+│   ├── css/
+│   ├── js/
+│   ├── images/
+│   └── fonts/
+├── languages/           # 多语言 JSON / YAML（zh-CN.yml / en.yml）
+├── scripts/             # 注册过滤器 / 标签 / 事件扩展（Node.js）
+└── package.json         # 若主题需自身依赖</code></div></pre>
+<h3 id="3-2-必备模板与渲染要点">3.2 必备模板与渲染要点</h3>
+<p>模板文件后缀取决于已安装的渲染器插件（<code>hexo-renderer-ejs</code>、<code>hexo-renderer-pug</code>、<code>hexo-renderer-nunjucks</code> 等），以下示例分别展示 <code>EJS</code> 与 <code>Pug</code>：</p>
+<ul>
+<li><code>layout.*</code>：所有页面的容器（含 <code>head</code>、SEO meta、全局样式与脚本）</li>
+<li><code>index.*</code>：文章列表循环</li>
+</ul>
+<p>EJS 示例：</p>
+<pre><div class="code-header"><span class="code-header-type">ejs</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-ejs">&lt;% page.posts.each(post =&gt; &#123; %&gt;
+  &lt;article&gt;
+    &lt;h2&gt;&lt;a href=&quot;&lt;%= url_for(post.path) %&gt;&quot;&gt;&lt;%= post.title %&gt;&lt;/a&gt;&lt;/h2&gt;
+    &lt;time&gt;&lt;%= date(post.date, 'YYYY-MM-DD') %&gt;&lt;/time&gt;
+  &lt;/article&gt;
+&lt;% &#125;) %&gt;
+&lt;%- partial('_partial/pagination', &#123;page: page&#125;) %&gt;</code></div></pre>
+<p>Pug 示例：</p>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-pug">articleList
+  each post in page.posts
+    article
+      h2
+        a(href=url_for(post.path))= post.title
+      time= date(post.date, 'YYYY-MM-DD')
+  != partial('_partial/pagination', &#123;page: page&#125;)</code></div></pre>
+<ul>
+<li><code>post.*</code>：单篇文章正文、元信息、上一篇/下一篇导航。</li>
+<li><code>_partial/*</code>：可抽象 <code>header</code>、<code>footer</code>、<code>sidebar</code>、<code>meta</code>，提升复用。</li>
+</ul>
+<h3 id="3-3-常用变量与上下文">3.3 常用变量与上下文</h3>
+<p>模板中常用：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">变量</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><code>site</code></td>
+<td style="text-align:left">站点对象（标题、文章列表、分类、标签）</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>page</code></td>
+<td style="text-align:left">当前页面对象（类型、路径、正文、Front Matter）</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>config</code></td>
+<td style="text-align:left">根 <code>_config.yml</code> 内容</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>theme</code></td>
+<td style="text-align:left">主题 <code>_config.yml</code> 内容</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>url_for()</code></td>
+<td style="text-align:left">生成相对 / 绝对路径</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>date()</code></td>
+<td style="text-align:left">日期格式化</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>partial()</code></td>
+<td style="text-align:left">引用局部模板</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-4-国际化（i18n）处理">3.4 国际化（i18n）处理</h3>
+<p><code>languages/zh-CN.yml</code> 示例：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml">menu:
+  home: 首页
+  archives: 归档
+  about: 关于</code></div></pre>
+<p>模板中调用：</p>
+<pre><div class="code-header"><span class="code-header-type">ejs</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-ejs">&lt;nav&gt;
+  &lt;a href=&quot;/&quot;&gt; &lt;%= __('menu.home') %&gt; &lt;/a&gt;
+  &lt;a href=&quot;/archives&quot;&gt; &lt;%= __('menu.archives') %&gt; &lt;/a&gt;
+&lt;/nav&gt;</code></div></pre>
+<h3 id="3-5-静态资源与性能">3.5 静态资源与性能</h3>
+<p>最佳实践：</p>
+<ul>
+<li>样式分层：基础（base.css）+ 组件（component-*.css）+ 布局（layout.css）</li>
+<li>合理使用 <code>hexo-helper</code> 或构建工具（如仅在主题内使用简单打包脚本）</li>
+<li>图片使用相对路径，便于迁移；必要时接入自定义 <code>CDN</code> 配置项</li>
+<li>代码高亮：优先选择轻量方案（<code>highlight.js</code> 或 <code>Prism</code>）</li>
+</ul>
+<h3 id="3-6-开发调试流程建议">3.6 开发调试流程建议</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash"># 第一次开发，确认目录结构
+hexo clean &amp;&amp; hexo g &amp;&amp; hexo s
+
+# 修改模板后快速验证（避免 public 残留）
+hexo clean &amp;&amp; hexo g
+
+# 调试脚本（scripts/）加入日志
+console.log('[my-theme] partial loaded')</code></div></pre>
+<h3 id="3-7-通用注意事项与版本控制">3.7 通用注意事项与版本控制</h3>
+<ul>
+<li>不直接修改 <code>node_modules</code> 中依赖，扩展放入 <code>scripts/</code></li>
+<li>主题自身依赖写入 <code>themes/my-theme/package.json</code>，与站点根分离</li>
+<li>使用 <code>git submodule</code> 管理第三方主题便于升级</li>
+<li>保持模板语义化：使用 <code>&lt;main&gt;</code>、<code>&lt;article&gt;</code>、<code>&lt;nav&gt;</code> 提升可访问性与 SEO</li>
+<li>避免在模板中硬编码绝对 URL，使用 <code>url_for()</code> / <code>config.url</code></li>
+<li>大型改动前 <code>git branch feature/theme-i18n</code> 分支化迭代</li>
+<li>渲染器选择：根据团队习惯选择 <code>Pug</code> / <code>EJS</code> / <code>Nunjucks</code>，保持统一避免混用降低可维护性</li>
+<li>常用渲染器插件一览：
+<table>
+<thead>
+<tr>
+<th style="text-align:left">插件</th>
+<th style="text-align:left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>hexo-renderer-pug</code></td>
+<td style="text-align:left">支持 Pug 模板</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>hexo-renderer-ejs</code></td>
+<td style="text-align:left">支持 EJS 模板（部分版本内置）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>hexo-renderer-nunjucks</code></td>
+<td style="text-align:left">支持 Nunjucks 模板</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>hexo-renderer-marked</code></td>
+<td style="text-align:left">Markdown 渲染（可替换为 <code>hexo-renderer-markdown-it</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>hexo-renderer-stylus</code></td>
+<td style="text-align:left">Stylus 预处理</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>hexo-renderer-sass</code></td>
+<td style="text-align:left">Sass/SCSS 支持（第三方）</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p><strong>关于插件开发</strong>：如需深入了解 Hexo 插件体系（过滤器、标签、生成器、部署器等）与自定义扩展开发，可参考本系列第二篇：<a href="/2024/12/55499/" title="HEXO 开发笔记（2）插件">HEXO 开发笔记（2）插件</a>。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/docs/" title="Hexo 官方文档" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fdocs%2F">Hexo 官方文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/themes/" title="Hexo 主题列表" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fthemes%2F">Hexo 主题列表</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/docs/themes" title="Hexo 主题开发指南" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fdocs%2Fthemes">Hexo 主题开发指南</a></li>
+<li><a target="_blank" rel="noopener" href="https://ejs.co/" title="EJS" class="external-link" data-redirect="https%3A%2F%2Fejs.co%2F">EJS 模板语法参考</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2024/12/58077/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2024/12/58077/">https://www.superheaoz.top/2024/12/58077/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2024/12/55499/"><span>HEXO 开发笔记（2）插件</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2023/10/32630/"><span>服务器操作指北（6）Yourls 短链接服务部署</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>服务器操作指北（4）GitLab 私有化部署【我的个人天地】</title><meta name="description" content="服务器操作指北（4）GitLab 私有化部署"><meta name="keywords" content="GitLab"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（4）GitLab 私有化部署【我的个人天地】"><meta property="og:description" content="服务器操作指北（4）GitLab 私有化部署"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2023/04/12983/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "服务器操作指北（4）GitLab 私有化部署",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2023-04-26T03:25:22.000Z",
+  "dateModified": "2024-12-28T03:25:22.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2023/04/12983/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81GitLab-%E7%AE%80%E4%BB%8B"><span class="toc-text">一、GitLab 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AE%89%E8%A3%85"><span class="toc-text">二、安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E9%BB%98%E8%AE%A4%E5%AE%89%E8%A3%85%E6%B5%81%E7%A8%8B"><span class="toc-text">2.1 默认安装流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%85%8D%E7%BD%AE%E8%AF%81%E4%B9%A6"><span class="toc-text">2.2 配置证书</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%85%8D%E7%BD%AE%E9%82%AE%E4%BB%B6%E6%9C%8D%E5%8A%A1"><span class="toc-text">2.3 配置邮件服务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E9%85%8D%E7%BD%AE-runner"><span class="toc-text">2.4 配置 runner</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-%E9%85%8D%E7%BD%AE-Container-register"><span class="toc-text">2.5 配置 Container register</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6-%E9%85%8D%E7%BD%AE%E7%BD%91%E7%BB%9C%EF%BC%8820240627-Update%EF%BC%89"><span class="toc-text">2.6 配置网络（20240627 Update）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color6"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color4"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（4）GitLab 私有化部署</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2023-04-26</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2024-12-28</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/GitLab/">GitLab</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">6243 字 · 约 21 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p><code>GitHub</code> 的访问总是间歇性抽风，再加上自己也喜欢将所有数据都进行本地化的维护，故而决定部署一个私有的 <code>gitlab</code> 服务器，并迁移代码。安装的服务器环境为 <code>Ubuntu 22.04.2 LTS</code>。</p>
+<span id="more"></span>
+<ul>
+<li>20240627：由于 <code>GitLab</code> 服务器构建在内网，需要特定网关与 dns 才能进行联网，所以需要对相关配置进行修改。</li>
+<li>20241228：基于 <code>GitLab 极狐</code> 的骚操作，建议换用 gitea。</li>
+</ul>
+<h2 id="一、GitLab-简介">一、GitLab 简介</h2>
+<p><code>GitLab</code> 是一个利用 <code>Ruby on Rails</code> 开发的开源应用程序，实现一个 <code>自托管</code> 的 <code>Git 项目</code>仓库，可通过 Web 界面进行访问公开的或者私人项目。它拥有与 <code>Github</code> 类似的功能，能够浏览源代码，管理缺陷和注释。可以管理团队对仓库的访问，它非常易于浏览提交过的版本并提供一个文件历史库。它还提供一个代码片段收集功能可以轻松实现代码复用，便于日后有需要的时候进行查找。</p>
+<p>当前 <code>GitLab</code> 在中国成立的合资公司极狐，并提供中文版官网，本次安装也是基于 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/jhgitlab" title="极狐版 gitlab">极狐版 gitlab</a>，域名注册及邮件服务的提供商为阿里云。</p>
+<h2 id="二、安装">二、安装</h2>
+<p>安装过程整体参考文档 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/1winu5" title="使用 Omnibus 安装包安装极狐 GitLab">使用 Omnibus 安装包安装极狐 GitLab</a>,但存在以下几点不同：</p>
+<ol>
+<li>未采用默认的 <code>443</code> 端口，使用自定义访问端口 <code>12345</code>。</li>
+<li>未采用默认的 <code>Let’s Encrypt</code>，使用 <code>acme.sh</code> 配合 <code>alidns</code>。</li>
+<li>未采用推荐的 <code>Postfix</code> 邮件通知方案，使用阿里云邮件服务。</li>
+</ol>
+<h3 id="2-1-默认安装流程">2.1 默认安装流程</h3>
+<ol>
+<li>安装和配置必须的依赖项</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">   # 安装依赖
+   sudo apt-get update
+   sudo apt-get install -y curl openssh-server ca-certificates tzdata perl
+
+   # 放行防火墙，未开启则不必执行
+   sudo ufw allow 12345/tcp</code></div></pre>
+<ol start="2">
+<li>下载/安装 <code>极狐 GitLab</code></li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">   # 配置极狐 GitLab 软件源镜像。
+   curl -fsSL https://packages.gitlab.cn/repository/raw/scripts/setup.sh | /bin/bash
+
+   # 安装，更改 https://gitlab.example.com 为您要访问极狐 GitLab 实例的 URL。
+   sudo EXTERNAL_URL=&quot;https://gitlab.example.com:12345&quot; apt-get install gitlab-jh</code></div></pre>
+<ol start="3">
+<li>查看当前初始用户密码</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">   sudo cat /etc/gitlab/initial_root_password</code></div></pre>
+<h3 id="2-2-配置证书">2.2 配置证书</h3>
+<ol>
+<li>重定向 <code>http</code>，禁用原生 <code>letsencrypt</code>。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">   # 编辑配置文件
+   sudo vi /etc/gitlab/gitlab.rb
+   # 通过 `/gitlab_rails` 找到相关配置项并修改
+   ## 重定向
+   nginx['redirect_http_to_https'] = true
+   ## 禁用原生 letsencrypt
+   letsencrypt['enable'] = false
+   ## 确认访问地址，https://gitlab.example.com 为您要访问极狐 GitLab 实例的 URL。
+   external_url 'https://gitlab.example.com:12345'</code></div></pre>
+<ol start="2">
+<li>安装 <code>acme.sh</code>，默认将会安装到当前用户目录 <code>~/.acme.sh/</code> 中，同时会将 <code>acme.sh</code> 命令注册到环境变量中。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">   curl  https://get.acme.sh | sh
+   source ~/.bashrc</code></div></pre>
+<ol start="3">
+<li>注册用户及环境变量。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">   # 更改 example@mail.com 为你的个人邮箱，注册/登录 acme.sh 账户
+   acme.sh --register-account -m example@mail.com
+
+   # 修改配置文件 ~/.acme.sh/account.conf ,添加 alidns 所需密钥
+   SAVED_Ali_Key='your ali key'
+   SAVED_Ali_Secret='your ali secret'</code></div></pre>
+<ol start="4">
+<li>签发并部署证书。</li>
+</ol>
+<p><strong>注意：这里必须通过 <code>--fullchain-file</code> 命令而不是 <code>--cert-file</code> 命令部署</strong></p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">   # 签发证书，更改 gitlab.example.com 为您要访问极狐 GitLab 实例的 URL。
+   acme.sh --issue --dns dns_ali -d gitlab.example.com
+
+   # 部署证书，此处可能会遇到权限不足问题，可以通过该命令解决`sudo chmod 777 /etc/gitlab/ssl`
+   sudo acme.sh --installcert -d gitlab.example.com \
+   --key-file /etc/gitlab/ssl/gitlab.example.com.key \
+   --fullchain-file /etc/gitlab/ssl/gitlab.example.com.cer</code></div></pre>
+<ol start="5">
+<li>部署自动更新。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">   # 自动更新
+   acme.sh  --upgrade  --auto-upgrade</code></div></pre>
+<ol start="6">
+<li>重启 <code>gitlab</code>，加载证书。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">   # 初次安装配置时，直接重启 gitlab 完成更新
+   sudo gitlab-ctl reconfigure
+
+   # 后续证书续签时，可通过以下命令更新
+   sudo gitlab-ctl hup nginx
+   sudo gitlab-ctl hup registry</code></div></pre>
+<h3 id="2-3-配置邮件服务">2.3 配置邮件服务</h3>
+<ol>
+<li>通过修改 <code>gitlab</code> 配置文件 <code>/etc/gitlab/gitlab.rb</code> 设置邮件服务，服务提供商为 <a target="_blank" rel="noopener" href="https://www.aliyun.com/product/directmail" title="阿里邮件推送" class="external-link" data-redirect="https%3A%2F%2Fwww.aliyun.com%2Fproduct%2Fdirectmail">阿里邮件推送</a>，每日免费的 200 封已经够用了。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div></div><code class="language-bash">   # 编辑配置文件
+   sudo vi /etc/gitlab/gitlab.rb
+   # 通过 `/gitlab_rails` 找到相关配置项并修改
+   ## 允许 smtp
+   gitlab_rails['smtp_enable'] = true
+   ## 配置 smtp 地址
+   gitlab_rails['smtp_address'] = &quot;smtpdm.aliyun.com&quot;
+   ## 配置 smtp 端口
+   gitlab_rails['smtp_port'] = 80
+   ## 配置 smtp 用户名，用户自定义，修改 mailserver.example.com 为您的邮件服务地址
+   gitlab_rails['smtp_user_name'] = &quot;noreply@mailserver.example.com&quot;
+   ## 配置 smtp 密码，在设置邮件服务时获取
+   gitlab_rails['smtp_password'] = &quot;your smtp password&quot;
+   ## 配置 smtp 域名，修改 mailserver.example.com 为您的邮件服务地址
+   gitlab_rails['smtp_domain'] = &quot;mailserver.example.com&quot;
+   ## 配置登录方式
+   gitlab_rails['smtp_authentication'] = &quot;login&quot;
+   ## 修改邮件发送者姓名，修改 mailserver.example.com 为您的邮件服务地址
+   gitlab_rails['gitlab_email_from'] = 'noreply@mailserver.example.com'</code></div></pre>
+<ol start="2">
+<li>重启 <code>gitlab</code>。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">   sudo gitlab-ctl reconfigure</code></div></pre>
+<h3 id="2-4-配置-runner">2.4 配置 runner</h3>
+<p><code>gitlab runner</code> 为 <code>CI/CD</code> 工具链的一环，通过 <code>runner</code>，可以达到本地化自动执行，类似 <code>github action</code>。安装方法可以在私有化实例的网页中看到 <code>https://gitlab.example.com:12345/admin/runners</code>。</p>
+<ol>
+<li>安装 <code>runner</code>。</li>
+</ol>
+<ul>
+<li>以下命令为直接在 <code>Linux</code> 系统中安装 <code>runner</code>。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-bash">   # Download the binary for your system
+   sudo curl -L --output /usr/local/bin/gitlab-runner https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64
+
+   # Give it permission to execute
+   sudo chmod +x /usr/local/bin/gitlab-runner
+
+   # Create a GitLab Runner user
+   sudo useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
+
+   # Install and run as a service
+   sudo gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
+   sudo gitlab-runner start</code></div></pre>
+<ul>
+<li>以下命令为在 docker 中安装 runner</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-bash">   # 官方默认 config 路径为`/srv/gitlab-runner/config`,存在读写权限问题，故而换到用户目录中，`/home/user/gitlab-runner/config`,请将`user`换为自己的用户名
+   # 由于采用了 HTTPS，需要在容器中更新部署证书
+   sudo docker run -d --name gitlab-runner --restart always \
+   -v /home/user/gitlab-runner/config:/etc/gitlab-runner \
+   -v /var/run/docker.sock:/var/run/docker.sock \
+   -v /etc/gitlab/ssl:/certs \
+   gitlab/gitlab-runner:latest
+
+   # 更新证书
+   sudo docker exec gitlab-runner update-ca-certificates</code></div></pre>
+<ol start="2">
+<li>注册 <code>runner</code>。</li>
+</ol>
+<ul>
+<li>以下命令为注册 <code>Linux</code> 的 <code>runner</code>，并配置执行器为 <code>docker</code>，在后续配置中，建议公共 <code>runner</code> 不配置标签。<code>registration-token</code> 从 <code>https://gitlab.example.com:12345/admin/runners</code> 中获取。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">   # 更改 gitlab.example.com 为您要访问极狐 GitLab 实例的 URL。
+   sudo gitlab-runner register \
+   --url https://gitlab.example.com:12345/ \
+   --registration-token your-registration-token \
+   --tls-ca-file /etc/gitlab/ssl/gitlab.example.com.crt \
+   --tls-key-file /etc/gitlab/ssl/gitlab.example.com.key \
+   --executor docker</code></div></pre>
+<ul>
+<li>以下命令为注册 <code>docker</code> 的 <code>runner</code>，并配置执行器为<code> docker</code>，个人是将该类 <code>runner</code> 作为项目的专属 <code>runner</code>，并配置指定标签，<code>your-project-registration-token</code> 从 <code>项目-设置-CI/CD-Runner</code> 中获取。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">   # 请将 -v 后的值替换为创建 runner 时所指定的目录。
+   sudo docker run --rm -it \
+   -v /home/user/gitlab-runner/config:/etc/gitlab-runner \
+   gitlab/gitlab-runner register \
+   --url https://gitlab.example.com:12345/ \
+   --registration-token your-project-registration-token \
+   --executor docker</code></div></pre>
+<ol start="3">
+<li>
+<p>配置 <code>runner</code> 支持容器拉取策略。</p>
+<p>在配置文件中的 <code>[runners.docker]</code> 部分添加如下内容：</p>
+</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">YAML</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-YAML">   [runners.docker]
+      pull_policy = [&quot;always&quot;, &quot;if-not-present&quot;]</code></div></pre>
+<ul>
+<li>
+<p>通过 Linux 安装的 runner，配置文件存储路径为<code>/etc/gitlab-runner/config.toml</code>。</p>
+</li>
+<li>
+<p>通过 docker 安装的 runner，配置文件存储路径参考本小节第一点的自定义路径。</p>
+</li>
+<li>
+<p>随后通过命令重启 runner：</p>
+<ul>
+<li>Linux 安装：<code>sudo systemctl restart gitlab-runner</code>。</li>
+<li>Docker 安装：<code>sudo docker restart gitlab-runner</code>。（注意：若不是根据本教程安装，请自行确定容器名称）</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-5-配置-Container-register">2.5 配置 Container register</h3>
+<p>使用 <code>极狐 GitLab</code> 的容器镜像库，可以让每个项目都拥有自己的空间来存储 <code>Docker</code> 镜像。部署参考该 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/zizfjk" title="文档">文档</a>.</p>
+<ol>
+<li>参考步骤 2.2，配置 <code>register</code> 对应 <code>url</code> 的证书，示例 <code>url</code> 为 <code>https://registry.gitlab.example.com</code>。</li>
+<li>修改配置文件，激活 <code>Container register</code>。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">   # 编辑配置文件
+   sudo vi /etc/gitlab/gitlab.rb
+   # 通过 `/registry_external_url` 找到相关配置项并修改
+   registry_external_url 'https://registry.gitlab.example.com'
+
+   # 重启 gitlab，激活仓库，默认将会在 5000 端口启动容器镜像库服务
+   sudo gitlab-ctl reconfigure</code></div></pre>
+<h3 id="2-6-配置网络（20240627-Update）">2.6 配置网络（20240627 Update）</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div></div><code class="language-bash"># DNS修改
+sudo vi /etc/systemd/resolved.conf
+## 添加自定义DNS
+   DNS=10.10.10.10 # 自定义的内网主DNS
+   FallbackDNS=223.5.5.5 # FallbackDNS为主DNS无法使用时后备的公网DNS
+## 应用
+sudo systemctl restart systemd-resolved
+## 验证 dns应该会查询内网主DNS
+nsloopup www.baidu.com
+
+# 网关修改
+sudo vi /etc/netplan/00-installer-config.yaml
+## 配置参考
+   network:
+   ethernets:
+      ens18: # 通过ip addr 查询联网网卡名称
+         dhcp4: false # 根据需求设定，为了保证服务稳定，建议静态
+         addresses: [10.10.10.5/24] # 网卡地址
+         nameservers:
+         addresses: [10.10.10.10] # 网关地址
+         routes:
+         - to: 0.0.0.0/0 # 默认路由
+            via: 10.10.10.10
+            metric: 100
+         dhcp6: true # 根据需求设定，由于服务仅通过V4访问，此处可以自动。
+   version: 2
+## 应用
+sudo netplan apply
+## 验证
+ip route</code></div></pre>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/1winu5" title="极狐 GitLab 官方文档">极狐 GitLab 官方文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/569ekz" title="阿里云邮件推送官方文档">阿里云邮件推送官方文档</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2023/04/12983/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2023/04/12983/">https://www.superheaoz.top/2023/04/12983/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2023/05/34807/"><span>服务器操作指北（5）编译安装 openssh 9.3p1 with openssl3.1.0</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2023/04/25680/"><span>Tendermint 学习随笔（2）P2P 源码阅读与分析</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

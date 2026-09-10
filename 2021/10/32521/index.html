@@ -1,0 +1,295 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>软路由部署记录 (1) QNAP 安装 OpenWrt【我的个人天地】</title><meta name="description" content="软路由部署记录 (1) QNAP 安装 OpenWrt"><meta name="keywords" content="软路由,OpenWrt,虚拟机"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="软路由部署记录 (1) QNAP 安装 OpenWrt【我的个人天地】"><meta property="og:description" content="软路由部署记录 (1) QNAP 安装 OpenWrt"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2021/10/32521/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "软路由部署记录 (1) QNAP 安装 OpenWrt",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2021-10-12T04:26:26.000Z",
+  "dateModified": "2021-10-12T04:26:26.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2021/10/32521/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%B5%84%E6%BA%90%E5%87%86%E5%A4%87"><span class="toc-text">一、资源准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AE%89%E8%A3%85%E8%BF%87%E7%A8%8B"><span class="toc-text">二、安装过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-NAS-%E8%BD%AF%E7%A1%AC%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="toc-text">2.1 NAS 软硬件配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-OpenWrt-%E5%91%BD%E4%BB%A4%E8%A1%8C%E9%85%8D%E7%BD%AE"><span class="toc-text">2.2 OpenWrt 命令行配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-OpenWrt-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE"><span class="toc-text">2.3 OpenWrt 网页配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E6%8F%92%E4%BB%B6%E6%8E%A8%E8%8D%90"><span class="toc-text">2.4 插件推荐</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color6"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color2"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">软路由部署记录 (1) QNAP 安装 OpenWrt</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2021-10-12</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2021-10-12</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E8%BD%AF%E8%B7%AF%E7%94%B1/">软路由</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/OpenWrt/">OpenWrt</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E8%99%9A%E6%8B%9F%E6%9C%BA/">虚拟机</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">2788 字 · 约 10 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>原本家里日用的是一个华硕的 RT-AC86U 路由器 (<s>小一千的路由器竟然不支持链路聚合，迷惑鸭。</s>),正常情况下应该都够用了，但是可能家里联网的智能设备过多，总是会让高负载路由器重启。<br>
+安装了梅林固件和内存扩展插件并添加了散热扇也不太行，故而准备现在 NAS 上搞一个软路由，后续有机会再上独立机器的软路由.(NAS 上搞也有烦人的地方，一更新固件就容易全体崩溃)</p>
+<span id="more"></span>
+<h2 id="一、资源准备">一、资源准备</h2>
+<ul>
+<li>威联通 NAS 一台 (至少有两个网口才行，本文使用的型号是 <code>453B-mini</code>)</li>
+<li><code>Koolshare</code> 版 <code>OpenWrt</code> 固件：<a target="_blank" rel="noopener" href="https://url.superheaoz.top/92vh4h" title="koolshare Lede X64">koolshare Lede X64</a>。(由于是虚拟机安装，所以可以直接使用虚拟机转盘或 <code>PE</code> 下写盘专用目录下的<code>openwrt-koolshare-mod-v2.36-r14941-67f6fa0a30-x86-64-generic-squashfs-combined.vmdk</code>)</li>
+</ul>
+<h2 id="二、安装过程">二、安装过程</h2>
+<h3 id="2-1-NAS-软硬件配置">2.1 NAS 软硬件配置</h3>
+<p>由于要安装软路由并接管所有网络流量，所以首先要对 <code>NAS</code> 的网络端口进行调整。</p>
+<ul>
+<li>
+<p>打开 <code>网络与虚拟交换机</code>，切换到 <code>高级</code> 模式。在网络设置选项卡中进入虚拟交换机页面.(建议操作过程通过网线直连 <code>NAS</code>，否则容易出现网络无法访问的问题)</p>
+</li>
+<li>
+<p><code>新增</code> 虚拟交换机，选择高级模式，绑定实体网络适配器 <code>Adapter 1</code>，下一步选择 <code>动态IP</code>，随后一路下一步到应用。(可以将虚拟机适配器名称改为 <code>Virtual Switch wan</code>)</p>
+</li>
+<li>
+<p><code>新增</code> 虚拟交换机，选择高级模式，绑定实体网络适配器 <code>Adapter 2</code>，下一步选择 <code>固定IP</code>，下一步选择 <code>使用以下的DNS服务器地址</code>，随后一路下一步到应用。(可以将虚拟机适配器名称改为 <code>Virtual Switch lan</code>)</p>
+<ul>
+<li>固定 IP 地址设置为 <code>192.168.xxx.yyy</code>。(<code>xxx</code> 和 <code>yyy</code> 可以自行在 <code>2-255</code> 范围内选择，<code>192.168.1.yyy</code>一般情况下是光猫所属网段，为避免冲突不进行选择，<code>192.168.xxx.1</code>将留给后续的 <code>OpenWrt</code> 软路由作为网关地址进行保留，后文将使用 <code>192.168.50.2</code> 作为 <code>NAS</code> 的地址，<code>192.168.50.1</code>作为 <code>OpenWrt</code> 的地址)</li>
+<li>子网掩码使用默认的 <code>255.255.255.0(/24)</code>。</li>
+<li>默认网关填写 <code>192.168.50.1</code>。</li>
+<li>主要 DNS 服务器与默认网关相同 <code>192.168.50.1</code>。</li>
+<li>次要 DNS 服务器可以使用各大公司的公共 DNS 服务，这里选择的是阿里云旗下的 <code>233.5.5.5</code>。(其他 DNS 服务商可参考 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/1yo8mr" title="已知 DNS 提供商列表">已知 DNS 提供商列表</a>)</li>
+</ul>
+</li>
+<li>
+<p>在设置完成后与 <code>NAS</code> 的连接可能会断开，这里需要用网线连接电脑网口和 <code>NAS</code> 的 <code>Adapter 2</code> 网口，并在电脑设置中手动设置 <code>IP 地址</code>，<code>子网掩码</code>，<code>网关</code>，<code>DNS 服务器</code>，IP 地址设置为 <code>192.168.50.200</code>,其他配置与前文相同。</p>
+</li>
+<li>
+<p>在 <code>网络与虚拟交换机</code> 的 <code>网络适配器</code> 选项卡中，将 <code>Virtual Switch lan</code> 设置为默认网关。</p>
+</li>
+</ul>
+<p>随后对虚拟机进行安装和配置。</p>
+<ul>
+<li>
+<p>首先在 <code>QNAP</code> 的官方 <code>App Center</code> 中选择安装 <code>Virtualization Station 虚拟机工作站</code>。</p>
+</li>
+<li>
+<p>通过 <code>File Station 文件总管</code> 上传提前准备好的 <code>vmdk 文件</code> 到系统任意目录。</p>
+</li>
+<li>
+<p>打开 <code>Virtualization Station 虚拟机工作站</code>，点击右侧 <code>导入</code> 按钮并选择映像转换器对之前上传到 <code>vmdk 文件</code> 进行转换。</p>
+</li>
+<li>
+<p>通过 <code>Virtualization Station 虚拟机工作站</code> 的 <code>建立</code> 按钮创建虚拟机。</p>
+<ul>
+<li>虚拟机名称：<code>LEDE</code>(任选名称即可)</li>
+<li>描述 (非必要): 留空即可</li>
+<li>操作系统：<code>Generic</code></li>
+<li>版本：<code>Generic</code></li>
+<li>启动固件：<code>原有BIOS</code>，若在前文中下载了 <code>-efi</code> 结尾的固件，这里需要选择 <code>UEFI</code>。</li>
+<li>CPU 核心数：<code>2</code></li>
+<li>内存：<code>2G</code> (根据 NAS 的内存情况进行选择即可，一般情况下 1G 就已经足够默认的 OpenWrt 系统使用，个人将 NAS 内存上到了 16G，所以 2G 在我这里也不多)</li>
+<li>光盘映像文件：不选择</li>
+<li>磁盘位置：<code>使用现有映像</code>，文件地址选择之前转换后的文件目录。</li>
+<li>网络：选择连接至 <code>Virtual Switch wan</code>。</li>
+<li>其他：启动 <code>VNC</code> 控制，自行设置密码。</li>
+</ul>
+</li>
+<li>
+<p>创建完成后不要直接启动，点击左侧虚拟机列表，选择之前创建的 <code>LEDE</code> 虚拟机。</p>
+<ul>
+<li>在 <code>设定-一般设定</code> 中，将 <code>CPU 型号</code> 选为 <code>Passthrough</code>，点击 <code>套用</code>。</li>
+<li>在 <code>设定-网络</code> 中，选择<code>新增装置</code>,添加<code>Virtual Switch lan</code>，点击 <code>套用</code>。</li>
+<li>在 <code>设定-储存空间</code> 中，将<code>界面</code>修改为<code>SATA</code>，点击 <code>套用</code>。</li>
+<li>在 <code>设定-其他</code> 中，将自动启动改为<code>延迟启动 120s</code>，点击 <code>套用</code>。(这样可以错开 NAS 重启时的资源占用高峰)</li>
+</ul>
+</li>
+<li>
+<p>启动虚拟机，在 <code>讯息</code> 页面点击中间的虚拟机界面，进入 <code>VNC</code> 开始 <code>OpenWrt</code> 的配置。</p>
+</li>
+</ul>
+<h3 id="2-2-OpenWrt-命令行配置">2.2 OpenWrt 命令行配置</h3>
+<ul>
+<li>在 <code>OpenWrt</code> 系统启动后，首先要进行网络地址的设置，通过 <code>vi /etc/config/network</code>修改局域网地址信息，重点是 <code>option ipaddr</code>。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-conf">  config interface 'lan'
+      option type 'bridge'
+      option ifname 'eth1'
+      option proto 'static'
+      option ipaddr '192.168.50.1'
+      option netmask '255.255.255.0'
+      option ip6assign '60'</code></div></pre>
+<ul>
+<li>由于 <code>LEDE</code> 默认用户为<code>root</code>,且屏蔽了登录页面用户名输入框，导致无法修改用户名后无法登录系统，造成一定的安全隐患，所以此处对 <code>LUCI 页面</code>进行修改，使登录页面支持显示用户名，并修改登录用户名。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">vi /usr/lib/lua/luci/view/sysauth.htm
+将 22-27 行对 username 的注释解除掉
+
+vi /etc/passwd
+root:x:0:0:root:/root:/bin/ash 修改为
+username:x:0:0:root:/root:/bin/ash
+
+vi /etc/shadow
+root:xxxxxx:0:0:99999:7:::修改为 username:xxxxxx:0:0:99999:7:::</code></div></pre>
+<h3 id="2-3-OpenWrt-网页配置">2.3 OpenWrt 网页配置</h3>
+<p>在命令行进行配置后，通过浏览器输入 <a target="_blank" rel="noopener" href="http://192.168.50.1" class="external-link" data-redirect="http%3A%2F%2F192.168.50.1">http://192.168.50.1</a> 即可访问 <code>OpenWrt</code> 的管理后台。</p>
+<ul>
+<li>在 <code>网络-接口</code> 中找到 <code>wan</code> 接口，点击编辑，将协议修改为 <code>PPPoE</code>，输入宽带运营商提供的用户名和密码，即可连接互联网。</li>
+<li>在 <code>网络-接口</code> 中找到 <code>wan6</code> 接口，点击编辑，将协议修改为 <code>DHCPv6客户端</code>，<code>请求 IPV6 地址</code> 修改为 <code>try</code>，即可在运营商支持的情况下使用 <code>IPv6</code>。</li>
+</ul>
+<h3 id="2-4-插件推荐">2.4 插件推荐</h3>
+<ul>
+<li>在有 <code>公网 IP</code> 或获取到 <code>IPv6</code> 地址的情况下，推荐使用酷软的 <code>Let's Encrypt</code> 和 <code>Koolddns</code> 插件，构建公网域名访问。也可以使用酷软提供的 <code>DDNSTO</code> 插件进行内网穿透访问。</li>
+</ul>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/nn8tmc" title="NAS 篇六：最详细威联通 NAS 搭建 LEDE 软路由流程，让你的路由器暴增 50+ 实用插件！">NAS 篇六：最详细威联通 NAS 搭建 LEDE 软路由流程，让你的路由器暴增 50+ 实用插件！</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/1kkznj" title="更改 openwrt 后台 web 登陆用户名方法">更改 openwrt 后台 web 登陆用户名方法</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2021/10/32521/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2021/10/32521/">https://www.superheaoz.top/2021/10/32521/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2021/10/50200/"><span>Win11 访问 WSL 文件系统异常</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2021/06/53799/"><span>图计算学习随笔（2）Nebula 部署</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

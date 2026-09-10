@@ -1,0 +1,389 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>hexo 迁移云服务【我的个人天地】</title><meta name="description" content="hexo 迁移云服务"><meta name="keywords" content="hexo,云服务"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="hexo 迁移云服务【我的个人天地】"><meta property="og:description" content="hexo 迁移云服务"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2020/10/8357/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "hexo 迁移云服务",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2020-10-12T05:30:13.000Z",
+  "dateModified": "2024-12-26T08:44:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2020/10/8357/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%9F%9F%E5%90%8D%E5%8F%8A%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-text">一、域名及服务器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%9F%9F%E5%90%8D"><span class="toc-text">1.1 域名</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%B4%AD%E4%B9%B0"><span class="toc-text">1.2 服务器购买</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">1.3 服务器配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81hexo-%E7%89%88%E6%9C%AC%E5%8D%87%E7%BA%A7"><span class="toc-text">二、hexo 版本升级</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E9%85%8D%E7%BD%AE-NodeJS"><span class="toc-text">2.1 配置 NodeJS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%9B%B4%E6%96%B0-hexo-%E7%9B%B8%E5%85%B3%E5%8C%85"><span class="toc-text">2.2 更新 hexo 相关包</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-hexo-asset-image-%E6%8F%92%E4%BB%B6-bug-%E4%BF%AE%E6%94%B9"><span class="toc-text">2.3 hexo-asset-image 插件 bug 修改</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-hexo-browsersync-%E9%97%AE%E9%A2%98%E5%B0%8F%E8%AE%B0"><span class="toc-text">2.4 hexo-browsersync 问题小记</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81hexo-%E4%B8%BB%E9%A2%98%E4%BF%AE%E6%94%B9"><span class="toc-text">三、hexo 主题修改</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E9%80%89%E6%8B%A9%E4%B8%BB%E9%A2%98"><span class="toc-text">3.1 选择主题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E4%BF%AE%E6%94%B9%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="toc-text">3.2 修改目录结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%BD%91%E7%AB%99%E6%8E%A8%E9%80%81"><span class="toc-text">四、网站推送</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color2"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color0"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">hexo 迁移云服务</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2020-10-12</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2024-12-26</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%BA%91%E6%9C%8D%E5%8A%A1/">云服务</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">5469 字 · 约 19 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>之前个人主页一直挂在 <code>coding</code> 上，好久没有看过了，结果发现必须要自有域名才能继续访问。趁着还云服务的学生服务器，和以前买来蹭免费邮件服务器的域名，准备迁移到云服务上。</p>
+<span id="more"></span>
+<h2 id="一、域名及服务器">一、域名及服务器</h2>
+<p>现在云服务的生态已经非常丰富了，所有工作可以在主流的云服务厂商一站式搞定，我目前部署在 <code>阿里云</code> 中，下文介绍也以 <code>阿里云</code> 为主。</p>
+<h3 id="1-1-域名">1.1 域名</h3>
+<p>买域名没什么说的（<a target="_blank" rel="noopener" href="https://url.superheaoz.top/aliyundomain" title="点击购买">点击购买</a>），唯一要提的一点是国内域名需要备案，不过很简单，各大厂商都提供一站式服务（<a target="_blank" rel="noopener" href="https://url.superheaoz.top/aliyunicp" title="点击备案">点击备案</a>）。之后可以顺便使用证书服务给自己的网站注册一个免费的 <code>SSL 证书</code>（<a target="_blank" rel="noopener" href="https://url.superheaoz.top/aliyunssl" title="点击注册">点击注册</a>），方便后续对个人主页进行 <code>HTTPS</code> 方面的设置。</p>
+<h3 id="1-2-服务器购买">1.2 服务器购买</h3>
+<p><a target="_blank" rel="noopener" href="https://url.superheaoz.top/aliyundev" title="开发者成长计划">开发者成长计划</a> 对用户还是很友好的，性能上 <code>一核 2G 1M带宽</code> 也够普通用户折腾了。自带公网 IPv4 地址，<s>要是还配 IPv6 地址就再好不过了</s>。（貌似新版服务器已经支持 IPv6）我这里买的是 <code>Ubuntu</code> 的操作系统，因为这个用的多，具体用什么操作系统，看自己习惯就好。<code>Windows</code> 就算了，这个配置也够呛能跑动，另外记得开启安全组端口和密钥对。</p>
+<ul>
+<li>
+<p>云服务器管理 - 网络与安全 - 安全组 - 手动添加 <code>80</code> 端口和 <code>443</code> 端口</p>
+</li>
+<li>
+<p>云服务器管理 - 网络与安全 - 密钥对 - 创建密钥对&amp;绑定密钥对</p>
+</li>
+</ul>
+<h3 id="1-3-服务器配置">1.3 服务器配置</h3>
+<p>服务器购买完成当然是要先配置一番，基础的操作命令就不再说了，由于是 <code>root 权限</code> 进入系统，所有的命令就不在带上 <code>sudo</code> 了。如果之前已经绑定了密钥对，这里可以直接使用密钥登录服务器。</p>
+<h4 id="1-3-1-开放端口">1.3.1 开放端口</h4>
+<p>服务器默认是打开防火墙并屏蔽除 <code>SSH</code> 外的各种端口的，这里需要用 <code>Ubuntu</code> 自己的 <code>UFW</code> 命令放行网页服务所需端口。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">ufw allow 80/tcp
+ufw allow 433/tcp</code></div></pre>
+<h4 id="1-3-2-安装-nginx">1.3.2 安装 <code>nginx</code></h4>
+<p>端口开放以后需要配置 <code>nginx</code> 来作为 <code>hexo</code> 运行的服务器，安装并启动的命令如下，<code>nginx</code> 配置的默认路径为 <code>/etc/nginx</code>。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">apt install nginx -y
+systemctl start nginx
+systemctl enable nginx</code></div></pre>
+<h4 id="1-3-3-配置-nginx-网页服务">1.3.3 配置 <code>nginx</code> 网页服务</h4>
+<p>启动服务后直接访问服务器 <code>公网 IP</code> 即可打开 <code>nginx</code> 的默认页面，如果无法打开，请确认安全组和防火墙的设置问题。<br>
+打开后第一步可以先在域名解析服务中将刚才已经购买并注册 <code>SSL 证书</code> 的域名指向该 IP，然后进入目录 <code>/etc/nginx/conf.d</code> 对个人主页的相关服务信息进行配置，首先创建个人主页的配置文件 <code>vi hexo.conf</code>，然后对内容进行修改。</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div></div><code class="language-conf">server &#123;
+  listen 443;
+  server_name youdomain;
+  ssl on;
+  ssl_certificate /etc/ssl/youdomain.pem;
+  ssl_certificate_key /etc/ssl/youdomain.key;
+  ssl_session_timeout 5m;
+  ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4; #使用此加密套件。
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2; #使用该协议进行配置。
+  ssl_prefer_server_ciphers on;
+  location / &#123;
+    root /home/git/www/hexo;
+    index index.html;
+  &#125;
+&#125;
+server &#123;
+  listen 80;
+  server_name youdomain;
+  rewrite ^/(.*)$ https://youdomain:443/$1 permanent;
+&#125;</code></div></pre>
+<ul>
+<li>
+<p>第一个 <code>server</code> 是用来配置 <code>HTTPS 访问</code>，<code>SSL 证书</code>的 <code>pem 文件</code> 和 <code>key 文件</code> 可以在阿里云的证书控制台中下载，然后上传到服务器的 <code>/etc/ssl</code> 目录即可。<code>location</code> 中的 <code>root</code> 路径是个人主页的根地址，之所以是 <code>/home/git</code> 是因为之后要对 git 进行操作，完成个人主页的自动部署。</p>
+</li>
+<li>
+<p>第二个 <code>server</code> 是用来配置 <code>HTTP 访问</code>，将所有的 <code>HTTP 请求</code> 转换为 <code>HTTPS 请求</code>。如果不需要设置 <code>HTTPS 访问</code>，可以按照如下进行设置。</p>
+</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-conf">server &#123;
+  listen  80;
+  server_name     youdomain;
+  location / &#123;
+    root    /home/git/www/hexo;
+    index   index.html;
+  &#125;
+&#125;</code></div></pre>
+<h4 id="1-3-4-配置-git">1.3.4 配置 git</h4>
+<p>这一步就是为了让我们可以本地编辑完成后直接通过 <code>hexo d</code> 命令一键将博文部署到服务器。</p>
+<ol>
+<li>
+<p>通过 <code>adduser git</code> 创建 <code>git 用户</code>，并配置密码。</p>
+</li>
+<li>
+<p>通过 <code>adduser git sudo</code> 授予 <code>git 用户</code> 管理员权限。或通过以下代码手动添加权限。</p>
+</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">chmod 740 /etc/sudoers
+vi /etc/sudoers
+
+# User privilege specification
+root ALL=(ALL:ALL) ALL
+git  ALL=(ALL:ALL) ALL  #添加这一行
+# Members of the admin group may gain root privileges
+
+chmod 400 /etc/sudoers</code></div></pre>
+<ol start="3">
+<li>对 <code>git 用户</code> 进行配置。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div></div><code class="language-bash"># 切换到 git 用户
+su git
+cd ~
+
+# 创建个人主页根目录
+mkdir www
+cd www
+mkdir hexo
+
+# 添加 ssl 密钥 (authorized_keys 文件来自默认登录用户的对应目录)
+cd ~
+mkdir .ssh
+sudo cp /root/.ssh/authorized_keys /home/git/.ssh/
+sudo chown git:git /home/git/.ssh/authorized_keys
+
+# 创建 git 仓库
+git init --bare hexo.git
+
+# 添加并赋予 hooks 执行权限
+vi ~/hexo.git/hooks/post-receive
+
+git --work-tree=/home/git/www/hexo --git-dir=/home/git/hexo.git checkout -f
+
+chmod +x ~/hexo.git/hooks/post-receive</code></div></pre>
+<p>至此对服务器的配置已经完成，之后是对本机的 <code>hexo</code> 进行安装和配置。</p>
+<h2 id="二、hexo-版本升级">二、<code>hexo</code> 版本升级</h2>
+<p>由于好久没有更新过个人主页，电脑在此期间也经历过重装系统，所以一切配置都要从头再来。电脑环境为 <code>Windows</code>，后续安装都是基于 <code>Windows 10</code>。</p>
+<h3 id="2-1-配置-NodeJS">2.1 配置 <code>NodeJS</code></h3>
+<h4 id="2-1-1-下载">2.1.1 下载</h4>
+<p>下载 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/ljuzl" title="安装包">安装包</a>，我这里通过清华大学的镜像站进行下载。这里选择的是绿色免安装版，后续需要对环境变量进行设置。</p>
+<h4 id="2-1-2-配置环境变量">2.1.2 配置环境变量</h4>
+<p>首先将文件解压缩到自己指定的目录，然后再用户环境变量中添加 <code>NODE_HOME</code>，变量指向 <code>NodeJS</code> 解压目录。然后在用户的 <code>path</code> 中添加 <code>%NODE_HOME</code> 和 <code>%NODE_PATH%\node_global</code>。</p>
+<h4 id="2-1-3-修改-npm-包安装位置">2.1.3 修改 <code>npm</code> 包安装位置</h4>
+<p>在 <code>NodeJS</code> 解压目录中建立 <code>node_global</code> 及 <code>node_cache</code> 两个文件夹。然后执行命令：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash"># 将'NodeJS解压目录'替换为自己的实际目录
+npm config set cache &quot;NodeJS解压目录\node_cache&quot;
+npm config set prefix &quot;NodeJS解压目录\node_global&quot;</code></div></pre>
+<h4 id="2-1-4-修改-npm-源">2.1.4 修改 <code>npm 源</code></h4>
+<p>默认的安装源在国外，下载不稳定，可以调整到淘宝源。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 配置
+npm config set registry https://registry.npmmirror.com
+# 验证
+npm config get registry</code></div></pre>
+<h3 id="2-2-更新-hexo-相关包">2.2 更新 <code>hexo</code> 相关包</h3>
+<p>首先通过 <code>npm install -g hexo-cli</code> 安装 <code>hexo-cli</code>。</p>
+<p>然后由于个人主页的许多配置都是两年前的，已经非常落后了，为此，对 <code>npm 包</code> 进行升级。</p>
+<ol>
+<li>
+<p>全局升级 <code>hexo-cli</code>，首先通过 <code>hexo version</code> 查看当前版本，然后执行 <code>npm i hexo-cli -g</code>，再次使用 <code>hexo version</code> 查看是否升级成功。截至 <code>2020/10/12</code>，<code>hexo</code> 最新版本为 <code>5.2.0</code>。</p>
+</li>
+<li>
+<p>使用 <code>npm install -g npm-check</code> 和 <code>npm-check</code>，检查系统中的插件是否有升级的，可以看到自己前面都安装了那些插件。</p>
+</li>
+<li>
+<p>使用 <code>npm-check -u</code>，升级系统中的插件。</p>
+</li>
+</ol>
+<h3 id="2-3-hexo-asset-image-插件-bug-修改">2.3 <code>hexo-asset-image</code> 插件 bug 修改</h3>
+<p><s><code>hexo-asset-image</code>插件的作用是将 md 文件中的图片路径在生成个人主页是动态转换为对应网址路径，然而对应的 npm 包存在 bug，会导致路径生成出现错误。该 bug 作者在 github 中已经修改，但是没有发布新的 npm 包，所以需要手动修复文件。对应的修改操作为该<a target="_blank" rel="noopener" href="https://github.com/xcodebuild/hexo-asset-image/commit/3dc8a000e8ade20943f3da56c3ab9f7a88a69f0f" title="commit" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fxcodebuild%2Fhexo-asset-image%2Fcommit%2F3dc8a000e8ade20943f3da56c3ab9f7a88a69f0f">commit</a>。文件位置在<code>./node_modules/hexo-asset-image/index.js</code>。</s></p>
+<p>目前 <code>bug</code> 已经被修复，新版插件已经不需要在修改对应源码。</p>
+<pre><div class="code-header"><span class="code-header-type">git</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-git">24  -   var endPos = link.lastIndexOf('.');
+24  +   var endPos = link.length-1;</code></div></pre>
+<h3 id="2-4-hexo-browsersync-问题小记">2.4 <code>hexo-browsersync</code> 问题小记</h3>
+<p>在某次重启电脑后执行 <code>hexo s</code> 命令时发现 <code>hexo-browsersync</code> 所需要的 3000 端口被占用，提示 <code>listen EACCES</code>。通过 <code>netstat</code> 指令却找不到相关进程信息。在一顿搜索后发现是 <code>hyper-V</code> 对端口进行了保留，当要修改保留端口时提示进程被占用，重启电脑后发现保留端口自己修改了，不再冲突。查看和修改预保留端口命令如下，我差点就想重置 <code>winsock</code> 了。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">netsh interface ipv4 show excludedportrange protocol=tcp
+netsh int ipv4 set dynamicport tcp start=49152 num=16383
+netsh int ipv4 add excludedportrange protocol=tcp startport=3000 numberofports=1</code></div></pre>
+<h2 id="三、hexo-主题修改">三、<code>hexo</code> 主题修改</h2>
+<h3 id="3-1-选择主题">3.1 选择主题</h3>
+<p>在升级完 <code>hexo</code> 以后，无奈的发现主题适配存在问题，于是重新搜索主题（前端实属不精，就不自己献丑搞了），最后敲定了主题：<a target="_blank" rel="noopener" href="https://github.com/fan-lv/Fan" title="Fan" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ffan-lv%2FFan">Fan</a>。</p>
+<ul>
+<li>首先将主题 <code>fork</code> 到自己的仓库中，然后按照主题的 <code>GitHub</code> 页面进行相关配置。</li>
+<li><s>该主题在 <code>Hexo 5.0.0+</code> 版本中存在侧边栏 <code>toc</code> 无法正确响应的 <code>bug</code>，经排查后发现是 <code>hexo</code> 本身的 <code>toc</code> 生成机制对跳转路径进行了转码，但文章生成时没有转码，导致函数无法正确识别 <code>toc-link</code>。在主题的 <code>sidebar.js</code> 文件结尾添加如下代码将侧边栏的 <code>toc-link</code> 重新解码即可。</s> 修改已经贡献到主题。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">js</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-js">/**
+ * @description 为 toc-link 重新解码
+ */
+var list = document.getElementsByClassName(&quot;toc-link&quot;);
+for (var i in list) &#123;
+  var tochref = decodeURI(list[i].getAttribute(&quot;href&quot;));
+  list[i].href = tochref;
+&#125;</code></div></pre>
+<h3 id="3-2-修改目录结构">3.2 修改目录结构</h3>
+<p>默认的 <code>hexo</code> 新文章都生成在 <code>\source\_post</code> 目录下，当文章数目变多时无法快速查找，为此将文章以年为单位进行归类。修改根目录下的 <code>_config.yml</code> 文件。然后将现有文章进行分类归纳，命令行一键操作可参考博文——如何在 Hexo 中对文章 md 文件分类。</p>
+<pre><div class="code-header"><span class="code-header-type">yml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-yml">new_post_name: :year/:title
+permalink: :year/:month/:day/:name/</code></div></pre>
+<h2 id="四、网站推送">四、网站推送</h2>
+<p>在一切配置完成以后，需要通过 <code>hexo-deployer-git</code> 插件设置推送服务，从而做到自动推送更新个人主页。</p>
+<ol>
+<li>安装插件。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">npm install hexo-cli -g
+npm install hexo-deployer-git --save</code></div></pre>
+<ol start="2">
+<li>配置推送地址。其中 <code>repo</code> 栏的设置参数与第二章配置一致。</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">yml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-yml"># Deployment
+## Docs: https://hexo.io/docs/one-command-deployment
+deploy:
+  type: git
+  message:
+  repo: git@youdomain:/home/git/hexo.git
+  branch: master</code></div></pre>
+<ol start="3">
+<li><code>git</code> 添加可信目录</li>
+</ol>
+<p>新版 <code>git</code> 更新了可信域机制，需要将 <code>.deploy_git</code> 对应目录添加到安全目录里面才可以完成部署。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">git config --global --add safe.directory 'your-projrct-dir/.deploy_git'</code></div></pre>
+<ol start="4">
+<li>执行 <code>hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</code> 推送个人主页。此处需要将云服务器生成的密钥，导入到本地计算机中。</li>
+</ol>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/4l6nf" title="从零搭建 Hexo 并部署云服务器（奶妈级教学）">从零搭建 Hexo 并部署云服务器（奶妈级教学）</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/u5m1h" title="NodeJS 配置及换源">NodeJS 配置及换源</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/r7mh7" title="Hexo 版本升级指南">Hexo 版本升级指南</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/tlwsk" title="Hyper-V 和 IDEA 运行端口占用问题">Hyper-V 和 IDEA 运行端口占用问题</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/vqnnl" title="如何在 Hexo 中对文章 md 文件分类">如何在 Hexo 中对文章 md 文件分类</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2020/10/8357/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2020/10/8357/">https://www.superheaoz.top/2020/10/8357/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2021/02/9833/"><span>CentOS 配置开发环境</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2020/10/11845/"><span>Windows 安装 latex</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

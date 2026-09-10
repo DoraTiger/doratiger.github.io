@@ -1,0 +1,326 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Ray 学习随笔（3）ray-streaming-state 源码阅读【我的个人天地】</title><meta name="description" content="Ray 学习随笔（3）ray-streaming-state 源码阅读"><meta name="keywords" content="ray"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Ray 学习随笔（3）ray-streaming-state 源码阅读【我的个人天地】"><meta property="og:description" content="Ray 学习随笔（3）ray-streaming-state 源码阅读"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2021/06/3687/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Ray 学习随笔（3）ray-streaming-state 源码阅读",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2021-06-03T12:14:15.000Z",
+  "dateModified": "2021-06-03T12:14:15.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2021/06/3687/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A6%82%E8%BF%B0"><span class="toc-text">一、概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Java-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">二、Java 源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E5%92%8C%E6%96%87%E4%BB%B6%E5%8A%9F%E8%83%BD"><span class="toc-text">2.1 目录结构和文件功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%87%8D%E7%82%B9%E5%8F%82%E6%95%B0%E7%A0%94%E7%A9%B6"><span class="toc-text">2.2 重点参数研究</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E8%B0%83%E7%94%A8%E9%80%BB%E8%BE%91"><span class="toc-text">2.3 调用逻辑</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">三、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color4"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color5"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Ray 学习随笔（3）ray-streaming-state 源码阅读</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2021-06-03</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2021-06-03</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ray/">ray</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">7640 字 · 约 26 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>Ray 源码分析系列笔记。</p>
+<span id="more"></span>
+<h2 id="一、概述">一、概述</h2>
+<a href="/2021/05/6715/" title="Ray 学习随笔（1）启动过程源码阅读">Ray 学习随笔（1）启动过程源码阅读</a>对 `ray` 本身的启动流程进程了分析，<a href="/2021/06/1816/" title="Ray 学习随笔（2）ray-streaming 源码阅读">Ray 学习随笔（2）ray-streaming 源码阅读</a>对 `ray-streaming` 的启动过程进行了分析。由于 `ray-streaming-state` 并没有被实际使用，所以前文并没有进行深入阅读。本篇具体阅读学习相关代码和业务逻辑。
+<h2 id="二、Java-源码分析">二、Java 源码分析</h2>
+<h3 id="2-1-目录结构和文件功能">2.1 目录结构和文件功能</h3>
+<p>整个 state 源码包的目录结构如下所示。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div></div><code class="language-bash">state
+    ├── KeyValueState.java  -&gt;  key-value类型状态存储接口,提供get和put方法.
+    ├── PartitionRecord.java  -&gt;  分区值记录,包含分区ID和具体值.
+    ├── StateException.java  -&gt;  状态异常.
+    ├── StateStoreManager.java  -&gt;  状态存储事务接口.
+    ├── StorageRecord.java  -&gt;  检查点记录,包含检查点ID和具体值.
+    ├── backend
+    │   ├── AbstractKeyStateBackend.java  -&gt;  将状态存储事务接口进行实现,通过代理提供value/list/map三种类型的状态存储,通过put,get访问代理获取数据(需要状态描述确定存储表),通过代理实现事务基本调用,具体实现靠strage. keyGroupIndex,currentKey,currentCheckpointId作用未知
+    │   ├── AbstractStateBackend.java  -&gt;  状态后端的父类抽象,通过config构建状态策略,存储后端类型为keyvalue和keymap. keyGroupIndex作用未知
+    │   ├── BackendType.java  -&gt;  状态后端类型,目前只提供memory.(getEnum传入config配置,但逻辑上只返回memory类型,无视config配置).
+    │   ├── KeyStateBackend.java  -&gt;  状态存储事务接口AbstractKeyStateBackend的代理部分具体实现,提供value/list/map三种类型代理构建.  numberOfKeyGroups,keyGroup作用未知
+    │   ├── OperatorStateBackend.java  -&gt;  状态存储事务接口AbstractKeyStateBackend的代理部分具体实现,仅适用于操作符级别数据存储,只提供list类型代理构建,SplitList和UnionList的区别在于是否对代理标识符.setSplit(true)(Split代理没有调用init,会在get/put时触发init,逻辑上union也不需要init了)
+    │   ├── StateBackendBuilder.java  -&gt;  提供状态后端的具体构建,
+    │   ├── StateStrategy.java  -&gt;  状态保存模型,DUAL_VERSION允许回滚,SINGLE_VERSION只保留当前版本.
+    │   └── impl
+    │       └── MemoryStateBackend.java  -&gt;  内存状态后端的具体实现,提供三种类型存储的构建代理,具体构建函数在store中,直接忽略tableName属性和序列化属性,目测这些是用来个关系型存储后端确定表名和数据序列化用的.
+    ├── config
+    │   ├── ConfigHelper.java  -&gt;
+    │   └── ConfigKey.java  -&gt;  状态存储config键值存储,允许设置存储后端类型,表名,策略,NUMBER_PER_CHECKPOINT(默认值5,作用未知)
+    ├── keystate
+    │   ├── KeyGroup.java  -&gt;  键值组,包含分组键值起点和终点.所有键组的分组最大值默认情况下为作业的最大并行度.
+    │   ├── KeyGroupAssignment.java  -&gt;  键值组调度算法,getKeyGroup通过作业最大并行度,task并行度,task索引构建keygroup. assignKeyGroupIndexForKey通过键值哈希和键组数量判断键值所属keygroup索引.computeKeyGroupToTask计算每个算子不同分组id对应的子任务id.
+    │   ├── desc  -&gt;  所有描述都需要提供数据类型,但没有进行利用,无法进行数据序列化和反序列化.(后端支持不完全,mem后端不需要关注序列化问题,所以只预留接口,没进行实现)
+    │   │   ├── AbstractStateDescriptor.java  -&gt;  状态描述抽象,包含状态名称,状态表名(目前无用),状态类型(内存后端无用).状态名称通过getIdentify对其他调用提供身份名.
+    │   │   ├── ListStateDescriptor.java  -&gt;  list状态描述实现,需要提供value类型,提供状态build函数,可选设置ListState的partitionNum和index.
+    │   │   ├── MapStateDescriptor.java  -&gt;  map状态描述实现,需要提供key和value的键值类型.
+    │   │   └── ValueStateDescriptor.java  -&gt;  value状态描述实现,需要设置默认值和value类型.
+    │   └── state
+    │       ├── ListState.java  -&gt;  继承自一元状态接口,将单一value值改为list类型,进而提供对list的修改函数add,update.
+    │       ├── MapState.java  -&gt;  继承自一元状态接口,将单一value值改为map类型,进而提供map相关操作.
+    │       ├── State.java  -&gt;  状态接口,提供setCurrentKey函数(作用未知,猜测设置状态key值)
+    │       ├── UnaryState.java  -&gt;  一元状态接口,每个状态仅包含一个value值,只提供get
+    │       ├── ValueState.java  -&gt;  继承自一元状态接口,允许修改状态value值,提供update
+    │       ├── impl
+    │       │   ├── ListStateImpl.java  -&gt;  ListState的实现,通过StateHelper实现存储.
+    │       │   ├── MapStateImpl.java  -&gt;  MapState的实现,通过StateHelper实现存储.
+    │       │   ├── OperatorStateImpl.java  -&gt;  ListState关于操作符的实现,通过StateHelper实现存储.init操作会执行scan扫描存储后端是否有对应数据,目测用于恢复数据,然后执行splitList,将数据切分成PartitionRecord,追加在覆盖原有数据上,操作符状态key值会在基本描述的基础上加入并行度和子任务索引.(splitList和scan逻辑需要仔细梳理)
+    │       │   ├── StateHelper.java  -&gt;  状态辅助类,成员变量AbstractKeyStateBackend用于最终存储数据,成员变量AbstractStateDescriptor用于存储状态描述
+    │       │   └── ValueStateImpl.java  -&gt;  ValueState的实现,通过StateHelper实现存储.
+    │       └── proxy
+    │           ├── ListStateStoreManagerProxy.java  -&gt;  继承自StateStoreManagerProxy,对ListState进行代理包装,对接状态和后端,通过判断stateDescriptor.isOperatorList()提供MapStateImpl和OperatorStateImpl
+    │           ├── MapStateStoreManagerProxy.java  -&gt;  继承自StateStoreManagerProxy,对MapState进行代理包装,对接状态和后端,只提供MapStateImpl
+    │           └── ValueStateStoreManagerProxy.java  -&gt;  继承自StateStoreManagerProxy,对ValueState进行代理包装,对接状态和后端,只提供ValueStateImpl
+    ├── serialization
+    │   ├── KeyMapStoreSerializer.java  -&gt;  keymap序列化和反序列化接口
+    │   ├── KeyValueStoreSerialization.java  -&gt;  keyvalue序列化和反序列化接口
+    │   ├── Serializer.java  -&gt;  FST序列化框架封装
+    │   └── impl
+    │       ├── AbstractSerialization.java  -&gt;  序列化器抽象,generateRowKeyPrefix函数生成数据的row key,函数名应该改为generateRowKeyWithPrefix
+    │       ├── DefaultKeyMapStoreSerializer.java  -&gt;  key提供keyWithPrefix序列化, map Key直接序列化,map value直接序列化,key未提供反序列化.
+    │       └── DefaultKeyValueStoreSerialization.java  -&gt;  key只提供keyWithPrefix的序列化,value直接序列化,key未提供反序列化.
+    ├── store
+    │   ├── KeyMapStore.java  -&gt;  keymap存储接口继承自KeyValue存储接口,
+    │   ├── KeyValueStore.java  -&gt;  KeyValue存储接口,数据读写外提供用于刷写到硬盘的flush函数,清理缓存的clearCache,结束存储的close
+    │   └── impl  -&gt;  内存实现均利用newConcurrentMap,map子类型为hashmap.
+    │       ├── MemoryKeyMapStore.java  -&gt;  keymap存储的内存实现,可以直接存map,也可以存具体值.删除只能以map为目标,不支持map value删除
+    │       └── MemoryKeyValueStore.java  -&gt;  keyvalue存储的内存实现,直接存值.
+    └── strategy
+        ├── AbstractStateStoreManager.java  -&gt;  事务管理抽象,内置可读写的frontStore,远程存储的kvStore,只读的middleStore.
+        ├── DualStateStoreManager.java  -&gt;
+        ├── MVStateStoreManager.java  -&gt;  多版本存储策略实现,利用外部存储mvcc
+        └── StateStoreManagerProxy.java  -&gt;  状态存储代理,利用的后端由AbstractKeyStateBackend提供,目前只有mem</code></div></pre>
+<h3 id="2-2-重点参数研究">2.2 重点参数研究</h3>
+<p>keyGroupIndex 数据存储相关，目前无用</p>
+<ul>
+<li>AbstractKeyStateBackend 的 getKeyGroupIndex 在 StateStoreManagerProxy 被调用，修改 stateStrategy 对应值，用在 get 和 put 前，但是后续实现中没有操作该对象。</li>
+<li>AbstractKeyStateBackend 的 setKeyGroupIndex 在 StateHelper 中被调用，调用父方法 setKeyGroupIndex 和 resetKeyGroupIndex 未被调用。</li>
+<li>KeyStateBackend 的 setCurrentKey 方法会根据 key 信息直接修改该值。</li>
+<li>AbstractStateBackend 的 setKeyGroupIndex 目前无调用</li>
+<li>AbstractStateStoreManager 的 setKeyGroupIndex 在 StateStoreManagerProxy 被调用，父方法 get 和 put 后续实现中没有操作该对象。父方法 setKeyGroupIndex 未被调用</li>
+</ul>
+<p>currentCheckpointId 检查点相关</p>
+<ul>
+<li>AbstractKeyStateBackend 的 setCheckpointId 在 runtime/worker/context/StreamingRuntimeContext.java 中被调用，调用父类的 setCheckpointId 未被调用，状态检查点目前应该没有实现</li>
+<li>AbstractKeyStateBackend 的 setCheckpointId 在同文件 setContext 方法中被调用，调用父类的 setContext 未被调用</li>
+<li>AbstractKeyStateBackend 的 getCheckpointId 在 StateStoreManagerProxy 被调用，用在 put 和 get 操作中，put 直接根据检查点构建存储记录 StorageRecord,get 在 daul,mv 中有不同实现。</li>
+</ul>
+<p>currentKey 数据查询相关</p>
+<ul>
+<li>AbstractKeyStateBackend 的 getCurrentKey 在 StateHelper 中被 getStateKey 调用，将 descName 和 currentKey 组合，构建存储键值，descName 通过 descriptor.getIdentify(),具体值为 descriptor 的 name 变量。</li>
+<li>AbstractKeyStateBackend 的 setCurrentKey 在 runtime/worker/context/StreamingRuntimeContext.java 中被调用，父函数 setCurrentKey 未见调用</li>
+<li>AbstractKeyStateBackend 的 setCurrentKey 在同文件 setContext 方法中被调用，调用父类的 setContext 未被调用</li>
+<li>AbstractKeyStateBackend 的 setCurrentKey 在 StateHelper 中被调用，调用方法 setCurrentKey 在 stateimpl 中被调用，后续应为用户调用</li>
+<li>AbstractKeyStateBackend 的 setCurrentKey 在 KeyStateBackend 中被实现，在赋值前会修改 KeyGroupIndex(KeyGroupAssignment.assignKeyGroupIndexForKey(currentKey, numberOfKeyGroups)) 策略为直接 hash 取模</li>
+<li>AbstractKeyStateBackend 的 setCurrentKey 在 OperatorStateBackend 中被实现，直接赋值<br>
+currentKey 切换会造成同样查询结果不同，currentKey 参与 StateKey 构建.descriptor 的 name 同样参与构建。<br>
+currentKey 应该与操作符或 task 绑定，descriptor 的 name 可以参与用户 state 绑定或 window 绑定，不同 window 不同 descriptor.</li>
+</ul>
+<p>numberOfKeyGroups</p>
+<ul>
+<li>KeyStateBackend 的 numberOfKeyGroups 在构建时被赋值，目前只在 test 中进行构建。</li>
+<li>KeyStateBackend 的 numberOfKeyGroups 在 setCurrentKey 时被调用，根据调用情况来看，该变量应该为当前操作符并行度。</li>
+<li>KeyStateBackend 的 getNumberOfKeyGroups 未见调用</li>
+</ul>
+<p>keyGroup</p>
+<ul>
+<li>KeyStateBackend 的 keyGroup 在构建时被赋值，目前只在 test 中进行构建。</li>
+<li>KeyStateBackend 的 getkeyGroup 未见调用</li>
+</ul>
+<h3 id="2-3-调用逻辑">2.3 调用逻辑</h3>
+<p>整个 state 对外暴露的后端接口为 <code>OperatorStateBackend</code> 和 <code>KeyStateBackend</code> ,其中后者源码注释中表示应该只用于键值类型数据流，但是目前计算系统中未进行明细判断。后端的创建由 <code>StateBackendBuilder</code> 提供。在状态后端创建完成以后，两种后端对外暴露的存储类型不尽相同。当执行 commit 事务时，会将存储信息持久化。获取具体的装填后端存储时，需要传入 Descriptor 进行辅助。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div></div><code class="language-Java">/**
+ * TransactionState interface.
+ * &lt;p&gt;
+ * Streaming State should implement transaction in case of failure, which in our case is four
+ * default method, finish, commit, ackCommit, rollback.
+ */
+public interface StateStoreManager &#123;
+
+  /**
+   * The finish method is used when the batched data is all saved in state. Normally, serialization
+   * job is done here.
+   */
+  void finish(long checkpointId);
+
+  /**
+   * The commit method is used for persistent, and can be used in another thread to reach async
+   * state commit. Normally, data persistent is done here.
+   */
+  void commit(long checkpointId);
+
+  /**
+   * The ackCommit method is used for cleaning the last checkpoint, and must be called after commit
+   * in the same thread.
+   */
+  void ackCommit(long checkpointId, long timeStamp);
+
+  /**
+   * The rollback method is used for recovering the checkpoint.
+   */
+  void rollBack(long checkpointId);
+&#125;</code></div></pre>
+<h2 id="三、总结">三、总结</h2>
+<ul>
+<li>state 已经提供了完整的状态支持，ray-streaming 后续发展中应该会将 runtime 中的 content 整体替换成 state 中的 backend.</li>
+<li>state 目前仅支持内存作为状态存储后端，处于实验性阶段。后续如果对代码进行实际使用，应该提供其他可用后端。</li>
+</ul>
+<h2 id="参考">参考</h2>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2021/06/3687/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2021/06/3687/">https://www.superheaoz.top/2021/06/3687/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2021/06/24830/"><span>ZeroTier 内网穿透</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2021/06/1816/"><span>Ray 学习随笔（2）ray-streaming 源码阅读</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

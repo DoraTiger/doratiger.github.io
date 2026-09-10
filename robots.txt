@@ -1,0 +1,10 @@
+# https://www.superheaoz.top/robots.txt
+
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /tmp/
+
+Sitemap: https://www.superheaoz.top/sitemap.xml

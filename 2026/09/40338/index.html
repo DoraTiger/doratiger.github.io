@@ -1,0 +1,311 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置【我的个人天地】</title><meta name="description" content="Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置"><meta name="keywords" content="homelab,debian,代理,obsidian,zotero,chatgpt"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置【我的个人天地】"><meta property="og:description" content="Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/09/40338/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-09-09T04:00:00.000Z",
+  "dateModified": "2026-09-09T04:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/09/40338/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%85%88%E7%9C%8B%E8%AF%B7%E6%B1%82%E5%88%B0%E5%BA%95%E5%8F%91%E5%88%B0%E4%BA%86%E5%93%AA%E9%87%8C"><span class="toc-text">一、先看请求到底发到了哪里</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-DNS-%E8%83%BD%E8%A7%A3%E6%9E%90%EF%BC%8C%E4%B8%8D%E4%BB%A3%E8%A1%A8%E8%AF%B7%E6%B1%82%E4%BC%9A%E7%9B%B4%E8%BF%9E"><span class="toc-text">1.1 DNS 能解析，不代表请求会直连</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E7%BD%91%E6%AE%B5%E6%8E%92%E9%99%A4%E6%B2%A1%E6%9C%89%E8%A6%86%E7%9B%96%E5%9F%9F%E5%90%8D%E8%AE%BF%E9%97%AE"><span class="toc-text">1.2 网段排除没有覆盖域名访问</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E8%A1%A5%E5%85%A8%E5%86%85%E7%BD%91%E5%9F%9F%E5%90%8D%E7%9A%84%E4%BB%A3%E7%90%86%E7%BB%95%E8%BF%87%E9%85%8D%E7%BD%AE"><span class="toc-text">二、补全内网域名的代理绕过配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E8%B0%83%E6%95%B4%E7%BB%88%E7%AB%AF%E4%B8%AD%E7%9A%84%E4%BB%A3%E7%90%86%E5%8F%98%E9%87%8F"><span class="toc-text">2.1 调整终端中的代理变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%8A%A0%E8%BD%BD%E9%85%8D%E7%BD%AE%E5%B9%B6%E9%AA%8C%E8%AF%81%E8%AE%BF%E9%97%AE%E8%B7%AF%E5%BE%84"><span class="toc-text">2.2 加载配置并验证访问路径</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E7%BB%88%E7%AB%AF%E9%85%8D%E7%BD%AE%E4%B8%8E%E6%A1%8C%E9%9D%A2%E7%A8%8B%E5%BA%8F%E4%B9%8B%E9%97%B4%E8%BF%98%E6%9C%89%E4%B8%80%E5%B1%82"><span class="toc-text">三、终端配置与桌面程序之间还有一层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81ChatGPT-%E6%A1%8C%E9%9D%A2%E7%AB%AF%E7%99%BD%E5%B1%8F%E4%B8%8E-desktop-%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0"><span class="toc-text">四、ChatGPT 桌面端白屏与 .desktop 启动参数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%85%88%E5%9C%A8%E7%BB%88%E7%AB%AF%E7%A1%AE%E8%AE%A4%E4%BB%A3%E7%90%86%E5%8F%82%E6%95%B0%E6%9C%89%E6%95%88"><span class="toc-text">4.1 先在终端确认代理参数有效</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E4%BF%AE%E6%94%B9%E7%94%A8%E6%88%B7%E7%BA%A7%E5%90%AF%E5%8A%A8%E5%99%A8"><span class="toc-text">4.2 修改用户级启动器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E4%BB%8E%E5%AE%9E%E9%99%85%E4%BD%BF%E7%94%A8%E7%9A%84%E5%9B%BE%E6%A0%87%E9%87%8D%E6%96%B0%E9%AA%8C%E8%AF%81"><span class="toc-text">4.3 从实际使用的图标重新验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%BF%9D%E7%95%99%E4%B8%8B%E6%9D%A5%E7%9A%84%E9%85%8D%E7%BD%AE%E8%BE%B9%E7%95%8C"><span class="toc-text">五、保留下来的配置边界</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color9"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color5"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/homelab/">homelab</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/debian/">debian</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%BB%A3%E7%90%86/">代理</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/obsidian/">obsidian</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/zotero/">zotero</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/chatgpt/">chatgpt</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">6021 字 · 约 21 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>在 Debian 上配置好开发环境和桌面工具后，为了正常访问 GitHub 等外部服务，我又通过 Clash 给日常使用的程序配置了代理。平时习惯把这个需求叫作“全局代理”，希望开着代理工作时，不用再为每个命令单独切换网络。</p>
+<p>随后却遇到了另一个问题：Obsidian、Zotero 使用的内网服务突然访问不顺了。这些服务通过域名访问，在内网 DNS 中解析到局域网地址。原本以为已经把内网网段写进了代理排除列表，就不会受到影响，实际请求却还是进了代理。</p>
+<p>同一段时间，ChatGPT 桌面端也出现了启动白屏。从终端指定代理后能很快打开，直接点击桌面图标却不行。这两件事刚好把代理配置的两头都碰了一遍：内网服务需要绕过代理，外部服务又需要让桌面启动器明确带上代理参数。</p>
+<p>本文接着 <a href="/2026/06/38032/" title="Homelab 搭建手记（5）Obsidian 与 Zotero Linux 部署">Homelab 搭建手记（5）Obsidian 与 Zotero Linux 部署</a> 记录这次调整。下面的域名和内网地址均已替换为示例；排障日志以 WebDAV 为例，不涉及修改笔记库、文献库或服务端数据。</p>
+<span id="more"></span>
+<h2 id="一、先看请求到底发到了哪里">一、先看请求到底发到了哪里</h2>
+<h3 id="1-1-DNS-能解析，不代表请求会直连">1.1 DNS 能解析，不代表请求会直连</h3>
+<p>假设内网 WebDAV 使用 <code>webdav.home.example.com</code>，本机解析结果为 <code>192.168.50.10</code>。当时代理排除列表的关键问题是只有回环名称和 IP 网段，缺少访问时使用的域名：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">export https_proxy=http://127.0.0.1:7890
+export NO_PROXY=&quot;localhost,192.168.0.0/16&quot;</code></div></pre>
+<p>我先对同一个地址做了两次请求：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash"># 替换为自己的内网服务域名
+getent ahosts webdav.home.example.com
+
+# 按当前终端代理配置访问
+curl -Iv --connect-timeout 10 https://webdav.home.example.com
+
+# 本次请求明确绕过 curl 的代理配置
+curl --noproxy '*' -Iv --connect-timeout 10 https://webdav.home.example.com</code></div></pre>
+<p>第一次请求的关键日志如下，域名已脱敏，省略了证书细节：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-text">* Uses proxy env variable https_proxy == 'http://127.0.0.1:7890'
+*   Trying 127.0.0.1:7890...
+&gt; CONNECT webdav.home.example.com:443 HTTP/1.1
+&lt; HTTP/1.1 200 Connection established
+...
+&lt; HTTP/2 401</code></div></pre>
+<p>加上 <code>--noproxy '*'</code> 后，连接对象变成了内网服务：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">* Host webdav.home.example.com:443 was resolved.
+* IPv4: 192.168.50.10
+*   Trying 192.168.50.10:443...
+...
+&lt; HTTP/2 401</code></div></pre>
+<p>这组结果能确认：默认请求进入了本地 HTTP 代理，强制直连时则使用了本机解析得到的内网地址。<strong>两次请求都收到了 <code>401</code>，不能把第一条日志写成“代理连接失败”，也不能据此判断 DNS 已经损坏。</strong></p>
+<p>这里没有提供 WebDAV 账号密码，<code>401</code> 是服务要求认证的响应。它说明请求到达了某个要求认证的 HTTP 服务；是否为预期服务，还要结合证书和服务端信息确认。它也不代表 WebDAV 的目录访问、上传和同步已经通过验证。</p>
+<h3 id="1-2-网段排除没有覆盖域名访问">1.2 网段排除没有覆盖域名访问</h3>
+<p>我原先把“域名解析到内网 IP”和“命中代理绕过规则”当成了一件事。但这次请求使用的是 <code>webdav.home.example.com</code>，排除列表里写的却是 <code>192.168.0.0/16</code>。</p>
+<p><code>NO_PROXY</code> 的匹配细节取决于客户端。不能假定程序都会先解析域名，再拿结果匹配其中的网段。对于这里的 curl 请求，已有日志已经说明网段规则没有实现预期的域名绕过，因此应直接把内网域名加入列表。</p>
+<p>curl 支持逗号分隔的排除项，<code>.home.example.com</code> 这样的后缀可用于匹配该域下的主机；CIDR 网段写法从 curl 7.86.0 开始支持。其他应用是否支持相同语法，需要分别确认，不能把 curl 的配置当成所有桌面程序的统一标准。<a target="_blank" rel="noopener" href="https://everything.curl.dev/usingcurl/proxies/env.html" title="curl 代理环境变量" class="external-link" data-redirect="https%3A%2F%2Feverything.curl.dev%2Fusingcurl%2Fproxies%2Fenv.html">curl 代理环境变量说明</a></p>
+<h2 id="二、补全内网域名的代理绕过配置">二、补全内网域名的代理绕过配置</h2>
+<h3 id="2-1-调整终端中的代理变量">2.1 调整终端中的代理变量</h3>
+<p>我的代理配置放在 <code>~/.bashrc.d/proxy.sh</code>。这是自己组织 Bash 配置时使用的文件，Bash 不会自动扫描这个目录，仍需由 <code>~/.bashrc</code> 加载。</p>
+<p>编辑前先备份已有文件，再把代理变量整理为下面这样：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash"># 已有配置时先保留副本
+cp -p ~/.bashrc.d/proxy.sh ~/.bashrc.d/proxy.sh.bak-$(date +%Y%m%d-%H%M%S)</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-bash"># ~/.bashrc.d/proxy.sh
+# 端口按本机代理软件实际监听情况填写
+export http_proxy=&quot;http://127.0.0.1:7890&quot;
+export https_proxy=&quot;$http_proxy&quot;
+export HTTP_PROXY=&quot;$http_proxy&quot;
+export HTTPS_PROXY=&quot;$https_proxy&quot;
+
+# 仅当该端口也提供 SOCKS5 服务时使用
+export all_proxy=&quot;socks5://127.0.0.1:7890&quot;
+export ALL_PROXY=&quot;$all_proxy&quot;
+
+# 示例内网域名和网段，请自行替换
+export no_proxy=&quot;localhost,127.0.0.1,::1,.home.example.com,192.168.0.0/16&quot;
+export NO_PROXY=&quot;$no_proxy&quot;</code></div></pre>
+<p>这里真正新增的是内网域名后缀，并让大小写两份排除列表保持一致。只应加入确定需要直连的范围；如果自己的主域名同时承载公网和内网服务，使用专门的内网子域或精确主机名，避免把公网服务也一并排除。</p>
+<p>HTTP 和 SOCKS5 是否共用 <code>7890</code>，取决于代理软件的监听配置。数字相同不代表协议一定都可用。<code>https_proxy</code> 写成 <code>http://127.0.0.1:7890</code>，表示连接的是 HTTP 代理，访问 HTTPS 目标时可通过 CONNECT 建立隧道，不是把目标网站降级成 HTTP。</p>
+<p>保留小写 <code>http_proxy</code> 很有必要：curl 不接受大写 <code>HTTP_PROXY</code> 作为 HTTP 代理变量。协议专用变量又优先于 <code>ALL_PROXY</code>，因此本例 HTTPS 请求首先使用 <code>https_proxy</code>。<a target="_blank" rel="noopener" href="https://everything.curl.dev/usingcurl/proxies/env.html" title="curl 代理环境变量" class="external-link" data-redirect="https%3A%2F%2Feverything.curl.dev%2Fusingcurl%2Fproxies%2Fenv.html">curl 代理环境变量说明</a></p>
+<h3 id="2-2-加载配置并验证访问路径">2.2 加载配置并验证访问路径</h3>
+<p>如果还没有加载入口，可以在 <code>~/.bashrc</code> 中加入一次：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">if [ -f &quot;$HOME/.bashrc.d/proxy.sh&quot; ]; then
+    . &quot;$HOME/.bashrc.d/proxy.sh&quot;
+fi</code></div></pre>
+<p>当前终端直接加载后，再运行不带强制绕过参数的请求：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">. ~/.bashrc.d/proxy.sh
+curl -Iv --connect-timeout 10 https://webdav.home.example.com</code></div></pre>
+<p>这时要看连接目标是否变成内网 IP，以及是否还出现连接本地代理的 CONNECT 请求。再选一个确实需要代理的外部站点检查，确认没有把所有请求都改成直连：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">curl -Iv --connect-timeout 10 https://github.com</code></div></pre>
+<p>当时补上域名排除项后，内网访问问题得到了解决。不过终端测试只覆盖当前 shell；回到 Obsidian 和 Zotero，还要分别执行同步检查。可以用一个临时笔记或测试附件确认读写结果，不能只凭 curl 收到 HTTP 响应就认定应用同步正常。</p>
+<h2 id="三、终端配置与桌面程序之间还有一层">三、终端配置与桌面程序之间还有一层</h2>
+<p>从 XFCE 菜单启动应用，通常不会经过交互式 Bash。刚刚在终端执行的 <code>source</code>，也不会更新已经运行的桌面程序。</p>
+<p>遇到“curl 已经直连，应用仍然失败”的情况，我会继续检查应用的启动方式、继承环境以及自身代理设置。Obsidian 的同步插件可能使用不同的请求实现，Zotero 也有自己的网络配置，不能因为它们在同一个桌面里运行就假定行为相同。</p>
+<p>如需检查进程环境，先找到并人工确认主进程 PID，再仅筛选代理相关变量：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">pgrep -af 'obsidian|zotero'
+
+# 用实际确认的 PID 替换 12345
+tr '\0' '\n' &lt; /proc/12345/environ | grep -iE '^(http_proxy|https_proxy|all_proxy|no_proxy)='</code></div></pre>
+<p>这些变量能帮助判断启动时继承了什么，但不能证明应用一定采用它们。输出也可能带有代理认证信息，排障时不要直接贴出未经检查的完整环境。</p>
+<p>另外，“全局代理”这个叫法需要拆开理解：环境变量只影响采用它们的程序；桌面系统代理是否生效取决于应用；TUN 则可能在路由层接管流量。<code>curl --noproxy '*'</code> 只能取消 curl 自己使用的显式代理，不能绕过系统中的 TUN。</p>
+<p>如果使用 TUN 或代理内核统一接管流量，就要在对应配置中同时检查内网直连和 DNS 策略；代理客户端真正处于 Global 模式时，也不能默认普通分流规则会执行。本次记录中的直接修复是补全环境变量排除项，没有把代理内核切换模式当成已经完成的操作。</p>
+<h2 id="四、ChatGPT-桌面端白屏与-desktop-启动参数">四、ChatGPT 桌面端白屏与 <code>.desktop</code> 启动参数</h2>
+<h3 id="4-1-先在终端确认代理参数有效">4.1 先在终端确认代理参数有效</h3>
+<p>ChatGPT 桌面端的表现刚好相反：点击图标停在启动白屏，用下面的命令却能很快打开：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">chatgpt --proxy-server=&quot;socks5://127.0.0.1:7890&quot;</code></div></pre>
+<p>这里记录的是我在 Debian + XFCE 环境中安装、命令名为 <code>chatgpt</code> 的客户端。这个结果说明显式指定代理改善了该次启动的网络访问，但单凭这一点，还不能断言白屏一定由环境变量缺失导致，更不能推广成所有平台、所有客户端版本的通用处理。</p>
+<p><code>--proxy-server</code> 是 Electron 提供的代理参数之一；具体安装包是否接受或透传参数仍需实测。本例已经有终端启动成功的对照，接下来把同样的参数放进桌面入口即可。<a target="_blank" rel="noopener" href="https://github.com/electron/electron/blob/main/docs/api/command-line-switches.md" title="Electron 支持的启动参数" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Felectron%2Felectron%2Fblob%2Fmain%2Fdocs%2Fapi%2Fcommand-line-switches.md">Electron 启动参数文档</a></p>
+<h3 id="4-2-修改用户级启动器">4.2 修改用户级启动器</h3>
+<p>先找当前应用的 <code>.desktop</code> 文件。常见位置是 <code>~/.local/share/applications/</code>、<code>/usr/local/share/applications/</code> 和 <code>/usr/share/applications/</code>，文件名不一定就是 <code>chatgpt.desktop</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">find ~/.local/share/applications /usr/local/share/applications /usr/share/applications \
+  -iname '*chatgpt*.desktop' 2&gt;/dev/null</code></div></pre>
+<p>如果已经存在用户级文件，先备份再编辑它。如果只有系统级文件，可以复制到用户级目录，保留同名入口。下面以 <code>chatgpt.desktop</code> 为例，实际路径以查找结果为准：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash">mkdir -p ~/.local/share/applications
+
+# -i 会在目标已存在时询问，避免覆盖原有用户配置
+cp -i /usr/share/applications/chatgpt.desktop ~/.local/share/applications/chatgpt.desktop
+cp -p ~/.local/share/applications/chatgpt.desktop \
+  ~/.local/share/applications/chatgpt.desktop.bak-$(date +%Y%m%d-%H%M%S)
+
+nano ~/.local/share/applications/chatgpt.desktop</code></div></pre>
+<p>在主 <code>[Desktop Entry]</code> 段中，原先的启动命令是：</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-ini">Exec=chatgpt %U</code></div></pre>
+<p>修改为：</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-ini">Exec=chatgpt --proxy-server=&quot;socks5://127.0.0.1:7890&quot; %U</code></div></pre>
+<p>这也是我目前启动器里保留的配置。其他字段和原有参数沿用安装包提供的内容，不需要重新手写整份 <code>MimeType</code> 列表。</p>
+<p><code>%U</code> 表示启动器传入的 URL 列表，每个 URL 作为独立参数传给应用，因此要保留为单独一项。<code>chatgpt</code> 没写绝对路径时，启动器使用桌面环境的 <code>PATH</code> 查找它；如果原文件已经使用绝对路径，就保留原路径。<a target="_blank" rel="noopener" href="https://specifications.freedesktop.org/desktop-entry/latest/exec-variables.html" title="Desktop Entry Exec 规范" class="external-link" data-redirect="https%3A%2F%2Fspecifications.freedesktop.org%2Fdesktop-entry%2Flatest%2Fexec-variables.html">Desktop Entry 的 Exec 规范</a></p>
+<p>这里的 <code>Exec</code> 也不是普通 shell 脚本。不要直接在其中拼接 <code>source ~/.bashrc &amp;&amp; ...</code>。若启动器对引号解析有差异，上面不含空格的代理地址也可写成 <code>--proxy-server=socks5://127.0.0.1:7890</code>，<code>%U</code> 仍单独保留。</p>
+<h3 id="4-3-从实际使用的图标重新验证">4.3 从实际使用的图标重新验证</h3>
+<p>保存后，先从应用菜单正常退出 ChatGPT，再点击菜单图标重新打开。只关闭窗口时应用可能仍留在后台，新一次启动也可能复用旧进程，导致改过的参数没有真正用于启动主进程。</p>
+<p>如果终端有效、图标仍白屏，继续检查：</p>
+<ul>
+<li>点击的是应用菜单入口，还是桌面上另存的一份 <code>.desktop</code> 文件？后者需要检查自己的 <code>Exec</code>。</li>
+<li>面板固定的启动器是否保存了旧命令？必要时重新固定正确的菜单项。</li>
+<li>SOCKS5 监听是否已启动，端口是否与配置一致？</li>
+<li>用户级覆盖文件是否仍保留旧版本启动参数？应用升级后应与新的系统入口比较。</li>
+</ul>
+<p><code>update-desktop-database</code> 主要更新 MIME 关联缓存，不能把它当成所有菜单和面板启动器的强制刷新命令。修改后应以实际点击结果为准。</p>
+<p>如果需要撤销这次调整，恢复备份中的 <code>Exec</code> 即可。用户级覆盖文件也应持续维护，避免安装包更新了系统启动器，而自己的旧副本一直遮住新配置。</p>
+<h2 id="五、保留下来的配置边界">五、保留下来的配置边界</h2>
+<p>这次调整之后，我保留了两处明确配置：内网服务域名进入 <code>NO_PROXY/no_proxy</code>，ChatGPT 桌面入口带上已经在终端验证有效的代理参数。</p>
+<p>以后再遇到类似问题，可以沿用同一组检查：内网域名解析是否符合预期、请求实际连接的是服务还是代理、应用同步是否可用，以及退出后从菜单启动是否仍然正常。这样既能保留访问外部服务所需的代理，也能让内网服务按预期直连。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://everything.curl.dev/usingcurl/proxies/env.html" title="curl 代理环境变量" class="external-link" data-redirect="https%3A%2F%2Feverything.curl.dev%2Fusingcurl%2Fproxies%2Fenv.html">curl 代理环境变量</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/electron/electron/blob/main/docs/api/command-line-switches.md" title="Electron 支持的启动参数" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Felectron%2Felectron%2Fblob%2Fmain%2Fdocs%2Fapi%2Fcommand-line-switches.md">Electron 支持的启动参数</a></li>
+<li><a target="_blank" rel="noopener" href="https://specifications.freedesktop.org/desktop-entry/latest/exec-variables.html" title="Desktop Entry Exec 规范" class="external-link" data-redirect="https%3A%2F%2Fspecifications.freedesktop.org%2Fdesktop-entry%2Flatest%2Fexec-variables.html">Desktop Entry：Exec 参数与字段代码</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/09/40338/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/09/40338/">https://www.superheaoz.top/2026/09/40338/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/31179/"><span>Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/52265/"><span>HEXO 开发笔记（11）自建主题：视觉系统重构</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

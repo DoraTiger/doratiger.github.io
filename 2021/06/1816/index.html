@@ -1,0 +1,1539 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Ray 学习随笔（2）ray-streaming 源码阅读【我的个人天地】</title><meta name="description" content="Ray 学习随笔（2）ray-streaming 源码阅读"><meta name="keywords" content="ray"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Ray 学习随笔（2）ray-streaming 源码阅读【我的个人天地】"><meta property="og:description" content="Ray 学习随笔（2）ray-streaming 源码阅读"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2021/06/1816/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Ray 学习随笔（2）ray-streaming 源码阅读",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2021-06-02T11:30:24.000Z",
+  "dateModified": "2021-06-02T11:30:24.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2021/06/1816/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A6%82%E8%BF%B0"><span class="toc-text">一、概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Java-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">二、Java 源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-streaming-api"><span class="toc-text">2.1 streaming-api</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-streaming-runtime"><span class="toc-text">2.2 streaming-runtime</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">三、总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color7"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color3"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Ray 学习随笔（2）ray-streaming 源码阅读</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2021-06-02</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2021-06-02</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ray/">ray</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">55783 字 · 约 186 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p><code>Ray</code> 源码分析系列笔记。</p>
+<span id="more"></span>
+<h2 id="一、概述">一、概述</h2>
+<p>本文针对 <code>ray-streaming</code> 的源码进行分析，研究启动过程中涉及的操作。<code>ray-streaming</code> 脱胎于 <code>flink</code>，同时源码也是由蚂蚁方面的团队贡献的，目前 <code>ray</code> 的流计算处于一个比较粗浅的状态，只支持单一输入的操作，并且没有提供对时间窗口的支持，同时检查点逻辑也是最基本的内存实现和本地文件系统实现。</p>
+<p><code>ray-streaming</code> 主要通过三个包进行业务支持，整体设计在 <code>ray Java actor</code> 之上，通过构建 <code>jobmaster</code> 进行流计算任务调度和容错恢复，通过 <code>ray</code> 原生提供的 <code>java actor</code> 和 <code>python actor</code> 对多语言进行支持。相较于 <code>flink</code>，<code>ray-streaming</code> 采用了不同的数据传输策略和检查点策略，在做检查点时，会将通过 <code>C++</code> 构建的输入输出缓冲池偏移量缓存，可以简化计算恢复逻辑，省去中间数据的存储。</p>
+<h2 id="二、Java-源码分析">二、Java 源码分析</h2>
+<h3 id="2-1-streaming-api">2.1 streaming-api</h3>
+<h4 id="2-1-1-StreamingContext">2.1.1 StreamingContext</h4>
+<p><code>ray/streaming/api/context/StreamingContext.java</code> 是所有流计算任务的起点，包含了流计算的基本上下文信息。其中最重要的函数有两个一个是用于添加计算任务配置的 <code>withConfig</code> 方法，该函数传入 <code>map 类型</code> 的配置信息，所有信息将在后续执行任务时被提交。另一个函数是 <code>execute</code>，该函数是流计算最终提交执行的地方，会从所有的流计算 <code>sink</code> 进行反向遍历，通过 <code>JobGraphBuilder</code> 构建流计算任务执行图，随后通过 <code>JobGraphOptimizer</code> 对计算任务进行优化 (目前的优化策略仅是从数据源开始遍历任务，对计算任务进行合并，目前存在问题，同一个数据源出现两个以上的 <code>sink</code> 时，任务会存在执行异常.).最终连接或创建 <code>ray</code> 集群，并通过 <code>JobClient.submit</code> 提交任务，<code>JobClient</code> 的函数接口在 <code>streaming-api</code> 中，但具体实现都保存在 <code>streaming-runtime</code>。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div></div><code class="language-Java">/**
+ * Construct job DAG, and execute the job.
+ */
+public void execute(String jobName) &#123;
+  JobGraphBuilder jobGraphBuilder = new JobGraphBuilder(this.streamSinks, jobName);
+  JobGraph originalJobGraph = jobGraphBuilder.build();
+  this.jobGraph = new JobGraphOptimizer(originalJobGraph).optimize();
+  jobGraph.printJobGraph();
+  LOG.info(&quot;JobGraph digraph\n&#123;&#125;&quot;, jobGraph.generateDigraph());
+
+  if (!Ray.isInitialized()) &#123;
+    if (Config.MEMORY_CHANNEL.equalsIgnoreCase(jobConfig.get(Config.CHANNEL_TYPE))) &#123;
+      Preconditions.checkArgument(!jobGraph.isCrossLanguageGraph());
+      ClusterStarter.startCluster(false, true);
+      LOG.info(&quot;Created local cluster for job &#123;&#125;.&quot;, jobName);
+    &#125; else &#123;
+      ClusterStarter.startCluster(jobGraph.isCrossLanguageGraph(), false);
+      LOG.info(&quot;Created multi process cluster for job &#123;&#125;.&quot;, jobName);
+    &#125;
+    Runtime.getRuntime().addShutdownHook(new Thread(StreamingContext.this::stop));
+  &#125; else &#123;
+    LOG.info(&quot;Reuse existing cluster.&quot;);
+  &#125;
+
+  ServiceLoader&lt;JobClient&gt; serviceLoader = ServiceLoader.load(JobClient.class);
+  Iterator&lt;JobClient&gt; iterator = serviceLoader.iterator();
+  Preconditions.checkArgument(iterator.hasNext(),
+      &quot;No JobClient implementation has been provided.&quot;);
+  JobClient jobClient = iterator.next();
+  jobClient.submit(jobGraph, jobConfig);
+&#125;</code></div></pre>
+<h4 id="2-1-2-DataStream">2.1.2 DataStream</h4>
+<p>从 <code>StreamingContext</code> 出发，首先要构建数据源算子，该算子通过 <code>ray/streaming/api/stream/DataStreamSource.java</code> 对外提供调用接口，用户需要将 <code>StreamingContext</code> 传入其中，用于记录算子递归过程。随后的所有计算任务都基于 <code>ray/streaming/api/stream/DataStream.java</code> 进行构建，通过递归调用的方式，逐次记录调用关系，所有的计算流操作都封装在 <code>ray/streaming/api/stream</code> 目录中。一条计算流的终点是 <code>ray/streaming/api/stream/DataStreamSink.java</code> ,<code>sink</code> 流会将整个计算任务链注册回 <code>StreamingContext</code> 中，用于构建任务，当一个计算流没有 <code>sink</code> 时，流计算上下文将不会保存该任务，也不会触发执行。</p>
+<h4 id="2-1-3-operator-function">2.1.3 operator&amp;function</h4>
+<p>所有的 <code>DataStream</code> 都是对 <code>Operator</code> <code>的封装，Operator</code> 的实现路径在 <code>ray/streaming/operator</code> 中，而所有的 <code>Operator</code> 如果涉及到具体的计算操作，则由最终的 <code>Function</code> 负责，<code>Function</code> 的路径为 <code>ray/streaming/function</code> 。<code>Function</code> 分为对用户直接暴露和系统内部调用两种，分别保存在 <code>ray/streaming/api/function/impl</code> 和 <code>ray/streaming/api/function/internal</code> 中。</p>
+<h3 id="2-2-streaming-runtime">2.2 streaming-runtime</h3>
+<p><code>runtime</code> 层面的类包逐级调用逻辑如下：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div></div><code class="language-bash">JobClientImpl
+    └──&gt;JobMaster   &lt;───────────────────────────┐
+        ├──&gt;JobScheduler                        │
+        │   └──&gt;WorkerLifecycleController       │
+        │       └──&gt;RemoteCallWorker            │
+        │           └──&gt;JobWorker               │&lt;──┐
+        │               ├──&gt;RemoteCallMaster   ─┙&lt;──┥
+        │               ├──&gt;ContextBackend          │
+        │               └──&gt;StreamTask          ────┴───────┐
+        │                   └──&gt;Processor                   │
+        │                       ├──&gt;Operator                │
+        │                       └──&gt;StreamingRuntimeContext&lt;┙
+        │                           ├──&gt;KeyStateBackend
+        │                           └──&gt;OperatorStateBackend
+        ├──&gt;GraphManager
+        ├──&gt;ResourceManager
+        ├──&gt;ContextBackend
+        ├──&gt;CheckpointCoordinator
+        └──&gt;FailoverCoordinator</code></div></pre>
+<h4 id="2-2-1-JobClientImpl">2.2.1 JobClientImpl</h4>
+<p><code>ray/streaming/runtime/client/JobClientImpl.java</code> 是对 <code>JobClient</code> 的具体实现。其中的 <code>submit</code> 函数传入任务图和任务参数，根据任务参数创建 <code>ray-streaming</code> 实现的核心 <code>JobMaster</code> ，随后通过 <code>ray</code> 的远程调用方式，执行 <code>JobMaster</code> 中的 <code>submitJob</code> 函数，正式开始执行计算任务。</p>
+<h4 id="2-2-2-JobMaster">2.2.2 JobMaster</h4>
+<p><code>ray/streaming/runtime/master/JobMaster.java</code> 在创建时，会根据任务参数创建 <code>StreamingConfig</code> ,并根据该配置初始化目前简易的存储后端 <code>ContextBackend</code> 以及 <code>JobMasterRuntimeContext</code> ,同时回从上下文中判断计算任务是否需要从检查点中恢复，进而执行相关 <code>init</code> 操作。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div></div><code class="language-Java">public boolean submitJob(ActorHandle&lt;JobMaster&gt; jobMasterActor, JobGraph jobGraph) &#123;
+  LOG.info(&quot;Begin submitting job using logical plan: &#123;&#125;.&quot;, jobGraph);
+
+  this.jobMasterActor = jobMasterActor;
+
+  // init manager
+  graphManager = new GraphManagerImpl(runtimeContext);
+  resourceManager = new ResourceManagerImpl(runtimeContext);
+
+  // build and set graph into runtime context
+  ExecutionGraph executionGraph = graphManager.buildExecutionGraph(jobGraph);
+  runtimeContext.setJobGraph(jobGraph);
+  runtimeContext.setExecutionGraph(executionGraph);
+
+  // init scheduler
+  try &#123;
+    scheduler = new JobSchedulerImpl(this);
+    scheduler.scheduleJob(graphManager.getExecutionGraph());
+  &#125; catch (Exception e) &#123;
+    LOG.error(&quot;Failed to submit job.&quot;, e);
+    return false;
+  &#125;
+  return true;
+&#125;</code></div></pre>
+<p><code>JobMaster</code> 的 <code>submitJob</code> 函数需要传入 <code>JobMaster</code> 本身的远程执行句柄和任务图，随后的执行过程分为以下几个阶段：</p>
+<ul>
+<li>初始化管理服务：根据 <code>JobMasterRuntimeContext</code> 创建 <code>GraphManager</code> 和 <code>ResourceManager</code>。</li>
+<li>构建执行图：通过 <code>GraphManager</code> 将任务图转化为最终的任务执行图 <code>ExecutionGraph</code>,并将计算任务注册到 <code>JobMasterRuntimeContext</code> 中。(执行图的主要过程是针对不同算子并行度信息构建对应的物理执行节点)</li>
+<li>任务调度：通过 <code>JobSchedulerImpl</code> 的 <code>scheduleJob</code> 函数具体调度并执行流计算任务。</li>
+</ul>
+<p><code>JobMaster</code> 的 <code>init</code>传入变量为一个布尔型，用于判断任务是否是从检查点中恢复。该函数主要用途为启动用于检查点的 <code>CheckpointCoordinator</code> 进程和用于错误恢复的 <code>FailoverCoordinator</code> 进程。然后保存当前计算状态到存储后端中。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-Java">// init coordinators
+checkpointCoordinator = new CheckpointCoordinator(this);
+checkpointCoordinator.start();
+failoverCoordinator = new FailoverCoordinator(this, isRecover);
+failoverCoordinator.start();
+
+saveContext();</code></div></pre>
+<p><code>JobMaster</code> 的 <code>reportJobWorkerCommit</code> 函数，被 <code>JobWorker</code> 调用，通过调用 <code>CheckpointCoordinator</code> 的相关函数，对检查点进行管理。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div></div><code class="language-Java">  public byte[] reportJobWorkerCommit(byte[] reportBytes) &#123;
+    Boolean ret = false;
+    RemoteCall.BaseWorkerCmd reportPb;
+    try &#123;
+      reportPb = RemoteCall.BaseWorkerCmd.parseFrom(reportBytes);
+      ActorId actorId = ActorId.fromBytes(reportPb.getActorId().toByteArray());
+      long remoteCallCost = System.currentTimeMillis() - reportPb.getTimestamp();
+      LOG.info(&quot;Vertex &#123;&#125;, request job worker commit cost &#123;&#125;ms, actorId=&#123;&#125;.&quot;,
+          getExecutionVertex(actorId), remoteCallCost, actorId);
+      RemoteCall.WorkerCommitReport commit =
+          reportPb.getDetail().unpack(RemoteCall.WorkerCommitReport.class);
+      WorkerCommitReport report = new WorkerCommitReport(actorId, commit.getCommitCheckpointId());
+      ret = checkpointCoordinator.reportJobWorkerCommit(report);
+    &#125; catch (InvalidProtocolBufferException e) &#123;
+      LOG.error(&quot;Parse job worker commit has exception.&quot;, e);
+    &#125;
+    return RemoteCall.BoolResult.newBuilder().setBoolRes(ret).build().toByteArray();
+  &#125;</code></div></pre>
+<p><code>JobMaster</code> 的 <code>requestJobWorkerRollback</code> 函数，同样被 <code>JobWorker</code> 调用，当判定计算任务需要回滚时，将会调用 <code>FailoverCoordinator</code> 的相关函数，进行错误恢复。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div></div><code class="language-Java">public byte[] requestJobWorkerRollback(byte[] requestBytes) &#123;
+    Boolean ret = false;
+    RemoteCall.BaseWorkerCmd requestPb;
+    try &#123;
+      requestPb = RemoteCall.BaseWorkerCmd.parseFrom(requestBytes);
+      ActorId actorId = ActorId.fromBytes(requestPb.getActorId().toByteArray());
+      long remoteCallCost = System.currentTimeMillis() - requestPb.getTimestamp();
+      ExecutionGraph executionGraph = graphManager.getExecutionGraph();
+      Optional&lt;BaseActorHandle&gt; rayActor = executionGraph.getActorById(actorId);
+      if (!rayActor.isPresent()) &#123;
+        LOG.warn(&quot;Skip this invalid rollback, actor id &#123;&#125; is not found.&quot;, actorId);
+        return RemoteCall.BoolResult.newBuilder().setBoolRes(false).build().toByteArray();
+      &#125;
+      ExecutionVertex exeVertex = getExecutionVertex(actorId);
+      LOG.info(&quot;Vertex &#123;&#125;, request job worker rollback cost &#123;&#125;ms, actorId=&#123;&#125;.&quot;,
+          exeVertex, remoteCallCost, actorId);
+      RemoteCall.WorkerRollbackRequest rollbackPb
+          = RemoteCall.WorkerRollbackRequest.parseFrom(requestPb.getDetail().getValue());
+      exeVertex.setPid(rollbackPb.getWorkerPid());
+      // To find old container where slot is located in.
+      String hostname = &quot;&quot;;
+      Optional&lt;Container&gt; container = ResourceUtil.getContainerById(
+          resourceManager.getRegisteredContainers(),
+          exeVertex.getContainerId()
+      );
+      if (container.isPresent()) &#123;
+        hostname = container.get().getHostname();
+      &#125;
+      WorkerRollbackRequest request = new WorkerRollbackRequest(
+          actorId, rollbackPb.getExceptionMsg(), hostname, exeVertex.getPid()
+      );
+
+      ret = failoverCoordinator.requestJobWorkerRollback(request);
+      LOG.info(&quot;Vertex &#123;&#125; request rollback, exception msg : &#123;&#125;.&quot;,
+          exeVertex, rollbackPb.getExceptionMsg());
+
+    &#125; catch (Throwable e) &#123;
+      LOG.error(&quot;Parse job worker rollback has exception.&quot;, e);
+    &#125;
+    return RemoteCall.BoolResult.newBuilder().setBoolRes(ret).build().toByteArray();
+  &#125;</code></div></pre>
+<h4 id="2-2-3-JobScheduler">2.2.3 JobScheduler</h4>
+<p><code>ray/streaming/runtime/master/scheduler/JobSchedulerImpl.java</code> 在创建过程中需要传入 <code>JobMaster</code>，随后从中获取管理服务和计算任务配置，并创建用于具体算子执行管理的 <code>WorkerLifecycleController</code>。</p>
+<p><code>JobScheduler</code> 的 <code>scheduleJob</code> 函数，对传入的物理执行图进行处理，启动计算任务，主要分为以下几个阶段：</p>
+<ul>
+<li>准备阶段：通过 <code>prepareResourceAndCreateWorker</code> 准备资源并创建相应的 <code>JobWorker</code>，随后通过 <code>generateActorMappings</code> 生成计算节点间的映射关系，用于数据分发。</li>
+<li>启动阶段：<code>initAndStart</code> 启动流计算任务。</li>
+</ul>
+<p>JobScheduler 的 <code>prepareResourceAndCreateWorker</code> 函数，对传入的物理执行图进行处理，主要分为以下几个阶段：</p>
+<ul>
+<li>准备计算资源：通过 <code>resourceManager.assignResource</code> 向 <code>ray</code> 集群申请资源。</li>
+<li>创建计算节点：通过 <code>createWorkers</code> 创建所有计算节点。最终通过 <code>WorkerLifecycleController</code> 的 <code>createWorkers</code> 函数创建计算节点。</li>
+</ul>
+<p><code>JobScheduler</code> 的 <code>initAndStart</code> 函数，对传入的物理执行图进行处理，主要分为以下几个阶段：</p>
+<ul>
+<li>构建计算上下文：通过物理执行图和 <code>JobMaster</code> 句柄，构建每一个 <code>JobWorker</code> 的上下文信息 <code>JobWorkerContext</code> .</li>
+<li>初始化计算节点：通过 <code>initWorkers</code> 初始化所有计算节点。最终是调用了 <code>WorkerLifecycleController</code> 的 <code>initWorkers</code> 函数。</li>
+<li>初始化主节点：通过 <code>initMaster</code> 初始化主节点。最终有调用回了 <code>JobMaster</code> 的 <code>init</code> 函数。</li>
+<li>启动计算节点：通过 <code>initWorkers</code> 启动所有计算任务。最终是调用了 <code>WorkerLifecycleController</code> 的 <code>startWorkers</code> 函数。</li>
+</ul>
+<h4 id="2-2-4-WorkerLifecycleController">2.2.4 WorkerLifecycleController</h4>
+<p><code>ray/streaming/runtime/master/scheduler/controller/WorkerLifecycleController.java</code> 用于所有计算节点的生命周期管理，提供创建，初始化，启动，销毁等操作。</p>
+<p><code>WorkerLifecycleController</code> 的 <code>asyncBatchExecute</code> 是统一封装的异步执行函数，通过 <code>java</code> 自带的 <code>CompletableFuture</code> 类的 <code>supplyAsync</code> 函数，异步执行计算任务。同时会校验计算任务的执行结果。</p>
+<p><code>WorkerLifecycleController</code> 的 <code>createWorkers</code> 通过 <code>asyncBatchExecute</code> 方式创建 <code>JobMaster</code>。异步执行的函数为 <code>createWorker</code> ，在这个函数中，会逐个遍历物理执行图的节点，然后根据计算任务类型创建基于 <code>java</code> 或是基于 <code>python</code> 的 <code>JobWorker</code>，随后再将创建好的 <code>JobWorker</code> 注册回执行图中，用于后续初始化和启动操作。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div></div><code class="language-Java">  private boolean createWorker(ExecutionVertex executionVertex) &#123;
+    LOG.info(&quot;Start to create worker actor for vertex: &#123;&#125; with resource: &#123;&#125;, workeConfig: &#123;&#125;.&quot;,
+        executionVertex.getExecutionVertexName(), executionVertex.getResource(),
+        executionVertex.getWorkerConfig());
+
+    Language language = executionVertex.getLanguage();
+
+    BaseActorHandle actor;
+    if (Language.JAVA == language) &#123;
+      actor = Ray.actor(JobWorker::new, executionVertex)
+          .setResources(executionVertex.getResource())
+          .setMaxRestarts(-1)
+          .remote();
+    &#125; else &#123;
+      RemoteCall.ExecutionVertexContext.ExecutionVertex vertexPb
+          = new GraphPbBuilder().buildVertex(executionVertex);
+      actor = Ray.actor(
+          PyActorClass.of(&quot;ray.streaming.runtime.worker&quot;, &quot;JobWorker&quot;), vertexPb.toByteArray())
+          .setResources(executionVertex.getResource())
+          .setMaxRestarts(-1)
+          .remote();
+    &#125;
+
+    if (null == actor) &#123;
+      LOG.error(&quot;Create worker actor failed.&quot;);
+      return false;
+    &#125;
+
+    executionVertex.setWorkerActor(actor);
+
+    LOG.info(&quot;Worker actor created, actor: &#123;&#125;, vertex: &#123;&#125;.&quot;,
+        executionVertex.getWorkerActorId(), executionVertex.getExecutionVertexName());
+    return true;
+  &#125;</code></div></pre>
+<p><code>WorkerLifecycleController</code> 的 <code>initWorkers</code> 负责初始化 <code>JobWorker</code>，通过 <code>RemoteCallWorker</code> 的 <code>initWorker</code> 函数逐个传递 <code>JobWorkerContext</code> 并初始化计算任务。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div></div><code class="language-Java">  public boolean initWorkers(
+      Map&lt;ExecutionVertex, JobWorkerContext&gt; vertexToContextMap, int timeout) &#123;
+    LOG.info(&quot;Begin initiating workers: &#123;&#125;.&quot;, vertexToContextMap);
+    long startTime = System.currentTimeMillis();
+
+    Map&lt;ObjectRef&lt;Boolean&gt;, ActorId&gt; rayObjects = new HashMap&lt;&gt;();
+    vertexToContextMap.entrySet().forEach((entry -&gt; &#123;
+      ExecutionVertex vertex = entry.getKey();
+      rayObjects.put(RemoteCallWorker.initWorker(vertex.getWorkerActor(), entry.getValue()),
+          vertex.getWorkerActorId());
+    &#125;));
+
+    List&lt;ObjectRef&lt;Boolean&gt;&gt; objectRefList = new ArrayList&lt;&gt;(rayObjects.keySet());
+
+    LOG.info(&quot;Waiting for workers' initialization.&quot;);
+    WaitResult&lt;Boolean&gt; result = Ray.wait(objectRefList, objectRefList.size(), timeout);
+    if (result.getReady().size() != objectRefList.size()) &#123;
+      LOG.error(&quot;Initializing workers timeout[&#123;&#125; ms].&quot;, timeout);
+      return false;
+    &#125;
+
+    LOG.info(&quot;Finished waiting workers' initialization.&quot;);
+    LOG.info(&quot;Workers initialized. Cost &#123;&#125; ms.&quot;, System.currentTimeMillis() - startTime);
+    return true;
+  &#125;</code></div></pre>
+<p><code>WorkerLifecycleController</code> 的 <code>startWorkers</code> 负责通知 <code>JobWorker</code> 启动计算任务，通过 <code>RemoteCallWorker</code> 的 <code>rollback</code> 函数逐个通知对应 <code>JobWorker</code> 通过 <code>rollback</code>启动 <code>StreamTask</code>。这里为了保证计算逻辑，会先启动所有数据源，然后再逐个启动其他计算任务。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div></div><code class="language-Java">public boolean startWorkers(ExecutionGraph executionGraph, long lastCheckpointId, int timeout) &#123;
+    LOG.info(&quot;Begin starting workers.&quot;);
+    long startTime = System.currentTimeMillis();
+    List&lt;ObjectRef&lt;Object&gt;&gt; objectRefs = new ArrayList&lt;&gt;();
+
+    // start source actors 1st
+    executionGraph.getSourceActors()
+        .forEach(actor -&gt; objectRefs.add(RemoteCallWorker.rollback(actor, lastCheckpointId)));
+
+    // then start non-source actors
+    executionGraph.getNonSourceActors()
+        .forEach(actor -&gt; objectRefs.add(RemoteCallWorker.rollback(actor, lastCheckpointId)));
+
+    WaitResult&lt;Object&gt; result = Ray.wait(objectRefs, objectRefs.size(), timeout);
+    if (result.getReady().size() != objectRefs.size()) &#123;
+      LOG.error(&quot;Starting workers timeout[&#123;&#125; ms].&quot;, timeout);
+      return false;
+    &#125;
+
+    LOG.info(&quot;Workers started. Cost &#123;&#125; ms.&quot;, System.currentTimeMillis() - startTime);
+    return true;
+  &#125;</code></div></pre>
+<h4 id="2-2-4-RemoteCallWorker-RemoteCallMaster">2.2.4 RemoteCallWorker&amp;RemoteCallMaster</h4>
+<p><code>ray/streaming/runtime/rpc/RemoteCallWorker.java</code> 负责处理所用 <code>JobWorker</code> 的远程调用逻辑。</p>
+<p><code>RemoteCallWorker</code> 的 <code>initWorker</code> 函数最终逐个传递 <code>JobWorkerContext</code> 并调用对应 <code>JobMaster</code> 的 <code>init</code> 函数。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code class="language-Java">  public static ObjectRef&lt;Boolean&gt; initWorker(BaseActorHandle actor, JobWorkerContext context) &#123;
+    LOG.info(&quot;Call worker to initiate, actor: &#123;&#125;, context: &#123;&#125;.&quot;, actor.getId(), context);
+    ObjectRef&lt;Boolean&gt; result;
+
+    // python
+    if (actor instanceof PyActorHandle) &#123;
+      result = ((PyActorHandle) actor).task(PyActorMethod.of(&quot;init&quot;, Boolean.class),
+          context.getPythonWorkerContextBytes()).remote();
+    &#125; else &#123;
+      // java
+      result = ((ActorHandle&lt;JobWorker&gt;) actor).task(JobWorker::init, context).remote();
+    &#125;
+
+    LOG.info(&quot;Finished calling worker to initiate.&quot;);
+    return result;
+  &#125;</code></div></pre>
+<p><code>RemoteCallWorker</code> 的 <code>rollback</code> 函数通过 <code>JobWorker</code> 的 <code>rollback</code> 函数启动计算，该函数同时支持从检查点中启动和直接启动。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div></div><code class="language-Java">  public static ObjectRef rollback(BaseActorHandle actor, final Long checkpointId) &#123;
+    LOG.info(&quot;Call worker to start, actor: &#123;&#125;.&quot;, actor.getId());
+    ObjectRef result;
+
+    // python
+    if (actor instanceof PyActorHandle) &#123;
+      RemoteCall.CheckpointId checkpointIdPb = RemoteCall.CheckpointId.newBuilder()
+          .setCheckpointId(checkpointId)
+          .build();
+      result = ((PyActorHandle) actor)
+          .task(PyActorMethod.of(&quot;rollback&quot;),
+              checkpointIdPb.toByteArray()
+          ).remote();
+    &#125; else &#123;
+      // java
+      result = ((ActorHandle&lt;JobWorker&gt;) actor)
+          .task(JobWorker::rollback, checkpointId, System.currentTimeMillis()).remote();
+    &#125;
+
+    LOG.info(&quot;Finished calling worker to start.&quot;);
+    return result;
+  &#125;</code></div></pre>
+<p><code>ray/streaming/runtime/rpc/RemoteCallMaster.java</code> 负责处理所用 <code>JobMaster</code> 的远程调用逻辑。主要用来同步检查点逻辑，包含 <code>reportJobWorkerCommitAsync</code> 和 <code>requestJobWorkerRollback</code> 两个函数。</p>
+<p><code>RemoteCallMaster</code> 的 <code>reportJobWorkerCommitAsync</code> 函数被 <code>StreamTask</code> 调用，用于通知检查点执行完毕。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-Java">  public static ObjectRef&lt;byte[]&gt; reportJobWorkerCommitAsync(
+      ActorHandle&lt;JobMaster&gt; actor,
+      WorkerCommitReport commitReport) &#123;
+    RemoteCall.WorkerCommitReport commit = RemoteCall.WorkerCommitReport.newBuilder()
+        .setCommitCheckpointId(commitReport.commitCheckpointId)
+        .build();
+    Any detail = Any.pack(commit);
+    RemoteCall.BaseWorkerCmd cmd = RemoteCall.BaseWorkerCmd.newBuilder()
+        .setActorId(ByteString.copyFrom(commitReport.fromActorId.getBytes()))
+        .setTimestamp(System.currentTimeMillis())
+        .setDetail(detail).build();
+
+    return actor.task(JobMaster::reportJobWorkerCommit, cmd.toByteArray()).remote();
+  &#125;</code></div></pre>
+<p><code>RemoteCallMaster</code> 的 <code>requestJobWorkerRollback</code> 函数被 <code>JobWorker</code> 调用，用于在检测到异常时，通知 <code>JobMaster</code> 进行全局的业务回滚。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div></div><code class="language-Java">public static Boolean requestJobWorkerRollback(
+      ActorHandle&lt;JobMaster&gt; actor,
+      WorkerRollbackRequest rollbackRequest) &#123;
+    RemoteCall.WorkerRollbackRequest request = RemoteCall.WorkerRollbackRequest.newBuilder()
+        .setExceptionMsg(rollbackRequest.getRollbackExceptionMsg())
+        .setWorkerHostname(rollbackRequest.getHostname())
+        .setWorkerPid(rollbackRequest.getPid()).build();
+    Any detail = Any.pack(request);
+    RemoteCall.BaseWorkerCmd cmd = RemoteCall.BaseWorkerCmd.newBuilder()
+        .setActorId(ByteString.copyFrom(rollbackRequest.fromActorId.getBytes()))
+        .setTimestamp(System.currentTimeMillis())
+        .setDetail(detail).build();
+    ObjectRef&lt;byte[]&gt; ret = actor.task(
+        JobMaster::requestJobWorkerRollback, cmd.toByteArray()).remote();
+    byte[] res = ret.get();
+    return PbResultParser.parseBoolResult(res);
+  &#125;</code></div></pre>
+<h4 id="2-2-5-JobWorker">2.2.5 JobWorker</h4>
+<p><code>ray/streaming/runtime/worker/JobWorker.java</code> 是注册到 <code>ray</code> <code>集群中的最小单位，JobWorker</code> 内部包含的 <code>StreamTask</code> 是流计算任务的最小单位。</p>
+<p><code>JobWorker</code> 在创建阶段，会根据物理执行节点信息创建 <code>JobWorkerContext</code> 并构建属于 <code>JobWorker</code> 的存储后端 <code>ContextBackend</code> (该后端和 <code>Job Master</code> 中使用的后端类型一致，但存储各自独立).随后判断计算节点上下文中是否含有检查点信息，若存在，在从后端中获取信息后，会直接调用 <code>init</code> 从恢复的上下文中初始化节点，然后请求启动计算任务 <code>requestRollback</code></p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div></div><code class="language-Java">  public JobWorker(ExecutionVertex executionVertex) &#123;
+    LOG.info(&quot;Creating job worker.&quot;);
+
+    // TODO: the following 3 lines is duplicated with that in init(), try to optimise it later.
+    this.executionVertex = executionVertex;
+    this.workerConfig = new StreamingWorkerConfig(executionVertex.getWorkerConfig());
+    this.contextBackend = ContextBackendFactory.getContextBackend(this.workerConfig);
+
+    LOG.info(&quot;Ray.getRuntimeContext().wasCurrentActorRestarted()=&#123;&#125;&quot;,
+        Ray.getRuntimeContext().wasCurrentActorRestarted());
+    if (!Ray.getRuntimeContext().wasCurrentActorRestarted()) &#123;
+      saveContext();
+      LOG.info(&quot;Job worker is fresh started, init success.&quot;);
+      return;
+    &#125;
+
+    LOG.info(&quot;Begin load job worker checkpoint state.&quot;);
+
+    byte[] bytes = CheckpointStateUtil.get(contextBackend, getJobWorkerContextKey());
+    if (bytes != null) &#123;
+      JobWorkerContext context = Serializer.decode(bytes);
+      LOG.info(&quot;Worker recover from checkpoint state, byte len=&#123;&#125;, context=&#123;&#125;.&quot;, bytes.length,
+          context);
+      init(context);
+      requestRollback(&quot;LoadCheckpoint request rollback in new actor.&quot;);
+    &#125; else &#123;
+      LOG.error(
+          &quot;Worker is reconstructed, but can't load checkpoint. &quot; +
+              &quot;Check whether you checkpoint state is reliable. Current checkpoint state is &#123;&#125;.&quot;,
+          contextBackend.getClass().getName());
+    &#125;
+  &#125;</code></div></pre>
+<p><code>JobWorker</code> 的 <code>init</code> 函数，通过上下文信息，再次构建节点相关信息 (这里的步骤在 <code>JobWorker</code> 创建时执行过，但具体依赖的上下文信息存在异同),并进行保存。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div></div><code class="language-Java">  public Boolean init(JobWorkerContext workerContext) &#123;
+    // IMPORTANT: some test cases depends on this log to find workers' pid,
+    // be careful when changing this log.
+    LOG.info(&quot;Initiating job worker: &#123;&#125;. Worker context is: &#123;&#125;, pid=&#123;&#125;.&quot;,
+        workerContext.getWorkerName(), workerContext, EnvUtil.getJvmPid());
+
+    this.workerContext = workerContext;
+    this.executionVertex = workerContext.getExecutionVertex();
+    this.workerConfig = new StreamingWorkerConfig(executionVertex.getWorkerConfig());
+    // init state backend
+    this.contextBackend = ContextBackendFactory.getContextBackend(this.workerConfig);
+
+    LOG.info(&quot;Initiating job worker succeeded: &#123;&#125;.&quot;, workerContext.getWorkerName());
+    saveContext();
+    return true;
+  &#125;
+
+  public synchronized void saveContext() &#123;
+    byte[] contextBytes = Serializer.encode(workerContext);
+    String key = getJobWorkerContextKey();
+    LOG.info(&quot;Saving context, worker context=&#123;&#125;, serialized byte length=&#123;&#125;, key=&#123;&#125;.&quot;, workerContext,
+        contextBytes.length, key);
+    CheckpointStateUtil.put(contextBackend, key, contextBytes);
+  &#125;</code></div></pre>
+<p><code>JobWorker</code> 的 <code>rollback</code> 函数，负责实际创建用于直接计算任务的 <code>StreamTask</code>，并负责对相应计算任务的生命周期管理和检查点管理。<code>rollback</code> 函数通过判断传入的<code>检查点 ID</code>，但任务已经创建切<code>检查点 ID</code> 和本地相同时，将自动跳过剩余步骤。否则将正常创建数据传输信道，并通过调用 <code>createStreamTask</code> 函数创建计算任务，随后通过 <code>StreamTask</code> 的 <code>recover</code> 函数启动计算。目前的流计算任务仅支持数据源操作和单输入操作。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div></div><code class="language-Java"> public CallResult&lt;ChannelRecoverInfo&gt; rollback(Long checkpointId, Long startRollbackTs) &#123;
+    synchronized (initialStateChangeLock) &#123;
+      if (task != null &amp;&amp; task.isAlive() &amp;&amp; checkpointId == task.lastCheckpointId &amp;&amp;
+          task.isInitialState) &#123;
+        return CallResult.skipped(&quot;Task is already in initial state, skip this rollback.&quot;);
+      &#125;
+    &#125;
+    long remoteCallCost = System.currentTimeMillis() - startRollbackTs;
+
+    LOG.info(&quot;Start rollback[&#123;&#125;], checkpoint is &#123;&#125;, remote call cost &#123;&#125;ms.&quot;,
+        executionVertex.getExecutionJobVertexName(), checkpointId, remoteCallCost);
+
+    rollbackCount++;
+    if (rollbackCount &gt; 1) &#123;
+      isRecreate.set(true);
+    &#125;
+
+    try &#123;
+      //Init transfer
+      TransferChannelType channelType = workerConfig.transferConfig.channelType();
+      if (TransferChannelType.NATIVE_CHANNEL == channelType) &#123;
+        transferHandler = new TransferHandler();
+      &#125;
+
+      if (task != null) &#123;
+        // make sure the task is closed
+        task.close();
+        task = null;
+      &#125;
+
+      // create stream task
+      task = createStreamTask(checkpointId);
+      ChannelRecoverInfo channelRecoverInfo = task.recover(isRecreate.get());
+      isNeedRollback = false;
+
+      LOG.info(&quot;Rollback job worker success, checkpoint is &#123;&#125;, channelRecoverInfo is &#123;&#125;.&quot;,
+          checkpointId, channelRecoverInfo);
+
+      return CallResult.success(channelRecoverInfo);
+    &#125; catch (Exception e) &#123;
+      LOG.error(&quot;Rollback job worker has exception.&quot;, e);
+      return CallResult.fail(ExceptionUtils.getStackTrace(e));
+    &#125;
+  &#125;
+
+  private StreamTask createStreamTask(long checkpointId) &#123;
+    StreamTask task;
+    StreamProcessor streamProcessor = ProcessBuilder
+        .buildProcessor(executionVertex.getStreamOperator());
+    LOG.debug(&quot;Stream processor created: &#123;&#125;.&quot;, streamProcessor);
+
+    if (streamProcessor instanceof SourceProcessor) &#123;
+      task = new SourceStreamTask(streamProcessor, this, checkpointId);
+    &#125; else if (streamProcessor instanceof OneInputProcessor) &#123;
+      task = new OneInputStreamTask(streamProcessor, this, checkpointId);
+    &#125; else &#123;
+      throw new RuntimeException(&quot;Unsupported processor type:&quot; + streamProcessor);
+    &#125;
+    LOG.info(&quot;Stream task created: &#123;&#125;.&quot;, task);
+    return task;
+  &#125;</code></div></pre>
+<p><code>JobWorker</code> 的检查点相关函数总共有三个，其中 <code>triggerCheckpoint</code> 用于触发检查点，<code>notifyCheckpointTimeout</code> 用于通知检查点执行失败，<code>clearExpiredCheckpoint</code> 用于清理过期检查点。所有函数最终调用了 <code>StreamTask</code> 中对应的相关方法。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div></div><code class="language-Java">  public Boolean triggerCheckpoint(Long barrierId) &#123;
+    LOG.info(&quot;Receive trigger, barrierId is &#123;&#125;.&quot;, barrierId);
+    if (task != null) &#123;
+      return task.triggerCheckpoint(barrierId);
+    &#125;
+    return false;
+  &#125;
+
+  public Boolean notifyCheckpointTimeout(Long checkpointId) &#123;
+    LOG.info(&quot;Notify checkpoint timeout, checkpoint id is &#123;&#125;.&quot;, checkpointId);
+    if (task != null) &#123;
+      task.notifyCheckpointTimeout(checkpointId);
+    &#125;
+    return true;
+  &#125;
+
+  public Boolean clearExpiredCheckpoint(Long expiredStateCpId, Long expiredQueueCpId) &#123;
+    LOG.info(&quot;Clear expired checkpoint state, checkpoint id is &#123;&#125;; &quot; +
+            &quot;Clear expired queue msg, checkpoint id is &#123;&#125;&quot;,
+        expiredStateCpId, expiredQueueCpId);
+    if (task != null) &#123;
+      if (expiredStateCpId &gt; 0) &#123;
+        task.clearExpiredCpState(expiredStateCpId);
+      &#125;
+      task.clearExpiredQueueMsg(expiredQueueCpId);
+    &#125;
+    return true;
+  &#125;</code></div></pre>
+<p><code>JobWorker</code> 的容错相关函数总共有两个，其中 <code>requestRollback</code> 负责通知 <code>JobMaster</code> 计算任务需要回滚，<code>checkIfNeedRollback</code> 则是单纯用于容错恢复的判断。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div></div><code class="language-Java">  public void requestRollback(String exceptionMsg) &#123;
+    LOG.info(&quot;Request rollback.&quot;);
+    isNeedRollback = true;
+    isRecreate.set(true);
+    boolean requestRet = RemoteCallMaster.requestJobWorkerRollback(
+        workerContext.getMaster(), new WorkerRollbackRequest(
+            workerContext.getWorkerActorId(),
+            exceptionMsg,
+            EnvUtil.getHostName(),
+            EnvUtil.getJvmPid()
+        ));
+    if (!requestRet) &#123;
+      LOG.warn(&quot;Job worker request rollback failed! exceptionMsg=&#123;&#125;.&quot;, exceptionMsg);
+    &#125;
+  &#125;
+
+  public Boolean checkIfNeedRollback(Long startCallTs) &#123;
+    // No save checkpoint in this query.
+    long remoteCallCost = System.currentTimeMillis() - startCallTs;
+    LOG.info(&quot;Finished checking if need to rollback with result: &#123;&#125;, rpc delay=&#123;&#125;ms.&quot;,
+        isNeedRollback, remoteCallCost);
+    return isNeedRollback;
+  &#125;</code></div></pre>
+<h4 id="2-2-6-StreamTask">2.2.6 StreamTask</h4>
+<p><code>ray/streaming/runtime/worker/tasks/StreamTask.java</code> 是所有流计算任务的基类继承自 <code>Runnable</code> ,在创建时会将自身注册为独立线程来做到流数据的持续处理。<code>StreamTask</code> 存在多个特化的子类，用于实现对不同计算任务的处理，其类继承关系如下。主要分为数据源任务和输入任务两类，输入任务又具体分为单输入和双输入，对应操作符的不同实现。所有关于计算算子本身的操作都在 <code>StreamTask</code> 中进行实现，关于数据处理，则下推到具体的 <code>StreamTask</code> 的 <code>run</code> 函数中实现。当 <code>run</code> 函数中捕获异常时，会触发回滚。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">StreamTask
+    ├──&gt;InputStreamTask
+    │   ├──&gt;OneInputStreamTask
+    │   └──&gt;TwoInputStreamTask
+    └──&gt;SourceStreamTask</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-Java">  protected StreamTask(Processor processor, JobWorker jobWorker, long lastCheckpointId) &#123;
+    this.processor = processor;
+    this.jobWorker = jobWorker;
+    this.checkpointState = jobWorker.contextBackend;
+    this.lastCheckpointId = lastCheckpointId;
+
+    this.thread = new Thread(Ray.wrapRunnable(this), this.getClass().getName() + &quot;-&quot; + System.currentTimeMillis());
+    this.thread.setDaemon(true);
+  &#125;</code></div></pre>
+<p><code>StreamTask</code> 的 <code>recover</code> 函数负责启动计算任务，首先会调用 <code>prepareTask</code> 函数确定计算任务初始化信息，然后启动线程即启动计算任务。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div></div><code class="language-Java">  public ChannelRecoverInfo recover(boolean isRecover) &#123;
+
+    if (isRecover) &#123;
+      LOG.info(&quot;Stream task begin recover.&quot;);
+    &#125; else &#123;
+      LOG.info(&quot;Stream task first start begin.&quot;);
+    &#125;
+    prepareTask(isRecover);
+
+    // start runner
+    ChannelRecoverInfo recoverInfo = new ChannelRecoverInfo(new HashMap&lt;&gt;());
+    if (reader != null) &#123;
+      recoverInfo = reader.getQueueRecoverInfo();
+    &#125;
+
+    thread.setUncaughtExceptionHandler((t, e) -&gt; LOG.error(&quot;Uncaught exception in runner thread.&quot;, e));
+    LOG.info(&quot;Start stream task: &#123;&#125;.&quot;, this.getClass().getSimpleName());
+    thread.start();
+
+    if (isRecover) &#123;
+      LOG.info(&quot;Stream task recover end.&quot;);
+    &#125; else &#123;
+      LOG.info(&quot;Stream task first start finished.&quot;);
+    &#125;
+
+    return recoverInfo;
+  &#125;</code></div></pre>
+<p><code>StreamTask</code> 的 <code>prepareTask</code> 函数负责准备计算任务所需资源，具体分为以下几步：</p>
+<ul>
+<li>通过传入的参数判断计算任务是否为初次创建，并从存储后端中获取相应数据</li>
+<li>(option) 若为检查点恢复且检查点中存在数据，则调用 Processor 的相关 <code>loadCheckpoint</code> 函数，该函数最中由用户自行实现。</li>
+<li>创建数据读写入口 <code>DataWriter</code> 和 <code>DataReader</code>。</li>
+<li>调用 <code>openProcessor</code> 传递数据，执行计算任务的 <code>open</code> 阶段。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div></div><code class="language-Java">  private void prepareTask(boolean isRecreate) &#123;
+    LOG.info(&quot;Preparing stream task, isRecreate=&#123;&#125;.&quot;, isRecreate);
+    ExecutionVertex executionVertex = jobWorker.getExecutionVertex();
+
+    // set vertex info into config for native using
+    jobWorker.getWorkerConfig().workerInternalConfig.setProperty(WorkerInternalConfig.WORKER_NAME_INTERNAL,
+        executionVertex.getExecutionVertexName());
+    jobWorker.getWorkerConfig().workerInternalConfig.setProperty(WorkerInternalConfig.OP_NAME_INTERNAL,
+        executionVertex.getExecutionJobVertexName());
+
+    OperatorCheckpointInfo operatorCheckpointInfo = new OperatorCheckpointInfo();
+    byte[] bytes = null;
+
+    // Fetch checkpoint from storage only in recreate mode not for new startup
+    // worker
+    // in rescaling or something like that.
+    if (isRecreate) &#123;
+      String cpKey = genOpCheckpointKey(lastCheckpointId);
+      LOG.info(&quot;Getting task checkpoints from state, cpKey=&#123;&#125;, checkpointId=&#123;&#125;.&quot;, cpKey, lastCheckpointId);
+      bytes = CheckpointStateUtil.get(checkpointState, cpKey);
+      if (bytes == null) &#123;
+        String msg = String.format(&quot;Task recover failed, checkpoint is null! cpKey=%s&quot;, cpKey);
+        throw new RuntimeException(msg);
+      &#125;
+    &#125;
+
+    // when use memory state, if actor throw exception, will miss state
+    if (bytes != null) &#123;
+      operatorCheckpointInfo = Serializer.decode(bytes);
+      processor.loadCheckpoint(operatorCheckpointInfo.processorCheckpoint);
+      LOG.info(&quot;Stream task recover from checkpoint state, checkpoint bytes len=&#123;&#125;, checkpointInfo=&#123;&#125;.&quot;, bytes.length,
+          operatorCheckpointInfo);
+    &#125;
+
+    // writer
+    if (!executionVertex.getOutputEdges().isEmpty()) &#123;
+      LOG.info(&quot;Register queue writer, channels=&#123;&#125;, outputCheckpoints=&#123;&#125;.&quot;, executionVertex.getOutputChannelIdList(),
+          operatorCheckpointInfo.outputPoints);
+      writer = new DataWriter(executionVertex.getOutputChannelIdList(), executionVertex.getOutputActorList(),
+          operatorCheckpointInfo.outputPoints, jobWorker.getWorkerConfig());
+    &#125;
+
+    // reader
+    if (!executionVertex.getInputEdges().isEmpty()) &#123;
+      LOG.info(&quot;Register queue reader, channels=&#123;&#125;, inputCheckpoints=&#123;&#125;.&quot;, executionVertex.getInputChannelIdList(),
+          operatorCheckpointInfo.inputPoints);
+      reader = new DataReader(executionVertex.getInputChannelIdList(), executionVertex.getInputActorList(),
+          operatorCheckpointInfo.inputPoints, jobWorker.getWorkerConfig());
+    &#125;
+
+    openProcessor();
+
+    LOG.debug(&quot;Finished preparing stream task.&quot;);
+  &#125;</code></div></pre>
+<p><code>StreamTask</code> 的 <code>openProcessor</code> 函数负责激活计算任务的 <code>open</code> 阶段，主要任务为创建计算任务所需的 <code>StreamingRuntimeContext</code> 然后调用处理器的 <code>open</code> 函数传递上下文信息。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div></div><code class="language-Java">  private void openProcessor() &#123;
+    ExecutionVertex executionVertex = jobWorker.getExecutionVertex();
+    List&lt;ExecutionEdge&gt; outputEdges = executionVertex.getOutputEdges();
+
+    Map&lt;String, List&lt;String&gt;&gt; opGroupedChannelId = new HashMap&lt;&gt;();
+    Map&lt;String, List&lt;BaseActorHandle&gt;&gt; opGroupedActor = new HashMap&lt;&gt;();
+    Map&lt;String, Partition&gt; opPartitionMap = new HashMap&lt;&gt;();
+    for (int i = 0; i &lt; outputEdges.size(); ++i) &#123;
+      ExecutionEdge edge = outputEdges.get(i);
+      String opName = edge.getTargetExecutionJobVertexName();
+      if (!opPartitionMap.containsKey(opName)) &#123;
+        opGroupedChannelId.put(opName, new ArrayList&lt;&gt;());
+        opGroupedActor.put(opName, new ArrayList&lt;&gt;());
+      &#125;
+      opGroupedChannelId.get(opName).add(executionVertex.getOutputChannelIdList().get(i));
+      opGroupedActor.get(opName).add(executionVertex.getOutputActorList().get(i));
+      opPartitionMap.put(opName, edge.getPartition());
+    &#125;
+    opPartitionMap.keySet().forEach(opName -&gt; &#123;
+      collectors.add(new OutputCollector(writer, opGroupedChannelId.get(opName), opGroupedActor.get(opName),
+          opPartitionMap.get(opName)));
+    &#125;);
+
+    RuntimeContext runtimeContext = new StreamingRuntimeContext(executionVertex, jobWorker.getWorkerConfig().configMap,
+        executionVertex.getParallelism());
+
+    processor.open(collectors, runtimeContext);
+  &#125;</code></div></pre>
+<p><code>StreamTask</code> 的检查点相关操作主要有以下几个：</p>
+<ul>
+<li>用于触发检查点的 <code>triggerCheckpoint</code> 函数，该函数只允许在数据源中调用。</li>
+<li>用于执行检查点的 <code>doCheckpoint</code> 函数，该函数会首先存储消息服务的相关数据偏移量 (所有计算任务都会保存并分发 <code>DataWriter</code> 偏移量，同时上游传入的偏移量作为 <code>DataReader</code> 的偏移量进行保存),然后继续将包含偏移量的检查点信息进行广播，调用 <code>processor</code> 的 <code>saveCheckpoint</code> 函数执行用户的检查点方法，最后调用 <code>saveCpStateAndReport</code> 函数保存检查点信息并汇报结果。</li>
+<li><code>saveCpStateAndReport</code> 函数会依次调用 <code>saveCp</code> 和 <code>reportCommit</code> 函数。</li>
+<li><code>saveCp</code> 是最终执行检查点保存的函数，调用工具类 <code>CheckpointStateUtil</code> 将检查点数据存储到后端中。</li>
+<li><code>reportCommit</code> 函数负责通过 <code>RemoteCallMaster</code> 向 <code>JobMaster</code> 汇报检查点任务完成。</li>
+<li><code>clearExpiredCpState</code> , <code>clearExpiredQueueMsg</code> , 用于清理本地过期检查点数据。</li>
+</ul>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div></div><code class="language-Java">  public boolean triggerCheckpoint(Long barrierId) &#123;
+    throw new UnsupportedOperationException(&quot;Only source operator supports trigger checkpoints.&quot;);
+  &#125;
+
+  public void doCheckpoint(long checkpointId, Map&lt;String, OffsetInfo&gt; inputPoints) &#123;
+    Map&lt;String, OffsetInfo&gt; outputPoints = null;
+    if (writer != null) &#123;
+      outputPoints = writer.getOutputCheckpoints();
+      RemoteCall.Barrier barrierPb = RemoteCall.Barrier.newBuilder().setId(checkpointId).build();
+      ByteBuffer byteBuffer = ByteBuffer.wrap(barrierPb.toByteArray());
+      byteBuffer.order(ByteOrder.nativeOrder());
+      writer.broadcastBarrier(checkpointId, byteBuffer);
+    &#125;
+
+    LOG.info(&quot;Start do checkpoint, cp id=&#123;&#125;, inputPoints=&#123;&#125;, outputPoints=&#123;&#125;.&quot;, checkpointId, inputPoints,
+        outputPoints);
+
+    this.lastCheckpointId = checkpointId;
+    Serializable processorCheckpoint = processor.saveCheckpoint();
+
+    try &#123;
+      OperatorCheckpointInfo opCpInfo = new OperatorCheckpointInfo(inputPoints, outputPoints, processorCheckpoint,
+          checkpointId);
+      saveCpStateAndReport(opCpInfo, checkpointId);
+    &#125; catch (Exception e) &#123;
+      // there will be exceptions when flush state to backend.
+      // we ignore the exception to prevent failover
+      LOG.error(&quot;Processor or op checkpoint exception.&quot;, e);
+    &#125;
+
+    LOG.info(&quot;Operator do checkpoint &#123;&#125; finish.&quot;, checkpointId);
+  &#125;
+
+  private void saveCpStateAndReport(OperatorCheckpointInfo operatorCheckpointInfo, long checkpointId) &#123;
+    saveCp(operatorCheckpointInfo, checkpointId);
+    reportCommit(checkpointId);
+
+    LOG.info(&quot;Finish save cp state and report, checkpoint id is &#123;&#125;.&quot;, checkpointId);
+  &#125;
+
+  private void saveCp(OperatorCheckpointInfo operatorCheckpointInfo, long checkpointId) &#123;
+    byte[] bytes = Serializer.encode(operatorCheckpointInfo);
+    String cpKey = genOpCheckpointKey(checkpointId);
+    LOG.info(&quot;Saving task checkpoint, cpKey=&#123;&#125;, byte len=&#123;&#125;, checkpointInfo=&#123;&#125;.&quot;, cpKey, bytes.length,
+        operatorCheckpointInfo);
+    synchronized (checkpointState) &#123;
+      if (outdatedCheckpoints.contains(checkpointId)) &#123;
+        LOG.info(&quot;Outdated checkpoint, skip save checkpoint.&quot;);
+        outdatedCheckpoints.remove(checkpointId);
+      &#125; else &#123;
+        CheckpointStateUtil.put(checkpointState, cpKey, bytes);
+      &#125;
+    &#125;
+  &#125;
+
+  private void reportCommit(long checkpointId) &#123;
+    final JobWorkerContext context = jobWorker.getWorkerContext();
+    LOG.info(&quot;Report commit async, checkpoint id &#123;&#125;.&quot;, checkpointId);
+    RemoteCallMaster.reportJobWorkerCommitAsync(context.getMaster(),
+        new WorkerCommitReport(context.getWorkerActorId(), checkpointId));
+  &#125;
+
+  public void notifyCheckpointTimeout(long checkpointId) &#123;
+    String cpKey = genOpCheckpointKey(checkpointId);
+    try &#123;
+      synchronized (checkpointState) &#123;
+        if (checkpointState.exists(cpKey)) &#123;
+          checkpointState.remove(cpKey);
+        &#125; else &#123;
+          outdatedCheckpoints.add(checkpointId);
+        &#125;
+      &#125;
+    &#125; catch (Exception e) &#123;
+      LOG.error(&quot;Notify checkpoint timeout failed, checkpointId is &#123;&#125;.&quot;, checkpointId, e);
+    &#125;
+  &#125;
+
+  public void clearExpiredCpState(long checkpointId) &#123;
+    String cpKey = genOpCheckpointKey(checkpointId);
+    try &#123;
+      checkpointState.remove(cpKey);
+    &#125; catch (Exception e) &#123;
+      LOG.error(&quot;Failed to remove key &#123;&#125; from state backend.&quot;, cpKey, e);
+    &#125;
+  &#125;
+
+  public void clearExpiredQueueMsg(long checkpointId) &#123;
+    // get operator checkpoint
+    String cpKey = genOpCheckpointKey(checkpointId);
+    byte[] bytes;
+    try &#123;
+      bytes = checkpointState.get(cpKey);
+    &#125; catch (Exception e) &#123;
+      LOG.error(&quot;Failed to get key &#123;&#125; from state backend.&quot;, cpKey, e);
+      return;
+    &#125;
+    if (bytes != null) &#123;
+      final OperatorCheckpointInfo operatorCheckpointInfo = Serializer.decode(bytes);
+      long cpId = operatorCheckpointInfo.checkpointId;
+      if (writer != null) &#123;
+        writer.clearCheckpoint(cpId);
+      &#125;
+    &#125;
+  &#125;</code></div></pre>
+<p><code>StreamTask</code> 的 <code>requestRollback</code> 函数请求业务回滚。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-Java">  protected void requestRollback(String exceptionMsg) &#123;
+    jobWorker.requestRollback(exceptionMsg);
+  &#125;</code></div></pre>
+<h5 id="2-2-6-1-SourceStreamTask">2.2.6.1 SourceStreamTask</h5>
+<p><code>ray/streaming/runtime/worker/tasks/SourceStreamTask.java</code> 是对数据源的专门实现，重点构建了数据读取的 <code>run</code> 函数和触发检查点的 <code>triggerCheckpoint</code> 函数。</p>
+<p><code>SourceStreamTask</code> 的 <code>run</code> 函数会循环执行检查点判定和数据读取，正常 <code>process</code> 的数据处理函数为 <code>process</code> ,由于数据源不需要数据输入，所以单独定义了 <code>fetch</code> 函数。当获取到 <code>barrierId</code> 是，会调用 <code>doCheckpoint</code> 函数向下游发送检查点消息。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div></div><code class="language-Java">  public void run() &#123;
+    LOG.info(&quot;Source stream task thread start.&quot;);
+    Long barrierId;
+    try &#123;
+      while (running) &#123;
+        isInitialState = false;
+
+        // check checkpoint
+        barrierId = pendingBarrier.get();
+        if (barrierId != null) &#123;
+          // Important: because cp maybe timeout, master will use the old checkpoint id again
+          if (pendingBarrier.compareAndSet(barrierId, null)) &#123;
+            // source fetcher only have outputPoints
+            LOG.info(&quot;Start to do checkpoint &#123;&#125;, worker name is &#123;&#125;.&quot;,
+                barrierId, jobWorker.getWorkerContext().getWorkerName());
+
+            doCheckpoint(barrierId, null);
+
+            LOG.info(&quot;Finish to do checkpoint &#123;&#125;.&quot;, barrierId);
+          &#125; else &#123;
+            // pendingCheckpointId has modify, should not happen
+            LOG.warn(&quot;Pending checkpointId modify unexpected, expect=&#123;&#125;, now=&#123;&#125;.&quot;, barrierId,
+                pendingBarrier.get());
+          &#125;
+        &#125;
+
+        sourceProcessor.fetch();
+      &#125;
+    &#125; catch (Throwable e) &#123;
+      if (e instanceof ChannelInterruptException ||
+          ExceptionUtils.getRootCause(e) instanceof ChannelInterruptException) &#123;
+        LOG.info(&quot;queue has stopped.&quot;);
+      &#125; else &#123;
+        // occur error, need to rollback
+        LOG.error(&quot;Last success checkpointId=&#123;&#125;, now occur error.&quot;, lastCheckpointId, e);
+        requestRollback(ExceptionUtils.getStackTrace(e));
+      &#125;
+    &#125;
+
+    LOG.info(&quot;Source stream task thread exit.&quot;);
+  &#125;</code></div></pre>
+<p><code>SourceStreamTask</code> 的 <code>triggerCheckpoint</code> 函数，用于向 <code>pendingBarrier</code>中插入 <code>检查点 ID</code>，以供循环执行时检查检查点信息。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-Java">  public boolean triggerCheckpoint(Long barrierId) &#123;
+    return pendingBarrier.compareAndSet(null, barrierId);
+  &#125;</code></div></pre>
+<h5 id="2-2-6-2-InputStreamTask">2.2.6.2 InputStreamTask</h5>
+<p><code>ray/streaming/runtime/worker/tasks/InputStreamTask.java</code> 主要实现了数据处理过程，后续的子类只是提供对不同处理类型的判断。在 <code>run</code> 函数中，会不断从 <code>reader</code> 中获取数据，并根据数据类型的不同，待用 <code>processor</code> 处理数据或进行检查点操作。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div></div><code class="language-Java"> public void run() &#123;
+    try &#123;
+      while (running) &#123;
+        ChannelMessage item;
+
+        // reader.read() will change the consumer state once it got an item. This lock is to
+        // ensure worker can get correct isInitialState value in exactly-once-mode's rollback.
+        synchronized (jobWorker.initialStateChangeLock) &#123;
+          item = reader.read(readTimeoutMillis);
+          if (item != null) &#123;
+            isInitialState = false;
+          &#125; else &#123;
+            continue;
+          &#125;
+        &#125;
+
+        if (item instanceof DataMessage) &#123;
+          DataMessage dataMessage = (DataMessage) item;
+          byte[] bytes = new byte[dataMessage.body().remaining() - 1];
+          byte typeId = dataMessage.body().get();
+          dataMessage.body().get(bytes);
+          Object obj;
+          if (typeId == Serializer.JAVA_TYPE_ID) &#123;
+            obj = javaSerializer.deserialize(bytes);
+          &#125; else &#123;
+            obj = crossLangSerializer.deserialize(bytes);
+          &#125;
+          processor.process(obj);
+        &#125; else if (item instanceof BarrierMessage) &#123;
+          final BarrierMessage queueBarrier = (BarrierMessage) item;
+          byte[] barrierData = new byte[queueBarrier.getData().remaining()];
+          queueBarrier.getData().get(barrierData);
+          RemoteCall.Barrier barrierPb = RemoteCall.Barrier.parseFrom(barrierData);
+          final long checkpointId = barrierPb.getId();
+          LOG.info(&quot;Start to do checkpoint &#123;&#125;, worker name is &#123;&#125;.&quot;, checkpointId,
+              jobWorker.getWorkerContext().getWorkerName());
+
+          final Map&lt;String, OffsetInfo&gt; inputPoints = queueBarrier.getInputOffsets();
+          doCheckpoint(checkpointId, inputPoints);
+          LOG.info(&quot;Do checkpoint &#123;&#125; success.&quot;, checkpointId);
+        &#125;
+      &#125;
+    &#125; catch (Throwable throwable) &#123;
+      if (throwable instanceof ChannelInterruptException ||
+          ExceptionUtils.getRootCause(throwable) instanceof ChannelInterruptException) &#123;
+        LOG.info(&quot;queue has stopped.&quot;);
+      &#125; else &#123;
+        // error occurred, need to rollback
+        LOG.error(&quot;Last success checkpointId=&#123;&#125;, now occur error.&quot;, lastCheckpointId, throwable);
+        requestRollback(ExceptionUtils.getStackTrace(throwable));
+      &#125;
+    &#125;
+    LOG.info(&quot;Input stream task thread exit.&quot;);
+    stopped = true;
+  &#125;</code></div></pre>
+<h4 id="2-2-7-StreamingRuntimeContext">2.2.7 StreamingRuntimeContext</h4>
+<p><code>ray/streaming/runtime/worker/context/StreamingRuntimeContext.java</code> 是对 <code>streaming-api</code> 中 <code>RuntimeContext</code> 的实现，在创建时保存了计算任务的基本信息。传入的 <code>ExecutionVertex</code> 只是用来获取 <code>taskID</code> 和 <code>taskIndex</code>.</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-Java">  public StreamingRuntimeContext(
+      ExecutionVertex executionVertex, Map&lt;String, String&gt; config,
+      int parallelism) &#123;
+    this.taskId = executionVertex.getExecutionVertexId();
+    this.config = config;
+    this.taskIndex = executionVertex.getExecutionVertexIndex();
+    this.parallelism = parallelism;
+  &#125;</code></div></pre>
+<p><code>StreamingRuntimeContext</code> 的其他函数都是用来提供成员变量的读写，其中需要关注的是 <code>KeyStateBackend</code> 和 <code>OperatorStateBackend</code> , 这两个位于 <code>streaming-state</code> 的状态后端类，目前只提供了设置入口，后续未间初始化和调用。</p>
+<h4 id="2-2-8-Processor">2.2.8 Processor</h4>
+<p><code>ray/streaming/runtime/core/processor/Processor.java</code> 是所有流计算任务的具体处理位置，存在多个特化的子类，用于实现对不同计算的处理，其类继承关系如下。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">Processor --&gt;作为接口父类,主要提供函数接口.
+    └───&gt;StreamProcessor  --&gt;对除 `process` 外的函数进行了实现,提供基本功能.在不同阶段调用Operator的不同函数.
+          ├──&gt;SourceProcessor --&gt;对外提供数据源读取的 `fetch` 函数
+          ├──&gt;OneInputProcessor --&gt;对外提供单输入处理,调用operator的 `processElement` 函数.
+          └──&gt;TwoInputProcessor --&gt;与单输入类似,但是需要首先判断输入数据所属上游流,然后再调用operator的 `processElement` 函数.
+</code></div></pre>
+<p><code>Processor</code> 主要存在五个接口，用于计算任务的不同阶段。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-Java">  void open(List&lt;Collector&gt; collectors, RuntimeContext runtimeContext);
+
+  void process(T t);
+
+  /**
+   * See &#123;@link Function#saveCheckpoint()&#125;.
+   */
+  Serializable saveCheckpoint();
+
+  /**
+   * See &#123;@link Function#loadCheckpoint(Serializable)&#125;.
+   */
+  void loadCheckpoint(Serializable checkpointObject);
+
+  void close();</code></div></pre>
+<h4 id="2-2-9-ContextBackend">2.2.9 ContextBackend</h4>
+<p><code>ray/streaming/runtime/context/ContextBackend.java</code> 是 <code>streaming-runtime</code> 中对检查点后端的简易实现，对外提供了四个接口。随后实现了基于 <code>HashMap</code> 的 <code>MemoryContextBackend</code> 和基于本地文件系统的 <code>AtomicFsBackend</code> ,文件系统路径从 <code>config</code> 中获取。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div></div><code class="language-Java">  /**
+   * check if key exists in state
+   *
+   * @return true if exists
+   */
+  boolean exists(final String key) throws Exception;
+
+  /**
+   * get content by key
+   *
+   * @param key key
+   * @return the StateBackend
+   */
+  byte[] get(final String key) throws Exception;
+
+  /**
+   * put content by key
+   *
+   * @param key key
+   * @param value content
+   */
+  void put(final String key, final byte[] value) throws Exception;
+
+  /**
+   * remove content by key
+   *
+   * @param key key
+   */
+  void remove(final String key) throws Exception;</code></div></pre>
+<h4 id="2-2-10-BaseCoordinator">2.2.10 BaseCoordinator</h4>
+<p><code>ray/streaming/runtime/master/coordinator/BaseCoordinator.java</code> 是 <code>CheckpointCoordinator</code> 和 <code>FailoverCoordinator</code> 的父类，实现自 <code>Runnable</code>，将自身注册为独立线程。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div></div><code class="language-Java">  public BaseCoordinator(JobMaster jobMaster) &#123;
+    this.jobMaster = jobMaster;
+    this.runtimeContext = jobMaster.getRuntimeContext();
+    this.graphManager = jobMaster.getGraphManager();
+  &#125;
+
+  public void start() &#123;
+    thread = new Thread(Ray.wrapRunnable(this),
+        this.getClass().getName() + &quot;-&quot; + System.currentTimeMillis());
+    thread.start();
+  &#125;
+
+  public void stop() &#123;
+    closed = true;
+
+    try &#123;
+      if (thread != null) &#123;
+        thread.join(30000);
+      &#125;
+    &#125; catch (InterruptedException e) &#123;
+      LOG.error(&quot;Coordinator thread exit has exception.&quot;, e);
+    &#125;
+  &#125;</code></div></pre>
+<h5 id="2-2-10-1-CheckpointCoordinator">2.2.10.1 CheckpointCoordinator</h5>
+<p><code>CheckpointCoordinator</code> 的 <code>run</code> 函数中，主要流程未持续检查 <code>runtimeContext</code> 中的检查点命令，并作出相关操作。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div></div><code class="language-Java">  public void run() &#123;
+    while (!closed) &#123;
+      try &#123;
+        final BaseWorkerCmd command = runtimeContext.cpCmds.poll(1, TimeUnit.SECONDS);
+        if (command != null) &#123;
+          if (command instanceof WorkerCommitReport) &#123;
+            processCommitReport((WorkerCommitReport) command);
+          &#125; else &#123;
+            interruptCheckpoint();
+          &#125;
+        &#125;
+
+        if (!pendingCheckpointActors.isEmpty()) &#123;
+          // if wait commit report timeout, this cp fail, and restart next cp
+          if (timeoutOnWaitCheckpoint()) &#123;
+            LOG.warn(&quot;Waiting for checkpoint &#123;&#125; timeout, pending cp actors is &#123;&#125;.&quot;,
+                runtimeContext.lastCheckpointId,
+                graphManager.getExecutionGraph().getActorName(pendingCheckpointActors));
+
+            interruptCheckpoint();
+          &#125;
+        &#125; else &#123;
+          maybeTriggerCheckpoint();
+        &#125;
+      &#125; catch (Throwable e) &#123;
+        LOG.error(&quot;Checkpoint coordinator occur err.&quot;, e);
+        try &#123;
+          interruptCheckpoint();
+        &#125; catch (Throwable interruptE) &#123;
+          LOG.error(&quot;Ignore interrupt checkpoint exception in catch block.&quot;);
+        &#125;
+      &#125;
+    &#125;
+    LOG.warn(&quot;Checkpoint coordinator thread exit.&quot;);
+  &#125;</code></div></pre>
+<p>当 <code>run</code> 函数中获取到的为 <code>JobWorker</code> 正常发回的检查点消息时，将触发 <code>processCommitReport</code> 函数。该函数的逻辑是不断从 <code>WorkerCommitReport</code> 获取检查点完成消息，并将完成的 <code>Job Worker</code> 移出检查点队列，当队列清空时，则代表一轮检查点完成，此时通过 <code>clearExpiredCpStateAndQueueMsg</code> 通知所有计算任务清理上一轮检查点信息，然后通知 <code>JobMaster</code> 将自身也进行检查点保存。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div></div><code class="language-Java">  private void processCommitReport(WorkerCommitReport commitReport) &#123;
+    LOG.info(&quot;Start process commit report &#123;&#125;, from actor name=&#123;&#125;.&quot;, commitReport,
+        graphManager.getExecutionGraph().getActorName(commitReport.fromActorId));
+
+    try &#123;
+      Preconditions.checkArgument(
+          commitReport.commitCheckpointId == runtimeContext.lastCheckpointId,
+          &quot;expect checkpointId %s, but got %s&quot;,
+          runtimeContext.lastCheckpointId, commitReport);
+
+      if (!pendingCheckpointActors.contains(commitReport.fromActorId)) &#123;
+        LOG.warn(&quot;Invalid commit report, skipped.&quot;);
+        return;
+      &#125;
+
+      pendingCheckpointActors.remove(commitReport.fromActorId);
+      LOG.info(&quot;Pending actors after this commit: &#123;&#125;.&quot;,
+          graphManager.getExecutionGraph().getActorName(pendingCheckpointActors));
+
+      // checkpoint finish
+      if (pendingCheckpointActors.isEmpty()) &#123;
+        // actor finish
+        runtimeContext.checkpointIds.add(runtimeContext.lastCheckpointId);
+
+        if (clearExpiredCpStateAndQueueMsg()) &#123;
+          // save master context
+          jobMaster.saveContext();
+
+          LOG.info(&quot;Finish checkpoint: &#123;&#125;.&quot;, runtimeContext.lastCheckpointId);
+        &#125; else &#123;
+          LOG.warn(&quot;Fail to do checkpoint: &#123;&#125;.&quot;, runtimeContext.lastCheckpointId);
+        &#125;
+      &#125;
+
+      LOG.info(&quot;Process commit report &#123;&#125; success.&quot;, commitReport);
+    &#125; catch (Throwable e) &#123;
+      LOG.warn(&quot;Process commit report has exception.&quot;, e);
+    &#125;
+  &#125;</code></div></pre>
+<p><code>clearExpiredCpStateAndQueueMsg</code> 函数的业务逻辑是从执行图中获取所有 <code>actor</code>，然后通过逐个通知清理检查点。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code class="language-Java">  private boolean clearExpiredCpStateAndQueueMsg() &#123;
+    // queue msg must clear when first checkpoint finish
+    List&lt;BaseActorHandle&gt; allActor = graphManager.getExecutionGraph().getAllActors();
+    if (1 == runtimeContext.checkpointIds.size()) &#123;
+      Long msgExpiredCheckpointId = runtimeContext.checkpointIds.get(0);
+      RemoteCallWorker.clearExpiredCheckpointParallel(allActor, 0L, msgExpiredCheckpointId);
+    &#125;
+
+    if (runtimeContext.checkpointIds.size() &gt; 1) &#123;
+      Long stateExpiredCpId = runtimeContext.checkpointIds.remove(0);
+      Long msgExpiredCheckpointId = runtimeContext.checkpointIds.get(0);
+      RemoteCallWorker
+          .clearExpiredCheckpointParallel(allActor, stateExpiredCpId, msgExpiredCheckpointId);
+    &#125;
+    return true;
+  &#125;</code></div></pre>
+<p>当 <code>run</code> 函数获取到检查点执行存在异常时，会触发 <code>interruptCheckpoint</code> 函数。该函数最终执行逻辑和 <code>clearExpiredCpStateAndQueueMsg</code> 函数相似，只是调用函数不同。最后会调用一次 <code>maybeTriggerCheckpoint</code> 判断是否要启动新的检查点。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div></div><code class="language-Java">  private void interruptCheckpoint() &#123;
+    // notify checkpoint timeout is time-consuming while many workers crash or
+    // container failover.
+    if (interruptedCheckpointSet.contains(runtimeContext.lastCheckpointId)) &#123;
+      LOG.warn(&quot;Skip interrupt duplicated checkpoint id : &#123;&#125;.&quot;, runtimeContext.lastCheckpointId);
+      return;
+    &#125;
+    interruptedCheckpointSet.add(runtimeContext.lastCheckpointId);
+    LOG.warn(&quot;Interrupt checkpoint, checkpoint id : &#123;&#125;.&quot;, runtimeContext.lastCheckpointId);
+
+    List&lt;BaseActorHandle&gt; allActor = graphManager.getExecutionGraph().getAllActors();
+    if (runtimeContext.lastCheckpointId &gt; runtimeContext.getLastValidCheckpointId()) &#123;
+      RemoteCallWorker
+          .notifyCheckpointTimeoutParallel(allActor, runtimeContext.lastCheckpointId);
+    &#125;
+
+    if (!pendingCheckpointActors.isEmpty()) &#123;
+      pendingCheckpointActors.clear();
+    &#125;
+    maybeTriggerCheckpoint();
+  &#125;</code></div></pre>
+<p>当检查点正常结束后或异常处理结束后，会触发 <code>maybeTriggerCheckpoint</code> 函数。该函数首先判断检查点间隔是否满足，然后调用 <code>triggerCheckpoint</code> 函数。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-Java">  private void maybeTriggerCheckpoint() &#123;
+    if (readyToTrigger()) &#123;
+      triggerCheckpoint();
+    &#125;
+  &#125;
+
+  private boolean readyToTrigger() &#123;
+    return (System.currentTimeMillis() - runtimeContext.lastCpTimestamp) &gt;=
+        cpIntervalSecs * 1000;
+  &#125;
+</code></div></pre>
+<p><code>triggerCheckpoint</code> 函数是最终的检查点触发函数，会通过 <code>RemoteCallWorker</code> 调用 <code>JobWorker</code> 的 <code>triggerCheckpoint</code> 将检查点信息发送到所有数据源计算节点中。启动检查点任务。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div></div><code class="language-Java">  private void triggerCheckpoint() &#123;
+    interruptedCheckpointSet.clear();
+    if (LOG.isInfoEnabled()) &#123;
+      LOG.info(&quot;Start trigger checkpoint &#123;&#125;.&quot;, runtimeContext.lastCheckpointId + 1);
+    &#125;
+
+    List&lt;ActorId&gt; allIds = graphManager.getExecutionGraph().getAllActorsId();
+    // do the checkpoint
+    pendingCheckpointActors.addAll(allIds);
+
+    // inc last checkpoint id
+    ++runtimeContext.lastCheckpointId;
+
+    final List&lt;ObjectRef&gt; sourcesRet = new ArrayList&lt;&gt;();
+
+    graphManager.getExecutionGraph().getSourceActors().forEach(actor -&gt; &#123;
+      sourcesRet.add(RemoteCallWorker.triggerCheckpoint(
+          actor, runtimeContext.lastCheckpointId));
+    &#125;);
+
+    for (ObjectRef rayObject : sourcesRet) &#123;
+      if (rayObject.get() instanceof RayException) &#123;
+        LOG.warn(&quot;Trigger checkpoint has exception.&quot;, (RayException) rayObject.get());
+        throw (RayException) rayObject.get();
+      &#125;
+    &#125;
+    runtimeContext.lastCpTimestamp = System.currentTimeMillis();
+    LOG.info(&quot;Trigger checkpoint success.&quot;);
+  &#125;</code></div></pre>
+<h5 id="2-2-10-2-FailoverCoordinator">2.2.10.2 FailoverCoordinator</h5>
+<p><code>FailoverCoordinator</code> 的 <code>requestJobWorkerRollback</code> 函数向 <code>JobMaster</code> 暴露，用于判断是否向上下文中添加错误恢复请求信息。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-Java">  public Boolean requestJobWorkerRollback(WorkerRollbackRequest request) &#123;
+    LOG.info(&quot;Request job worker rollback &#123;&#125;.&quot;, request);
+    boolean ret;
+    if (!isDuplicateRequest(request)) &#123;
+      ret = runtimeContext.foCmds.offer(request);
+    &#125; else &#123;
+      LOG.warn(&quot;Skip duplicated worker rollback request, &#123;&#125;.&quot;, request.toString());
+      return true;
+    &#125;
+    jobMaster.saveContext();
+    if (!ret) &#123;
+      LOG.warn(&quot;Request job worker rollback failed, because command queue is full.&quot;);
+    &#125;
+    return ret;
+  &#125;</code></div></pre>
+<p><code>FailoverCoordinator</code> 的 <code>run</code> 函数同样不断查询检查点指令，当获取到 <code>WorkerRollbackRequest</code> 请求时，将调用 <code>dealWithRollbackRequest</code> 进行计算回滚。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div></div><code class="language-Java">  public void run() &#123;
+    while (!closed) &#123;
+      try &#123;
+        final BaseWorkerCmd command;
+        // see rollback() for lock reason
+        synchronized (cmdLock) &#123;
+          command = jobMaster.getRuntimeContext().foCmds.poll(1, TimeUnit.SECONDS);
+        &#125;
+        if (null == command) &#123;
+          continue;
+        &#125;
+        if (command instanceof WorkerRollbackRequest) &#123;
+          jobMaster.getRuntimeContext().unfinishedFoCmds.add(command);
+          dealWithRollbackRequest((WorkerRollbackRequest) command);
+        &#125;
+      &#125; catch (Throwable e) &#123;
+        LOG.error(&quot;Fo coordinator occur err.&quot;, e);
+      &#125;
+    &#125;
+    LOG.warn(&quot;Fo coordinator thread exit.&quot;);
+  &#125;</code></div></pre>
+<p><code>FailoverCoordinator</code> 的 <code>dealWithRollbackRequest</code> 函数，首先会从回滚消息中获取回滚请求的计算节点，然后判断回滚是否有效，最后调用 <code>interruptCheckpointAndRollback</code> 函数执行回滚。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div></div><code class="language-Java">  private void dealWithRollbackRequest(WorkerRollbackRequest rollbackRequest) &#123;
+    LOG.info(&quot;Start deal with rollback request &#123;&#125;.&quot;, rollbackRequest);
+
+    ExecutionVertex exeVertex = getExeVertexFromRequest(rollbackRequest);
+
+    // Reset pid for new-rollback actor.
+    if (null != rollbackRequest.getPid() &amp;&amp;
+        !rollbackRequest.getPid().equals(WorkerRollbackRequest.DEFAULT_PID)) &#123;
+      exeVertex.setPid(rollbackRequest.getPid());
+    &#125;
+
+    if (isRollbacking.get(exeVertex)) &#123;
+      LOG.info(&quot;Vertex &#123;&#125; is rollbacking, skip rollback again.&quot;, exeVertex);
+      return;
+    &#125;
+
+    String hostname = &quot;&quot;;
+    Optional&lt;Container&gt; container = ResourceUtil.getContainerById(
+        jobMaster.getResourceManager().getRegisteredContainers(),
+        exeVertex.getContainerId()
+    );
+    if (container.isPresent()) &#123;
+      hostname = container.get().getHostname();
+    &#125;
+
+    if (rollbackRequest.isForcedRollback) &#123;
+      interruptCheckpointAndRollback(rollbackRequest);
+    &#125; else &#123;
+      asyncRemoteCaller.checkIfNeedRollbackAsync(exeVertex.getWorkerActor(), res -&gt; &#123;
+        if (!res) &#123;
+          LOG.info(&quot;Vertex &#123;&#125; doesn't need to rollback, skip it.&quot;, exeVertex);
+          return;
+        &#125;
+        interruptCheckpointAndRollback(rollbackRequest);
+      &#125;, throwable -&gt; &#123;
+        LOG.error(&quot;Exception when calling checkIfNeedRollbackAsync, maybe vertex is dead&quot; +
+            &quot;, ignore this request, vertex=&#123;&#125;.&quot;, exeVertex, throwable);
+      &#125;);
+    &#125;
+
+    LOG.info(&quot;Deal with rollback request &#123;&#125; success.&quot;, rollbackRequest);
+  &#125;
+
+  private Boolean isDuplicateRequest(WorkerRollbackRequest request) &#123;
+    try &#123;
+      Object[] foCmdsArray = runtimeContext.foCmds.toArray();
+      for (Object cmd : foCmdsArray) &#123;
+        if (request.fromActorId.equals(((BaseWorkerCmd) cmd).fromActorId)) &#123;
+          return true;
+        &#125;
+      &#125;
+    &#125; catch (Exception e) &#123;
+      LOG.warn(&quot;Check request is duplicated failed.&quot;, e);
+    &#125;
+    return false;
+  &#125;
+
+  private ExecutionVertex getExeVertexFromRequest(WorkerRollbackRequest rollbackRequest) &#123;
+    ActorId actorId = rollbackRequest.fromActorId;
+    Optional&lt;BaseActorHandle&gt; rayActor = graphManager.getExecutionGraph().getActorById(actorId);
+    if (!rayActor.isPresent()) &#123;
+      throw new RuntimeException(&quot;Can not find ray actor of ID &quot; + actorId);
+    &#125;
+    return getExecutionVertex(rollbackRequest.fromActorId);
+  &#125;
+
+  private ExecutionVertex getExecutionVertex(BaseActorHandle actor) &#123;
+    return graphManager.getExecutionGraph().getExecutionVertexByActorId(actor.getId());
+  &#125;
+
+  private ExecutionVertex getExecutionVertex(ActorId actorId) &#123;
+    return graphManager.getExecutionGraph().getExecutionVertexByActorId(actorId);
+  &#125;</code></div></pre>
+<p><code>FailoverCoordinator</code> 的 <code>interruptCheckpointAndRollback</code> 函数，通过 <code>rollback</code> 执行回滚，然后向上下文中添加中断检查点请求。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-Java">  private void interruptCheckpointAndRollback(WorkerRollbackRequest rollbackRequest) &#123;
+    // assign a cascadingGroupId
+    if (rollbackRequest.cascadingGroupId == null) &#123;
+      rollbackRequest.cascadingGroupId = currentCascadingGroupId++;
+    &#125;
+    // get last valid checkpoint id then call worker rollback
+    rollback(jobMaster.getRuntimeContext().getLastValidCheckpointId(), rollbackRequest,
+        currentCascadingGroupId);
+    // we interrupt current checkpoint for 2 considerations:
+    // 1. current checkpoint might be timeout, because barrier might be lost after failover. so we
+    // interrupt current checkpoint to avoid waiting.
+    // 2. when we want to rollback vertex to n, job finished checkpoint n+1 and cleared state
+    // of checkpoint n.
+    jobMaster.getRuntimeContext().cpCmds.offer(new InterruptCheckpointRequest());
+  &#125;</code></div></pre>
+<p><code>FailoverCoordinator</code> 的 <code>rollback</code> 函数，在将请求回滚的 <code>JobWorker</code> 成功进行回滚后，会通知 <code>JobMaster</code> 将所有上游算子进行回滚，同时保存 <code>JobMaster</code> 状态。回滚将一直递归到数据源算子。</p>
+<pre><div class="code-header"><span class="code-header-type">Java</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div></div><code class="language-Java">  private void rollback(
+      long checkpointId, WorkerRollbackRequest rollbackRequest,
+      long cascadingGroupId) &#123;
+    ExecutionVertex exeVertex = getExeVertexFromRequest(rollbackRequest);
+    LOG.info(&quot;Call vertex &#123;&#125; to rollback, checkpoint id is &#123;&#125;, cascadingGroupId=&#123;&#125;.&quot;,
+        exeVertex, checkpointId, cascadingGroupId);
+
+    isRollbacking.put(exeVertex, true);
+
+    asyncRemoteCaller.rollback(exeVertex.getWorkerActor(), checkpointId, result -&gt; &#123;
+      List&lt;WorkerRollbackRequest&gt; newRollbackRequests = new ArrayList&lt;&gt;();
+      switch (result.getResultEnum()) &#123;
+        case SUCCESS:
+          ChannelRecoverInfo recoverInfo = result.getResultObj();
+          LOG.info(&quot;Vertex &#123;&#125; rollback done, dataLostQueues=&#123;&#125;, msg=&#123;&#125;, cascadingGroupId=&#123;&#125;.&quot;,
+              exeVertex, recoverInfo.getDataLostQueues(), result.getResultMsg(), cascadingGroupId);
+          // rollback upstream if vertex reports abnormal input queues
+          newRollbackRequests =
+              cascadeUpstreamActors(recoverInfo.getDataLostQueues(), exeVertex, cascadingGroupId);
+          break;
+        case SKIPPED:
+          LOG.info(&quot;Vertex skip rollback, result = &#123;&#125;, cascadingGroupId=&#123;&#125;.&quot;, result,
+              cascadingGroupId);
+          break;
+        default:
+          LOG.error(
+              &quot;Rollback vertex &#123;&#125; failed, result=&#123;&#125;, cascadingGroupId=&#123;&#125;,&quot; +
+                  &quot; rollback this worker again after &#123;&#125; ms.&quot;,
+              exeVertex, result, cascadingGroupId, ROLLBACK_RETRY_TIME_MS);
+          Thread.sleep(ROLLBACK_RETRY_TIME_MS);
+          LOG.info(&quot;Add rollback request for &#123;&#125; again, cascadingGroupId=&#123;&#125;.&quot;, exeVertex,
+              cascadingGroupId);
+          newRollbackRequests.add(
+              new WorkerRollbackRequest(exeVertex, &quot;&quot;, &quot;Rollback failed, try again.&quot;, false)
+          );
+          break;
+      &#125;
+
+      // lock to avoid executing new rollback requests added.
+      // consider such a case: A-&gt;B-&gt;C, C cascade B, and B cascade A
+      // if B is rollback before B's rollback request is saved, and then JobMaster crashed,
+      // then A will never be rollback.
+      synchronized (cmdLock) &#123;
+        jobMaster.getRuntimeContext().foCmds.addAll(newRollbackRequests);
+        // this rollback request is finished, remove it.
+        jobMaster.getRuntimeContext().unfinishedFoCmds.remove(rollbackRequest);
+        jobMaster.saveContext();
+      &#125;
+      isRollbacking.put(exeVertex, false);
+    &#125;, throwable -&gt; &#123;
+      LOG.error(&quot;Exception when calling vertex to rollback, vertex=&#123;&#125;.&quot;, exeVertex, throwable);
+      isRollbacking.put(exeVertex, false);
+    &#125;);
+
+    LOG.info(&quot;Finish rollback vertex &#123;&#125;, checkpoint id is &#123;&#125;.&quot;, exeVertex, checkpointId);
+  &#125;
+
+  private List&lt;WorkerRollbackRequest&gt; cascadeUpstreamActors(
+      Set&lt;String&gt; dataLostQueues, ExecutionVertex fromVertex, long cascadingGroupId) &#123;
+    List&lt;WorkerRollbackRequest&gt; cascadedRollbackRequest = new ArrayList&lt;&gt;();
+    // rollback upstream if vertex reports abnormal input queues
+    dataLostQueues.forEach(q -&gt; &#123;
+      BaseActorHandle upstreamActor =
+          graphManager.getExecutionGraph().getPeerActor(fromVertex.getWorkerActor(), q);
+      ExecutionVertex upstreamExeVertex = getExecutionVertex(upstreamActor);
+      // vertexes that has already cascaded by other vertex in the same level
+      // of graph should be ignored.
+      if (isRollbacking.get(upstreamExeVertex)) &#123;
+        return;
+      &#125;
+      LOG.info(&quot;Call upstream vertex &#123;&#125; of vertex &#123;&#125; to rollback, cascadingGroupId=&#123;&#125;.&quot;,
+          upstreamExeVertex, fromVertex, cascadingGroupId);
+      String hostname = &quot;&quot;;
+      Optional&lt;Container&gt; container = ResourceUtil.getContainerById(
+          jobMaster.getResourceManager().getRegisteredContainers(),
+          upstreamExeVertex.getContainerId()
+      );
+      if (container.isPresent()) &#123;
+        hostname = container.get().getHostname();
+      &#125;
+      // force upstream vertexes to rollback
+      WorkerRollbackRequest upstreamRequest = new WorkerRollbackRequest(
+          upstreamExeVertex, hostname, String.format(&quot;Cascading rollback from %s&quot;, fromVertex), true
+      );
+      upstreamRequest.cascadingGroupId = cascadingGroupId;
+      cascadedRollbackRequest.add(upstreamRequest);
+    &#125;);
+    return cascadedRollbackRequest;
+  &#125;</code></div></pre>
+<h3 id="三、总结">三、总结</h3>
+<ul>
+<li><code>ray-streaming</code> 提供对 <code>python API</code> 的支持，其后端运行方式一致，主要时提供了一个用于 <code>python</code> 连接 <code>java JobMaster</code> 的 <code>_PYTHON_GATEWAY</code>。若提供对新计算算子的支持，需要在 <code>streaming/python/datastream.py</code> , <code>streaming/python/operator.py</code>，<code>streaming/python/function.py</code> 提供相应接口。</li>
+<li><code>ray-streaming</code> 目前仅支持简单计算，不支持双输入处理，单输入中也缺失关于时间的处理。</li>
+<li><code>ray-streaming</code> 目前的检查点只有一个简易的内存后端和一个本地文件后端。状态后端 <code>streaming-state</code> 只保留了函数接口，并没有整合到计算系统中。</li>
+<li>从调用逻辑上来看，状态后端 <code>streaming-state</code> 应该在 <code>StreamTask</code> 中被创建。</li>
+<li>用于 <code>Task</code> 之间消息传递的 <code>DataMessage</code> 包含时间戳相关信息，用于数据处理的 <code>Record</code> 已经丢失时间信息，无法有效支持时间处理。</li>
+</ul>
+<h2 id="参考">参考</h2>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2021/06/1816/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2021/06/1816/">https://www.superheaoz.top/2021/06/1816/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2021/06/3687/"><span>Ray 学习随笔（3）ray-streaming-state 源码阅读</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2021/05/6715/"><span>Ray 学习随笔（1）启动过程源码阅读</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

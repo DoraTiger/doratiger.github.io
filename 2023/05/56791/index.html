@@ -1,0 +1,1742 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Tendermint 学习随笔（3）node 启动过程与源码分析【我的个人天地】</title><meta name="description" content="Tendermint 学习随笔（3）node 启动过程与源码分析"><meta name="keywords" content="Tendermint,blockchain"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Tendermint 学习随笔（3）node 启动过程与源码分析【我的个人天地】"><meta property="og:description" content="Tendermint 学习随笔（3）node 启动过程与源码分析"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2023/05/56791/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Tendermint 学习随笔（3）node 启动过程与源码分析",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2023-05-16T03:05:35.000Z",
+  "dateModified": "2023-05-16T03:05:35.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2023/05/56791/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">一、源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-tendermint-%E5%90%AF%E5%8A%A8%E5%85%A5%E5%8F%A3"><span class="toc-text">1.1 tendermint 启动入口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-Node-%E5%88%9B%E5%BB%BA%E8%BF%87%E7%A8%8B"><span class="toc-text">1.2 Node 创建过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-Node-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="toc-text">1.3 Node 启动过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-Node-%E5%81%9C%E6%AD%A2%E8%BF%87%E7%A8%8B"><span class="toc-text">1.4 Node 停止过程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">二、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color3"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color2"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Tendermint 学习随笔（3）node 启动过程与源码分析</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2023-05-16</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2023-05-16</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Tendermint/">Tendermint</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/blockchain/">blockchain</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">51001 字 · 约 171 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<a href="/2023/04/25680/" title="Tendermint 学习随笔（2）P2P 源码阅读与分析">Tendermint 学习随笔（2）P2P 源码阅读与分析</a> 中，对 `p2p` 相关源码的调用关系和业务逻辑进行了分析，可以发现整个 `p2p` 通信的最小单位就是 `node`，故而本文对 `node` 进行分析。而 `node` 涉及到了 `tendermint` 系统的全生命周期所以将以 `node` 启动流程为切入点，对相关功能进行分析。
+<span id="more"></span>
+<h2 id="一、源码分析">一、源码分析</h2>
+<h3 id="1-1-tendermint-启动入口">1.1 tendermint 启动入口</h3>
+<p>与传统 <code>go</code> 语言项目相同，<code>tendermint</code> 的启动主入口在 <code>cmd</code> 目录中，使用 <code>cobra</code> 作为命令行的构建工具，<code>cmd/tendermint</code> 目录的目录结构如下：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div></div><code class="language-bash">.
+├── commands # 具体命令实现目录
+│   ├── compact.go # experimental-compact-goleveldb, force compacts the tendermint storage engine (only GoLevelDB supported)
+│   ├── debug # debug相关命令目录
+│   │   ├── debug.go # ebugCmd defines the root command containing subcommands that assist in debugging running Tendermint processes.
+│   │   ├── dump.go # Continuously poll a Tendermint process and dump debugging data into a single location
+│   │   ├── io.go
+│   │   ├── kill.go # Kill a Tendermint process while aggregating and packaging debugging data
+│   │   └── util.go
+│   ├── gen_node_key.go # GenNodeKeyCmd allows the generation of a node key. It prints node's ID to the standard output.
+│   ├── gen_validator.go # GenValidatorCmd allows the generation of a keypair for a validator
+│   ├── init.go # InitFilesCmd initialises a fresh Tendermint Core instance.
+│   ├── light.go # LightCmd represents the base command when called without any subcommands
+│   ├── probe_upnp.go # ProbeUpnpCmd adds capabilities to test the UPnP functionality.
+│   ├── reindex_event.go # ReIndexEventCmd constructs a command to re-index events in a block height interval.
+│   ├── reindex_event_test.go
+│   ├── replay.go # ReplayCmd allows replaying of messages from the WAL.// ReplayConsoleCmd allows replaying of messages from the WAL in a console
+│   ├── reset.go # ResetAllCmd removes the database of this Tendermint core instance.// ResetStateCmd removes the database of the specified Tendermint core instance.// ResetPrivValidatorCmd resets the private validator files.
+│   ├── reset_test.go # RollbackStateCmd rollback tendermint state by one height
+│   ├── rollback.go
+│   ├── root.go # RootCmd is the root command for Tendermint core.
+│   ├── root_test.go
+│   ├── run_node.go # NewRunNodeCmd returns the command that allows the CLI to start a node. It can be used with a custom PrivValidator and in-process ABCI application.
+│   ├── show_node_id.go # It can be used with a custom PrivValidator and in-process ABCI application.
+│   ├── show_validator.go # ShowValidatorCmd adds capabilities for showing the validator info.
+│   ├── testnet.go #  TestnetFilesCmd allows initialisation of files for a Tendermint testnet.
+│   └── version.go # VersionCmd ...
+└── main.go # 主入口</code></div></pre>
+<p>结合<code>cobra</code>和对目录结构的分析，不难看出应该从<code>main.go</code>作为分析的入口，<code>commands</code>目录下是各个命令的具体实现。接下来先看该文件源码：</p>
+<pre><div class="code-header"><span class="code-header-type">GOLANG</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div></div><code class="language-GOLANG">package main
+
+import (
+ &quot;os&quot;
+ &quot;path/filepath&quot;
+
+ cmd &quot;github.com/tendermint/tendermint/cmd/tendermint/commands&quot;
+ &quot;github.com/tendermint/tendermint/cmd/tendermint/commands/debug&quot;
+ cfg &quot;github.com/tendermint/tendermint/config&quot;
+ &quot;github.com/tendermint/tendermint/libs/cli&quot;
+ nm &quot;github.com/tendermint/tendermint/node&quot;
+)
+
+func main() &#123;
+ rootCmd := cmd.RootCmd
+ rootCmd.AddCommand(
+  cmd.GenValidatorCmd,
+  cmd.InitFilesCmd,
+  cmd.ProbeUpnpCmd,
+  cmd.LightCmd,
+  cmd.ReIndexEventCmd,
+  cmd.ReplayCmd,
+  cmd.ReplayConsoleCmd,
+  cmd.ResetAllCmd,
+  cmd.ResetPrivValidatorCmd,
+  cmd.ResetStateCmd,
+  cmd.ShowValidatorCmd,
+  cmd.TestnetFilesCmd,
+  cmd.ShowNodeIDCmd,
+  cmd.GenNodeKeyCmd,
+  cmd.VersionCmd,
+  cmd.RollbackStateCmd,
+  cmd.CompactGoLevelDBCmd,
+  debug.DebugCmd,
+  cli.NewCompletionCmd(rootCmd, true),
+ )
+
+ // NOTE:
+ // Users wishing to:
+ // * Use an external signer for their validators
+ // * Supply an in-proc abci app
+ // * Supply a genesis doc file from another source
+ // * Provide their own DB implementation
+ // can copy this file and use something other than the
+ // DefaultNewNode function
+ nodeFunc := nm.DefaultNewNode
+
+ // Create &amp; start node
+ rootCmd.AddCommand(cmd.NewRunNodeCmd(nodeFunc))
+
+ cmd := cli.PrepareBaseCmd(rootCmd, &quot;TM&quot;, os.ExpandEnv(filepath.Join(&quot;$HOME&quot;, cfg.DefaultTendermintDir)))
+ if err := cmd.Execute(); err != nil &#123;
+  panic(err)
+ &#125;
+&#125;
+</code></div></pre>
+<p>从代码中不难看出，各种具体命令的实现都在<code>github.com/tendermint/tendermint/cmd/tendermint/commands</code>包中，对应前文看到的<code>commands</code>目录，启动 node 对应的代码入口为<code>cmd.NewRunNodeCmd(nodeFunc)</code>，这里我们先看<code>nodeFunc</code>是如何创建的，对应的<code>github.com/tendermint/tendermint/node</code>包就是前文提到的<code>node</code>目录。</p>
+<p>首先看<code>NewRunNodeCmd</code>函数，该函数是 tendermint 节点启动的直接入口，对应实现在<code>run_node.go</code>文件中：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div></div><code class="language-golang">// NewRunNodeCmd returns the command that allows the CLI to start a node.
+// It can be used with a custom PrivValidator and in-process ABCI application.
+func NewRunNodeCmd(nodeProvider nm.Provider) *cobra.Command &#123;
+ cmd := &amp;cobra.Command&#123;
+  Use:     &quot;start&quot;,
+  Aliases: []string&#123;&quot;node&quot;, &quot;run&quot;&#125;,
+  Short:   &quot;Run the tendermint node&quot;,
+  RunE: func(cmd *cobra.Command, args []string) error &#123;
+   if err := checkGenesisHash(config); err != nil &#123;
+    return err
+   &#125;
+
+   n, err := nodeProvider(config, logger)
+   if err != nil &#123;
+    return fmt.Errorf(&quot;failed to create node: %w&quot;, err)
+   &#125;
+
+   if err := n.Start(); err != nil &#123;
+    return fmt.Errorf(&quot;failed to start node: %w&quot;, err)
+   &#125;
+
+   logger.Info(&quot;Started node&quot;, &quot;nodeInfo&quot;, n.Switch().NodeInfo())
+
+   // Stop upon receiving SIGTERM or CTRL-C.
+   tmos.TrapSignal(logger, func() &#123;
+    if n.IsRunning() &#123;
+     if err := n.Stop(); err != nil &#123;
+      logger.Error(&quot;unable to stop the node&quot;, &quot;error&quot;, err)
+     &#125;
+    &#125;
+   &#125;)
+
+   // Run forever.
+   select &#123;&#125;
+  &#125;,
+ &#125;
+
+ AddNodeFlags(cmd)
+ return cmd
+&#125;</code></div></pre>
+<p>这个函数通过传入的<code>nodeProvider</code>构建节点<code>n</code>,构建过程中传入的<code>config</code>和<code>logger</code>两个变量是在构建命令行的过程中优先构建的，创建代码在<code>commands</code>目录的<code>root.go</code>中：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-golang">var (
+ config = cfg.DefaultConfig()
+ logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+)</code></div></pre>
+<p>随后通过调用<code>n.Start()</code>启动节点，<code>Start</code>函数是 tendermint 系统构建的统一服务类，用于实现各个服务的统一启动和停止，具体实现在<code>/libs/sevice/service.go</code>中：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div></div><code class="language-golang">// Start implements Service by calling OnStart (if defined). An error will be
+// returned if the service is already running or stopped. Not to start the
+// stopped service, you need to call Reset.
+func (bs *BaseService) Start() error &#123;
+ if atomic.CompareAndSwapUint32(&amp;bs.started, 0, 1) &#123;
+  if atomic.LoadUint32(&amp;bs.stopped) == 1 &#123;
+   bs.Logger.Error(fmt.Sprintf(&quot;Not starting %v service -- already stopped&quot;, bs.name),
+    &quot;impl&quot;, bs.impl)
+   // revert flag
+   atomic.StoreUint32(&amp;bs.started, 0)
+   return ErrAlreadyStopped
+  &#125;
+  bs.Logger.Info(&quot;service start&quot;,
+   &quot;msg&quot;,
+   log.NewLazySprintf(&quot;Starting %v service&quot;, bs.name),
+   &quot;impl&quot;,
+   bs.impl.String())
+  err := bs.impl.OnStart()
+  if err != nil &#123;
+   // revert flag
+   atomic.StoreUint32(&amp;bs.started, 0)
+   return err
+  &#125;
+  return nil
+ &#125;
+ bs.Logger.Debug(&quot;service start&quot;,
+  &quot;msg&quot;,
+  log.NewLazySprintf(&quot;Not starting %v service -- already started&quot;, bs.name),
+  &quot;impl&quot;,
+  bs.impl)
+ return ErrAlreadyStarted
+&#125;</code></div></pre>
+<p>不难看出，该实现最后调用了对应实现的<code>OnStart()</code>函数，<code>Start</code>作为<code>BaseService</code>的成员函数能被调用的原因，是<code>Node</code>结构体包含了<code>service.BaseService</code>结构体，这个结构体中有<code>Service</code>的定义<code>impl</code>,只要<code>node</code>匿名实现了该方法，就可以进行调用。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code class="language-golang">type Node struct &#123;
+ service.BaseService
+ ......
+&#125;
+
+type BaseService struct &#123;
+ Logger  log.Logger
+ name    string
+ started uint32 // atomic
+ stopped uint32 // atomic
+ quit    chan struct&#123;&#125;
+
+ // The &quot;subclass&quot; of BaseService
+ impl Service
+&#125;
+</code></div></pre>
+<p>最后通过自定义的<code>TrapSignal</code>函数监听系统的终止信号。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-golang">// TrapSignal catches the SIGTERM/SIGINT and executes cb function. After that it exits
+// with code 0.
+func TrapSignal(logger logger, cb func()) &#123;
+ c := make(chan os.Signal, 1)
+ signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+ go func() &#123;
+  for sig := range c &#123;
+   logger.Info(&quot;signal trapped&quot;, &quot;msg&quot;, log.NewLazySprintf(&quot;captured %v, exiting...&quot;, sig))
+   if cb != nil &#123;
+    cb()
+   &#125;
+   os.Exit(0)
+  &#125;
+ &#125;()
+&#125;</code></div></pre>
+<p>另一方面，再先看<code>DefaultNewNode</code>这个函数，这个函数是直接被作为对象传入<code>NewRunNodeCmd</code>函数中，而该函数的定义也在<code>github.com/tendermint/tendermint/node</code>这个包中，综上所属，各种调用的最后逻辑都指向了<code>node</code>这个包，接下来对该包进行分析。</p>
+<h3 id="1-2-Node-创建过程">1.2 Node 创建过程</h3>
+<p>node 目录下，只有如下四个文件，具体发挥功能的只有<code>node.go</code>这个文件。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">.
+├── doc.go #node构建说明
+├── id.go #节点身份相关，暂未启用
+├── node.go #node功能核心实现
+└── node_test.go #node功能测试</code></div></pre>
+<p>顺着上一节，我们首先分析<code>DefaultNewNode</code>这个函数：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div></div><code class="language-golang">// DefaultNewNode returns a Tendermint node with default settings for the
+// PrivValidator, ClientCreator, GenesisDoc, and DBProvider.
+// It implements NodeProvider.
+func DefaultNewNode(config *cfg.Config, logger log.Logger) (*Node, error) &#123;
+ nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;failed to load or gen node key %s: %w&quot;, config.NodeKeyFile(), err)
+ &#125;
+
+ return NewNode(config, //配置文件,由run_node.go传入
+  privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile()), //获取全部验证节点私钥
+  nodeKey, //节点私钥,由run_node.go传入
+  proxy.DefaultClientCreator(config.ProxyApp, config.ABCI, config.DBDir()),//构建默认程序代理
+  DefaultGenesisDocProviderFunc(config),//读取创世块信息
+  DefaultDBProvider,//构建数据库代理
+  DefaultMetricsProvider(config.Instrumentation),//构建监控代理
+  logger,//日志统计句柄,由run_node.go传入
+ )
+&#125;
+
+//---------------------------------------------------------
+// privval/file.go
+// LoadOrGenFilePV loads a FilePV from the given filePaths
+// or else generates a new one and saves it to the filePaths.
+func LoadOrGenFilePV(keyFilePath, stateFilePath string) *FilePV &#123;
+ var pv *FilePV
+ if tmos.FileExists(keyFilePath) &#123;
+  pv = LoadFilePV(keyFilePath, stateFilePath)
+ &#125; else &#123;
+  pv = GenFilePV(keyFilePath, stateFilePath)
+  pv.Save()
+ &#125;
+ return pv
+&#125;
+
+//---------------------------------------------------------
+// proxy/client.go
+// DefaultClientCreator returns a default ClientCreator, which will create a
+// local client if addr is one of: 'counter', 'counter_serial', 'kvstore',
+// 'persistent_kvstore' or 'noop', otherwise - a remote client.
+func DefaultClientCreator(addr, transport, dbDir string) ClientCreator &#123;
+ switch addr &#123;
+ case &quot;counter&quot;:
+  return NewLocalClientCreator(counter.NewApplication(false))
+ case &quot;counter_serial&quot;:
+  return NewLocalClientCreator(counter.NewApplication(true))
+ case &quot;kvstore&quot;:
+  return NewLocalClientCreator(kvstore.NewApplication())
+ case &quot;persistent_kvstore&quot;:
+  return NewLocalClientCreator(kvstore.NewPersistentKVStoreApplication(dbDir))
+ case &quot;e2e&quot;:
+  app, err := e2e.NewApplication(e2e.DefaultConfig(dbDir))
+  if err != nil &#123;
+   panic(err)
+  &#125;
+  return NewLocalClientCreator(app)
+ case &quot;noop&quot;:
+  return NewLocalClientCreator(types.NewBaseApplication())
+ default:
+  mustConnect := false // loop retrying
+  return NewRemoteClientCreator(addr, transport, mustConnect)
+ &#125;
+&#125;
+
+//---------------------------------------------------------
+// node/node.go
+// GenesisDocProvider returns a GenesisDoc.
+// It allows the GenesisDoc to be pulled from sources other than the
+// filesystem, for instance from a distributed key-value store cluster.
+type GenesisDocProvider func() (*types.GenesisDoc, error)
+
+// DefaultGenesisDocProviderFunc returns a GenesisDocProvider that loads
+// the GenesisDoc from the config.GenesisFile() on the filesystem.
+func DefaultGenesisDocProviderFunc(config *cfg.Config) GenesisDocProvider &#123;
+ return func() (*types.GenesisDoc, error) &#123;
+  return types.GenesisDocFromFile(config.GenesisFile())
+ &#125;
+&#125;
+
+//---------------------------------------------------------
+// node/node.go
+// DBProvider takes a DBContext and returns an instantiated DB.
+type DBProvider func(*DBContext) (dbm.DB, error)
+// DefaultDBProvider returns a database using the DBBackend and DBDir
+// specified in the ctx.Config.
+func DefaultDBProvider(ctx *DBContext) (dbm.DB, error) &#123;
+ dbType := dbm.BackendType(ctx.Config.DBBackend)
+ return dbm.NewDB(ctx.ID, dbType, ctx.Config.DBDir())
+&#125;
+
+//---------------------------------------------------------
+// node/node.go
+// MetricsProvider returns a consensus, p2p and mempool Metrics.
+type MetricsProvider func(chainID string) (*cs.Metrics, *p2p.Metrics, *mempl.Metrics, *sm.Metrics)
+// DefaultMetricsProvider returns Metrics build using Prometheus client library
+// if Prometheus is enabled. Otherwise, it returns no-op Metrics.
+func DefaultMetricsProvider(config *cfg.InstrumentationConfig) MetricsProvider &#123;
+ return func(chainID string) (*cs.Metrics, *p2p.Metrics, *mempl.Metrics, *sm.Metrics) &#123;
+  if config.Prometheus &#123;
+   return cs.PrometheusMetrics(config.Namespace, &quot;chain_id&quot;, chainID),
+    p2p.PrometheusMetrics(config.Namespace, &quot;chain_id&quot;, chainID),
+    mempl.PrometheusMetrics(config.Namespace, &quot;chain_id&quot;, chainID),
+    sm.PrometheusMetrics(config.Namespace, &quot;chain_id&quot;, chainID)
+  &#125;
+  return cs.NopMetrics(), p2p.NopMetrics(), mempl.NopMetrics(), sm.NopMetrics()
+ &#125;
+&#125;</code></div></pre>
+<p>该函数首先通过<code>p2p.LoadOrGenNodeKey</code>函数获取节点密钥，然后调用<code>NewNode</code>函数构建节点，传入的各个函数的构建方法如上所示，都是普通的构建逻辑。在分析<code>NewNode</code>函数前，先看一下<code>Node</code>的结构体定义：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div></div><code class="language-golang">// Node is the highest level interface to a full Tendermint node.
+// It includes all configuration information and running services.
+type Node struct &#123;
+ service.BaseService //服务类,涉及tendermint所有组件的统一管理
+
+ // config 配置文件
+ config        *cfg.Config
+ genesisDoc    *types.GenesisDoc   // initial validator set
+ privValidator types.PrivValidator // local node's validator key
+
+ // network 网络信息&amp;节点信息
+ transport   *p2p.MultiplexTransport
+ sw          *p2p.Switch  // p2p connections
+ addrBook    pex.AddrBook // known peers
+ nodeInfo    p2p.NodeInfo
+ nodeKey     *p2p.NodeKey // our node privkey
+ isListening bool
+
+ // services 各类服务和reactor相关配置
+ eventBus          *types.EventBus // pub/sub for services
+
+ stateStore        sm.Store
+ blockStore        *store.BlockStore // store the blockchain to disk
+
+ bcReactor         p2p.Reactor       // for fast-syncing
+ mempoolReactor    p2p.Reactor       // for gossipping transactions
+ mempool           mempl.Mempool
+ stateSync         bool                    // whether the node should state sync on startup
+ stateSyncReactor  *statesync.Reactor      // for hosting and restoring state sync snapshots
+ stateSyncProvider statesync.StateProvider // provides state data for bootstrapping a node
+ stateSyncGenesis  sm.State                // provides the genesis state for state sync
+ consensusState    *cs.State               // latest consensus state
+ consensusReactor  *cs.Reactor             // for participating in the consensus
+ pexReactor        *pex.Reactor            // for exchanging peer addresses
+ evidencePool      *evidence.Pool          // tracking evidence
+
+ proxyApp          proxy.AppConns          // connection to the application
+ rpcListeners      []net.Listener          // rpc servers
+ txIndexer         txindex.TxIndexer
+ blockIndexer      indexer.BlockIndexer
+ indexerService    *txindex.IndexerService
+
+ prometheusSrv     *http.Server
+&#125;</code></div></pre>
+<p>在<code>Node</code>的结构体定义中，保存了所有节点的网络信息，同时保存了各类存储句柄，reactor 句柄，通信相关服务句柄，监控相关句柄，具体的构建都在<code>NewNode</code>中进行：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div><div class="line-numbers-item">130</div><div class="line-numbers-item">131</div><div class="line-numbers-item">132</div><div class="line-numbers-item">133</div><div class="line-numbers-item">134</div><div class="line-numbers-item">135</div><div class="line-numbers-item">136</div><div class="line-numbers-item">137</div><div class="line-numbers-item">138</div><div class="line-numbers-item">139</div><div class="line-numbers-item">140</div><div class="line-numbers-item">141</div><div class="line-numbers-item">142</div><div class="line-numbers-item">143</div><div class="line-numbers-item">144</div><div class="line-numbers-item">145</div><div class="line-numbers-item">146</div><div class="line-numbers-item">147</div><div class="line-numbers-item">148</div><div class="line-numbers-item">149</div><div class="line-numbers-item">150</div><div class="line-numbers-item">151</div><div class="line-numbers-item">152</div><div class="line-numbers-item">153</div><div class="line-numbers-item">154</div><div class="line-numbers-item">155</div><div class="line-numbers-item">156</div><div class="line-numbers-item">157</div><div class="line-numbers-item">158</div><div class="line-numbers-item">159</div><div class="line-numbers-item">160</div><div class="line-numbers-item">161</div><div class="line-numbers-item">162</div><div class="line-numbers-item">163</div><div class="line-numbers-item">164</div><div class="line-numbers-item">165</div><div class="line-numbers-item">166</div><div class="line-numbers-item">167</div><div class="line-numbers-item">168</div><div class="line-numbers-item">169</div><div class="line-numbers-item">170</div><div class="line-numbers-item">171</div><div class="line-numbers-item">172</div><div class="line-numbers-item">173</div><div class="line-numbers-item">174</div><div class="line-numbers-item">175</div><div class="line-numbers-item">176</div><div class="line-numbers-item">177</div><div class="line-numbers-item">178</div><div class="line-numbers-item">179</div><div class="line-numbers-item">180</div><div class="line-numbers-item">181</div><div class="line-numbers-item">182</div><div class="line-numbers-item">183</div><div class="line-numbers-item">184</div><div class="line-numbers-item">185</div><div class="line-numbers-item">186</div><div class="line-numbers-item">187</div><div class="line-numbers-item">188</div><div class="line-numbers-item">189</div><div class="line-numbers-item">190</div><div class="line-numbers-item">191</div><div class="line-numbers-item">192</div><div class="line-numbers-item">193</div><div class="line-numbers-item">194</div><div class="line-numbers-item">195</div><div class="line-numbers-item">196</div><div class="line-numbers-item">197</div><div class="line-numbers-item">198</div><div class="line-numbers-item">199</div><div class="line-numbers-item">200</div><div class="line-numbers-item">201</div><div class="line-numbers-item">202</div><div class="line-numbers-item">203</div><div class="line-numbers-item">204</div><div class="line-numbers-item">205</div><div class="line-numbers-item">206</div><div class="line-numbers-item">207</div><div class="line-numbers-item">208</div><div class="line-numbers-item">209</div><div class="line-numbers-item">210</div><div class="line-numbers-item">211</div><div class="line-numbers-item">212</div><div class="line-numbers-item">213</div><div class="line-numbers-item">214</div><div class="line-numbers-item">215</div><div class="line-numbers-item">216</div><div class="line-numbers-item">217</div><div class="line-numbers-item">218</div><div class="line-numbers-item">219</div><div class="line-numbers-item">220</div><div class="line-numbers-item">221</div><div class="line-numbers-item">222</div><div class="line-numbers-item">223</div><div class="line-numbers-item">224</div><div class="line-numbers-item">225</div><div class="line-numbers-item">226</div><div class="line-numbers-item">227</div><div class="line-numbers-item">228</div><div class="line-numbers-item">229</div><div class="line-numbers-item">230</div><div class="line-numbers-item">231</div><div class="line-numbers-item">232</div><div class="line-numbers-item">233</div><div class="line-numbers-item">234</div></div><code class="language-golang">// NewNode returns a new, ready to go, Tendermint Node.
+func NewNode(config *cfg.Config,
+ privValidator types.PrivValidator,
+ nodeKey *p2p.NodeKey,
+ clientCreator proxy.ClientCreator,
+ genesisDocProvider GenesisDocProvider,
+ dbProvider DBProvider,
+ metricsProvider MetricsProvider,
+ logger log.Logger,
+ options ...Option,
+) (*Node, error) &#123;
+ blockStore, stateDB, err := initDBs(config, dbProvider)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ stateStore := sm.NewStore(stateDB, sm.StoreOptions&#123;
+  DiscardABCIResponses: config.Storage.DiscardABCIResponses,
+ &#125;)
+
+ state, genDoc, err := LoadStateFromDBOrGenesisDocProvider(stateDB, genesisDocProvider)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ // Create the proxyApp and establish connections to the ABCI app (consensus, mempool, query).
+ proxyApp, err := createAndStartProxyAppConns(clientCreator, logger)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ // EventBus and IndexerService must be started before the handshake because
+ // we might need to index the txs of the replayed block as this might not have happened
+ // when the node stopped last time (i.e. the node stopped after it saved the block
+ // but before it indexed the txs, or, endblocker panicked)
+ eventBus, err := createAndStartEventBus(logger)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ indexerService, txIndexer, blockIndexer, err := createAndStartIndexerService(config,
+  genDoc.ChainID, dbProvider, eventBus, logger)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ // If an address is provided, listen on the socket for a connection from an
+ // external signing process.
+ if config.PrivValidatorListenAddr != &quot;&quot; &#123;
+  // FIXME: we should start services inside OnStart
+  privValidator, err = createAndStartPrivValidatorSocketClient(config.PrivValidatorListenAddr, genDoc.ChainID, logger)
+  if err != nil &#123;
+   return nil, fmt.Errorf(&quot;error with private validator socket client: %w&quot;, err)
+  &#125;
+ &#125;
+
+ pubKey, err := privValidator.GetPubKey()
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;can't get pubkey: %w&quot;, err)
+ &#125;
+
+ // Determine whether we should attempt state sync.
+ stateSync := config.StateSync.Enable &amp;&amp; !onlyValidatorIsUs(state, pubKey)
+ if stateSync &amp;&amp; state.LastBlockHeight &gt; 0 &#123;
+  logger.Info(&quot;Found local state with non-zero height, skipping state sync&quot;)
+  stateSync = false
+ &#125;
+
+ // Create the handshaker, which calls RequestInfo, sets the AppVersion on the state,
+ // and replays any blocks as necessary to sync tendermint with the app.
+ consensusLogger := logger.With(&quot;module&quot;, &quot;consensus&quot;)
+ if !stateSync &#123;
+  if err := doHandshake(stateStore, state, blockStore, genDoc, eventBus, proxyApp, consensusLogger); err != nil &#123;
+   return nil, err
+  &#125;
+
+  // Reload the state. It will have the Version.Consensus.App set by the
+  // Handshake, and may have other modifications as well (ie. depending on
+  // what happened during block replay).
+  state, err = stateStore.Load()
+  if err != nil &#123;
+   return nil, fmt.Errorf(&quot;cannot load state: %w&quot;, err)
+  &#125;
+ &#125;
+
+ // Determine whether we should do fast sync. This must happen after the handshake, since the
+ // app may modify the validator set, specifying ourself as the only validator.
+ fastSync := config.FastSyncMode &amp;&amp; !onlyValidatorIsUs(state, pubKey)
+
+ logNodeStartupInfo(state, pubKey, logger, consensusLogger)
+
+ csMetrics, p2pMetrics, memplMetrics, smMetrics := metricsProvider(genDoc.ChainID)
+
+ // Make MempoolReactor
+ mempool, mempoolReactor := createMempoolAndMempoolReactor(config, proxyApp, state, memplMetrics, logger)
+
+ // Make Evidence Reactor
+ evidenceReactor, evidencePool, err := createEvidenceReactor(config, dbProvider, stateDB, blockStore, logger)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ // make block executor for consensus and blockchain reactors to execute blocks
+ blockExec := sm.NewBlockExecutor(
+  stateStore,
+  logger.With(&quot;module&quot;, &quot;state&quot;),
+  proxyApp.Consensus(),
+  mempool,
+  evidencePool,
+  sm.BlockExecutorWithMetrics(smMetrics),
+ )
+
+ // Make BlockchainReactor. Don't start fast sync if we're doing a state sync first.
+ bcReactor, err := createBlockchainReactor(config, state, blockExec, blockStore, fastSync &amp;&amp; !stateSync, logger)
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;could not create blockchain reactor: %w&quot;, err)
+ &#125;
+
+ // Make ConsensusReactor. Don't enable fully if doing a state sync and/or fast sync first.
+ // FIXME We need to update metrics here, since other reactors don't have access to them.
+ if stateSync &#123;
+  csMetrics.StateSyncing.Set(1)
+ &#125; else if fastSync &#123;
+  csMetrics.FastSyncing.Set(1)
+ &#125;
+ consensusReactor, consensusState := createConsensusReactor(
+  config, state, blockExec, blockStore, mempool, evidencePool,
+  privValidator, csMetrics, stateSync || fastSync, eventBus, consensusLogger,
+ )
+
+ // Set up state sync reactor, and schedule a sync if requested.
+ // FIXME The way we do phased startups (e.g. replay -&gt; fast sync -&gt; consensus) is very messy,
+ // we should clean this whole thing up. See:
+ // https://github.com/tendermint/tendermint/issues/4644
+ stateSyncReactor := statesync.NewReactor(
+  *config.StateSync,
+  proxyApp.Snapshot(),
+  proxyApp.Query(),
+  config.StateSync.TempDir,
+ )
+ stateSyncReactor.SetLogger(logger.With(&quot;module&quot;, &quot;statesync&quot;))
+
+ nodeInfo, err := makeNodeInfo(config, nodeKey, txIndexer, genDoc, state)
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ // Setup Transport.
+ transport, peerFilters := createTransport(config, nodeInfo, nodeKey, proxyApp)
+
+ // Setup Switch.
+ p2pLogger := logger.With(&quot;module&quot;, &quot;p2p&quot;)
+ sw := createSwitch(
+  config, transport, p2pMetrics, peerFilters, mempoolReactor, bcReactor,
+  stateSyncReactor, consensusReactor, evidenceReactor, nodeInfo, nodeKey, p2pLogger,
+ )
+
+ err = sw.AddPersistentPeers(splitAndTrimEmpty(config.P2P.PersistentPeers, &quot;,&quot;, &quot; &quot;))
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;could not add peers from persistent_peers field: %w&quot;, err)
+ &#125;
+
+ err = sw.AddUnconditionalPeerIDs(splitAndTrimEmpty(config.P2P.UnconditionalPeerIDs, &quot;,&quot;, &quot; &quot;))
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;could not add peer ids from unconditional_peer_ids field: %w&quot;, err)
+ &#125;
+
+ addrBook, err := createAddrBookAndSetOnSwitch(config, sw, p2pLogger, nodeKey)
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;could not create addrbook: %w&quot;, err)
+ &#125;
+
+ // Optionally, start the pex reactor
+ //
+ // TODO:
+ //
+ // We need to set Seeds and PersistentPeers on the switch,
+ // since it needs to be able to use these (and their DNS names)
+ // even if the PEX is off. We can include the DNS name in the NetAddress,
+ // but it would still be nice to have a clear list of the current &quot;PersistentPeers&quot;
+ // somewhere that we can return with net_info.
+ //
+ // If PEX is on, it should handle dialing the seeds. Otherwise the switch does it.
+ // Note we currently use the addrBook regardless at least for AddOurAddress
+ var pexReactor *pex.Reactor
+ if config.P2P.PexReactor &#123;
+  pexReactor = createPEXReactorAndAddToSwitch(addrBook, config, sw, logger)
+ &#125;
+
+ if config.RPC.PprofListenAddress != &quot;&quot; &#123;
+  go func() &#123;
+   logger.Info(&quot;Starting pprof server&quot;, &quot;laddr&quot;, config.RPC.PprofListenAddress)
+   //nolint:gosec,nolintlint // G114: Use of net/http serve function that has no support for setting timeouts
+   logger.Error(&quot;pprof server error&quot;, &quot;err&quot;, http.ListenAndServe(config.RPC.PprofListenAddress, nil))
+  &#125;()
+ &#125;
+
+ node := &amp;Node&#123;
+  config:        config,
+  genesisDoc:    genDoc,
+  privValidator: privValidator,
+
+  transport: transport,
+  sw:        sw,
+  addrBook:  addrBook,
+  nodeInfo:  nodeInfo,
+  nodeKey:   nodeKey,
+
+  stateStore:       stateStore,
+  blockStore:       blockStore,
+  bcReactor:        bcReactor,
+  mempoolReactor:   mempoolReactor,
+  mempool:          mempool,
+  consensusState:   consensusState,
+  consensusReactor: consensusReactor,
+  stateSyncReactor: stateSyncReactor,
+  stateSync:        stateSync,
+  stateSyncGenesis: state, // Shouldn't be necessary, but need a way to pass the genesis state
+  pexReactor:       pexReactor,
+  evidencePool:     evidencePool,
+  proxyApp:         proxyApp,
+  txIndexer:        txIndexer,
+  indexerService:   indexerService,
+  blockIndexer:     blockIndexer,
+  eventBus:         eventBus,
+ &#125;
+ node.BaseService = *service.NewBaseService(logger, &quot;Node&quot;, node)
+
+ for _, option := range options &#123;
+  option(node)
+ &#125;
+
+ return node, nil
+&#125;</code></div></pre>
+<p><code>NewNode</code>函数首先通过<code>initDBs</code>初始化区块存储和状态数据库，默认的存储后端为<code>goleveldb</code>.然后再通过<code>sm.NewStore</code>封装并初始化当前的状态存储，最后通过<code>LoadStateFromDBOrGenesisDocProvider</code>函数从创世文件和数据库中获取当前状态，具体的状态存储设计，放在后续章节中分析。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div></div><code class="language-golang">func initDBs(config *cfg.Config, dbProvider DBProvider) (blockStore *store.BlockStore, stateDB dbm.DB, err error) &#123;
+ var blockStoreDB dbm.DB
+ blockStoreDB, err = dbProvider(&amp;DBContext&#123;&quot;blockstore&quot;, config&#125;)
+ if err != nil &#123;
+  return
+ &#125;
+ blockStore = store.NewBlockStore(blockStoreDB)
+
+ stateDB, err = dbProvider(&amp;DBContext&#123;&quot;state&quot;, config&#125;)
+ if err != nil &#123;
+  return
+ &#125;
+
+ return
+&#125;
+
+//--------------------------------------
+//state/store.go
+// dbStore wraps a db (github.com/tendermint/tm-db)
+type dbStore struct &#123;
+ db dbm.DB
+
+ StoreOptions
+&#125;
+
+type StoreOptions struct &#123;
+
+ // DiscardABCIResponses determines whether or not the store
+ // retains all ABCIResponses. If DiscardABCiResponses is enabled,
+ // the store will maintain only the response object from the latest
+ // height.
+ DiscardABCIResponses bool
+&#125;
+
+var _ Store = (*dbStore)(nil)
+
+// NewStore creates the dbStore of the state pkg.
+func NewStore(db dbm.DB, options StoreOptions) Store &#123;
+ return dbStore&#123;db, options&#125;
+&#125;
+
+//------------------------------------------------------------------------------
+
+var genesisDocKey = []byte(&quot;genesisDoc&quot;)
+
+// LoadStateFromDBOrGenesisDocProvider attempts to load the state from the
+// database, or creates one using the given genesisDocProvider. On success this also
+// returns the genesis doc loaded through the given provider.
+func LoadStateFromDBOrGenesisDocProvider(
+ stateDB dbm.DB,
+ genesisDocProvider GenesisDocProvider,
+) (sm.State, *types.GenesisDoc, error) &#123;
+ // Get genesis doc
+ genDoc, err := loadGenesisDoc(stateDB)
+ if err != nil &#123;
+  genDoc, err = genesisDocProvider()
+  if err != nil &#123;
+   return sm.State&#123;&#125;, nil, err
+  &#125;
+  // save genesis doc to prevent a certain class of user errors (e.g. when it
+  // was changed, accidentally or not). Also good for audit trail.
+  if err := saveGenesisDoc(stateDB, genDoc); err != nil &#123;
+   return sm.State&#123;&#125;, nil, err
+  &#125;
+ &#125;
+ stateStore := sm.NewStore(stateDB, sm.StoreOptions&#123;
+  DiscardABCIResponses: false,
+ &#125;)
+ state, err := stateStore.LoadFromDBOrGenesisDoc(genDoc)
+ if err != nil &#123;
+  return sm.State&#123;&#125;, nil, err
+ &#125;
+ return state, genDoc, nil
+&#125;
+
+// panics if failed to unmarshal bytes
+func loadGenesisDoc(db dbm.DB) (*types.GenesisDoc, error) &#123;
+ b, err := db.Get(genesisDocKey)
+ if err != nil &#123;
+  panic(err)
+ &#125;
+ if len(b) == 0 &#123;
+  return nil, errors.New(&quot;genesis doc not found&quot;)
+ &#125;
+ var genDoc *types.GenesisDoc
+ err = tmjson.Unmarshal(b, &amp;genDoc)
+ if err != nil &#123;
+  panic(fmt.Sprintf(&quot;Failed to load genesis doc due to unmarshaling error: %v (bytes: %X)&quot;, err, b))
+ &#125;
+ return genDoc, nil
+&#125;
+
+// panics if failed to marshal the given genesis document
+func saveGenesisDoc(db dbm.DB, genDoc *types.GenesisDoc) error &#123;
+ b, err := tmjson.Marshal(genDoc)
+ if err != nil &#123;
+  return fmt.Errorf(&quot;failed to save genesis doc due to marshaling error: %w&quot;, err)
+ &#125;
+ if err := db.SetSync(genesisDocKey, b); err != nil &#123;
+  return err
+ &#125;
+
+ return nil
+&#125;</code></div></pre>
+<p>在构建完存储和数据库后，<code>NewNode</code>函数将创建用于通信的代理服务。其中<code>createAndStartProxyAppConns</code>创建 ABCI 通信，<code>createAndStartEventBus</code>和<code>createAndStartIndexerService</code>用以监听事件和构建事务与区块索引。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div></div><code class="language-golang">func createAndStartProxyAppConns(clientCreator proxy.ClientCreator, logger log.Logger) (proxy.AppConns, error) &#123;
+ proxyApp := proxy.NewAppConns(clientCreator)
+ proxyApp.SetLogger(logger.With(&quot;module&quot;, &quot;proxy&quot;))
+ if err := proxyApp.Start(); err != nil &#123;
+  return nil, fmt.Errorf(&quot;error starting proxy app connections: %v&quot;, err)
+ &#125;
+ return proxyApp, nil
+&#125;
+
+func createAndStartEventBus(logger log.Logger) (*types.EventBus, error) &#123;
+ eventBus := types.NewEventBus()
+ eventBus.SetLogger(logger.With(&quot;module&quot;, &quot;events&quot;))
+ if err := eventBus.Start(); err != nil &#123;
+  return nil, err
+ &#125;
+ return eventBus, nil
+&#125;
+
+func createAndStartIndexerService(
+ config *cfg.Config,
+ chainID string,
+ dbProvider DBProvider,
+ eventBus *types.EventBus,
+ logger log.Logger,
+) (*txindex.IndexerService, txindex.TxIndexer, indexer.BlockIndexer, error) &#123;
+ var (
+  txIndexer    txindex.TxIndexer
+  blockIndexer indexer.BlockIndexer
+ )
+
+ switch config.TxIndex.Indexer &#123;
+ case &quot;kv&quot;:
+  store, err := dbProvider(&amp;DBContext&#123;&quot;tx_index&quot;, config&#125;)
+  if err != nil &#123;
+   return nil, nil, nil, err
+  &#125;
+
+  txIndexer = kv.NewTxIndex(store)
+  blockIndexer = blockidxkv.New(dbm.NewPrefixDB(store, []byte(&quot;block_events&quot;)))
+
+ case &quot;psql&quot;:
+  if config.TxIndex.PsqlConn == &quot;&quot; &#123;
+   return nil, nil, nil, errors.New(`no psql-conn is set for the &quot;psql&quot; indexer`)
+  &#125;
+  es, err := psql.NewEventSink(config.TxIndex.PsqlConn, chainID)
+  if err != nil &#123;
+   return nil, nil, nil, fmt.Errorf(&quot;creating psql indexer: %w&quot;, err)
+  &#125;
+  txIndexer = es.TxIndexer()
+  blockIndexer = es.BlockIndexer()
+
+ default:
+  txIndexer = &amp;null.TxIndex&#123;&#125;
+  blockIndexer = &amp;blockidxnull.BlockerIndexer&#123;&#125;
+ &#125;
+
+ indexerService := txindex.NewIndexerService(txIndexer, blockIndexer, eventBus, false)
+ indexerService.SetLogger(logger.With(&quot;module&quot;, &quot;txindex&quot;))
+
+ if err := indexerService.Start(); err != nil &#123;
+  return nil, nil, nil, err
+ &#125;
+
+ return indexerService, txIndexer, blockIndexer, nil
+&#125;</code></div></pre>
+<p>接下来构建验证者，默认是将自己作为验证者，但如果配置文件中设置了外部验证者的地址，则会尝试通过<code>createAndStartPrivValidatorSocketClient</code>函数进行连接：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div></div><code class="language-golang">func createAndStartPrivValidatorSocketClient(
+ listenAddr,
+ chainID string,
+ logger log.Logger,
+) (types.PrivValidator, error) &#123;
+ pve, err := privval.NewSignerListener(listenAddr, logger)
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;failed to start private validator: %w&quot;, err)
+ &#125;
+
+ pvsc, err := privval.NewSignerClient(pve, chainID)
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;failed to start private validator: %w&quot;, err)
+ &#125;
+
+ // try to get a pubkey from private validate first time
+ _, err = pvsc.GetPubKey()
+ if err != nil &#123;
+  return nil, fmt.Errorf(&quot;can't get pubkey: %w&quot;, err)
+ &#125;
+
+ const (
+  retries = 50 // 50 * 100ms = 5s total
+  timeout = 100 * time.Millisecond
+ )
+ pvscWithRetries := privval.NewRetrySignerClient(pvsc, retries, timeout)
+
+ return pvscWithRetries, nil
+&#125;</code></div></pre>
+<p>在验证者构建完成并获得<code>pubKey</code>以后，则将根据配置文件信息，检查是否进行状态同步，当本地存在状态数据时，将直接通过<code>doHandshake</code>构建本地数据，其核心是调用<code>Handshake</code>函数，该函数会对所有区块数据进行重放。具体的重放流程将会在后续分析共识模块的过程中进行分析。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div></div><code class="language-golang">func doHandshake(
+ stateStore sm.Store,
+ state sm.State,
+ blockStore sm.BlockStore,
+ genDoc *types.GenesisDoc,
+ eventBus types.BlockEventPublisher,
+ proxyApp proxy.AppConns,
+ consensusLogger log.Logger,
+) error &#123;
+ handshaker := cs.NewHandshaker(stateStore, state, blockStore, genDoc)
+ handshaker.SetLogger(consensusLogger)
+ handshaker.SetEventBus(eventBus)
+ if err := handshaker.Handshake(proxyApp); err != nil &#123;
+  return fmt.Errorf(&quot;error during handshake: %v&quot;, err)
+ &#125;
+ return nil
+&#125;
+
+//--------------------------------------
+//consensus/replay.go
+// TODO: retry the handshake/replay if it fails ?
+func (h *Handshaker) Handshake(proxyApp proxy.AppConns) error &#123;
+
+ // Handshake is done via ABCI Info on the query conn.
+ res, err := proxyApp.Query().InfoSync(proxy.RequestInfo)
+ if err != nil &#123;
+  return fmt.Errorf(&quot;error calling Info: %v&quot;, err)
+ &#125;
+
+ blockHeight := res.LastBlockHeight
+ if blockHeight &lt; 0 &#123;
+  return fmt.Errorf(&quot;got a negative last block height (%d) from the app&quot;, blockHeight)
+ &#125;
+ appHash := res.LastBlockAppHash
+
+ h.logger.Info(&quot;ABCI Handshake App Info&quot;,
+  &quot;height&quot;, blockHeight,
+  &quot;hash&quot;, appHash,
+  &quot;software-version&quot;, res.Version,
+  &quot;protocol-version&quot;, res.AppVersion,
+ )
+
+ // Only set the version if there is no existing state.
+ if h.initialState.LastBlockHeight == 0 &#123;
+  h.initialState.Version.Consensus.App = res.AppVersion
+ &#125;
+
+ // Replay blocks up to the latest in the blockstore.
+ _, err = h.ReplayBlocks(h.initialState, appHash, blockHeight, proxyApp)
+ if err != nil &#123;
+  return fmt.Errorf(&quot;error on replay: %v&quot;, err)
+ &#125;
+
+ h.logger.Info(&quot;Completed ABCI Handshake - Tendermint and App are synced&quot;,
+  &quot;appHeight&quot;, blockHeight, &quot;appHash&quot;, appHash)
+
+ // TODO: (on restart) replay mempool
+
+ return nil
+&#125;</code></div></pre>
+<p>在状态数据准备完毕后，检测是否启用快速同步，然后将当前节点启动状态信息输出：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div></div><code class="language-golang">func logNodeStartupInfo(state sm.State, pubKey crypto.PubKey, logger, consensusLogger log.Logger) &#123;
+ // Log the version info.
+ logger.Info(&quot;Version info&quot;,
+  &quot;tendermint_version&quot;, version.TMCoreSemVer,
+  &quot;block&quot;, version.BlockProtocol,
+  &quot;p2p&quot;, version.P2PProtocol,
+ )
+
+ // If the state and software differ in block version, at least log it.
+ if state.Version.Consensus.Block != version.BlockProtocol &#123;
+  logger.Info(&quot;Software and state have different block protocols&quot;,
+   &quot;software&quot;, version.BlockProtocol,
+   &quot;state&quot;, state.Version.Consensus.Block,
+  )
+ &#125;
+
+ addr := pubKey.Address()
+ // Log whether this node is a validator or an observer
+ if state.Validators.HasAddress(addr) &#123;
+  consensusLogger.Info(&quot;This node is a validator&quot;, &quot;addr&quot;, addr, &quot;pubKey&quot;, pubKey)
+ &#125; else &#123;
+  consensusLogger.Info(&quot;This node is not a validator&quot;, &quot;addr&quot;, addr, &quot;pubKey&quot;, pubKey)
+ &#125;
+&#125;</code></div></pre>
+<p>输出信息后，就进入正式的 reactor 等各类功能模块的构建环节，这个环节中，首先建立各个组件的监控工具，然后通过<code>createMempoolAndMempoolReactor</code>,<code>createEvidenceReactor</code>,<code>createBlockchainReactor</code>,<code>createConsensusReactor</code>,<code>statesync.NewReactor</code>构建 tendermint 核心的几个 reactor</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div><div class="line-numbers-item">130</div><div class="line-numbers-item">131</div><div class="line-numbers-item">132</div><div class="line-numbers-item">133</div><div class="line-numbers-item">134</div><div class="line-numbers-item">135</div><div class="line-numbers-item">136</div><div class="line-numbers-item">137</div><div class="line-numbers-item">138</div><div class="line-numbers-item">139</div><div class="line-numbers-item">140</div><div class="line-numbers-item">141</div><div class="line-numbers-item">142</div><div class="line-numbers-item">143</div><div class="line-numbers-item">144</div><div class="line-numbers-item">145</div><div class="line-numbers-item">146</div><div class="line-numbers-item">147</div><div class="line-numbers-item">148</div><div class="line-numbers-item">149</div></div><code class="language-golang">//检查配置文件,构建指定版本mempool
+func createMempoolAndMempoolReactor(
+ config *cfg.Config,
+ proxyApp proxy.AppConns,
+ state sm.State,
+ memplMetrics *mempl.Metrics,
+ logger log.Logger,
+) (mempl.Mempool, p2p.Reactor) &#123;
+ switch config.Mempool.Version &#123;
+ case cfg.MempoolV1:
+  mp := mempoolv1.NewTxMempool(
+   logger,
+   config.Mempool,
+   proxyApp.Mempool(),
+   state.LastBlockHeight,
+   mempoolv1.WithMetrics(memplMetrics),
+   mempoolv1.WithPreCheck(sm.TxPreCheck(state)),
+   mempoolv1.WithPostCheck(sm.TxPostCheck(state)),
+  )
+
+  reactor := mempoolv1.NewReactor(
+   config.Mempool,
+   mp,
+  )
+  if config.Consensus.WaitForTxs() &#123;
+   mp.EnableTxsAvailable()
+  &#125;
+
+  return mp, reactor
+
+ case cfg.MempoolV0:
+  mp := mempoolv0.NewCListMempool(
+   config.Mempool,
+   proxyApp.Mempool(),
+   state.LastBlockHeight,
+   mempoolv0.WithMetrics(memplMetrics),
+   mempoolv0.WithPreCheck(sm.TxPreCheck(state)),
+   mempoolv0.WithPostCheck(sm.TxPostCheck(state)),
+  )
+
+  mp.SetLogger(logger)
+
+  reactor := mempoolv0.NewReactor(
+   config.Mempool,
+   mp,
+  )
+  if config.Consensus.WaitForTxs() &#123;
+   mp.EnableTxsAvailable()
+  &#125;
+
+  return mp, reactor
+
+ default:
+  return nil, nil
+ &#125;
+&#125;
+
+func createEvidenceReactor(config *cfg.Config, dbProvider DBProvider,
+ stateDB dbm.DB, blockStore *store.BlockStore, logger log.Logger,
+) (*evidence.Reactor, *evidence.Pool, error) &#123;
+ evidenceDB, err := dbProvider(&amp;DBContext&#123;&quot;evidence&quot;, config&#125;)
+ if err != nil &#123;
+  return nil, nil, err
+ &#125;
+ evidenceLogger := logger.With(&quot;module&quot;, &quot;evidence&quot;)
+ evidencePool, err := evidence.NewPool(evidenceDB, sm.NewStore(stateDB, sm.StoreOptions&#123;
+  DiscardABCIResponses: config.Storage.DiscardABCIResponses,
+ &#125;), blockStore)
+ if err != nil &#123;
+  return nil, nil, err
+ &#125;
+ evidenceReactor := evidence.NewReactor(evidencePool)
+ evidenceReactor.SetLogger(evidenceLogger)
+ return evidenceReactor, evidencePool, nil
+&#125;
+
+func createBlockchainReactor(config *cfg.Config,
+ state sm.State,
+ blockExec *sm.BlockExecutor,
+ blockStore *store.BlockStore,
+ fastSync bool,
+ logger log.Logger,
+) (bcReactor p2p.Reactor, err error) &#123;
+ switch config.FastSync.Version &#123;
+ case &quot;v0&quot;:
+  bcReactor = bcv0.NewBlockchainReactor(state.Copy(), blockExec, blockStore, fastSync)
+ case &quot;v1&quot;:
+  bcReactor = bcv1.NewBlockchainReactor(state.Copy(), blockExec, blockStore, fastSync)
+ case &quot;v2&quot;:
+  bcReactor = bcv2.NewBlockchainReactor(state.Copy(), blockExec, blockStore, fastSync)
+ default:
+  return nil, fmt.Errorf(&quot;unknown fastsync version %s&quot;, config.FastSync.Version)
+ &#125;
+
+ bcReactor.SetLogger(logger.With(&quot;module&quot;, &quot;blockchain&quot;))
+ return bcReactor, nil
+&#125;
+
+func createConsensusReactor(config *cfg.Config,
+ state sm.State,
+ blockExec *sm.BlockExecutor,
+ blockStore sm.BlockStore,
+ mempool mempl.Mempool,
+ evidencePool *evidence.Pool,
+ privValidator types.PrivValidator,
+ csMetrics *cs.Metrics,
+ waitSync bool,
+ eventBus *types.EventBus,
+ consensusLogger log.Logger,
+) (*cs.Reactor, *cs.State) &#123;
+ consensusState := cs.NewState(
+  config.Consensus,
+  state.Copy(),
+  blockExec,
+  blockStore,
+  mempool,
+  evidencePool,
+  cs.StateMetrics(csMetrics),
+ )
+ consensusState.SetLogger(consensusLogger)
+ if privValidator != nil &#123;
+  consensusState.SetPrivValidator(privValidator)
+ &#125;
+ consensusReactor := cs.NewReactor(consensusState, waitSync, cs.ReactorMetrics(csMetrics))
+ consensusReactor.SetLogger(consensusLogger)
+ // services which will be publishing and/or subscribing for messages (events)
+ // consensusReactor will set it on consensusState and blockExecutor
+ consensusReactor.SetEventBus(eventBus)
+ return consensusReactor, consensusState
+&#125;
+
+//statesync/reactor.go
+// NewReactor creates a new state sync reactor.
+func NewReactor(
+ cfg config.StateSyncConfig,
+ conn proxy.AppConnSnapshot,
+ connQuery proxy.AppConnQuery,
+ tempDir string,
+) *Reactor &#123;
+
+ r := &amp;Reactor&#123;
+  cfg:       cfg,
+  conn:      conn,
+  connQuery: connQuery,
+ &#125;
+ r.BaseReactor = *p2p.NewBaseReactor(&quot;StateSync&quot;, r)
+
+ return r
+&#125;</code></div></pre>
+<p>在构建各个相关组件之后，将会构建节点通信功能，对应上一篇文章提到的 p2p 功能中的<code>transport</code>,<code>switch</code>等通信组件并通过<code>AddPersistentPeers</code>,<code>AddUnconditionalPeerIDs</code>添加对等节点和利用<code>createAddrBookAndSetOnSwitch</code>构件地址簿：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div></div><code class="language-golang">func createTransport(
+ config *cfg.Config,
+ nodeInfo p2p.NodeInfo,
+ nodeKey *p2p.NodeKey,
+ proxyApp proxy.AppConns,
+) (
+ *p2p.MultiplexTransport,
+ []p2p.PeerFilterFunc,
+) &#123;
+ var (
+  mConnConfig = p2p.MConnConfig(config.P2P)
+  transport   = p2p.NewMultiplexTransport(nodeInfo, *nodeKey, mConnConfig)
+  connFilters = []p2p.ConnFilterFunc&#123;&#125;
+  peerFilters = []p2p.PeerFilterFunc&#123;&#125;
+ )
+
+ if !config.P2P.AllowDuplicateIP &#123;
+  connFilters = append(connFilters, p2p.ConnDuplicateIPFilter())
+ &#125;
+
+ // Filter peers by addr or pubkey with an ABCI query.
+ // If the query return code is OK, add peer.
+ if config.FilterPeers &#123;
+  connFilters = append(
+   connFilters,
+   // ABCI query for address filtering.
+   func(_ p2p.ConnSet, c net.Conn, _ []net.IP) error &#123;
+    res, err := proxyApp.Query().QuerySync(abci.RequestQuery&#123;
+     Path: fmt.Sprintf(&quot;/p2p/filter/addr/%s&quot;, c.RemoteAddr().String()),
+    &#125;)
+    if err != nil &#123;
+     return err
+    &#125;
+    if res.IsErr() &#123;
+     return fmt.Errorf(&quot;error querying abci app: %v&quot;, res)
+    &#125;
+
+    return nil
+   &#125;,
+  )
+
+  peerFilters = append(
+   peerFilters,
+   // ABCI query for ID filtering.
+   func(_ p2p.IPeerSet, p p2p.Peer) error &#123;
+    res, err := proxyApp.Query().QuerySync(abci.RequestQuery&#123;
+     Path: fmt.Sprintf(&quot;/p2p/filter/id/%s&quot;, p.ID()),
+    &#125;)
+    if err != nil &#123;
+     return err
+    &#125;
+    if res.IsErr() &#123;
+     return fmt.Errorf(&quot;error querying abci app: %v&quot;, res)
+    &#125;
+
+    return nil
+   &#125;,
+  )
+ &#125;
+
+ p2p.MultiplexTransportConnFilters(connFilters...)(transport)
+
+ // Limit the number of incoming connections.
+ max := config.P2P.MaxNumInboundPeers + len(splitAndTrimEmpty(config.P2P.UnconditionalPeerIDs, &quot;,&quot;, &quot; &quot;))
+ p2p.MultiplexTransportMaxIncomingConnections(max)(transport)
+
+ return transport, peerFilters
+&#125;
+
+//上一篇文章提到过,switch会在`AddReactor`过程中,跟reactor互相注册方便进行调用
+func createSwitch(config *cfg.Config,
+ transport p2p.Transport,
+ p2pMetrics *p2p.Metrics,
+ peerFilters []p2p.PeerFilterFunc,
+ mempoolReactor p2p.Reactor,
+ bcReactor p2p.Reactor,
+ stateSyncReactor *statesync.Reactor,
+ consensusReactor *cs.Reactor,
+ evidenceReactor *evidence.Reactor,
+ nodeInfo p2p.NodeInfo,
+ nodeKey *p2p.NodeKey,
+ p2pLogger log.Logger,
+) *p2p.Switch &#123;
+ sw := p2p.NewSwitch(
+  config.P2P,
+  transport,
+  p2p.WithMetrics(p2pMetrics),
+  p2p.SwitchPeerFilters(peerFilters...),
+ )
+ sw.SetLogger(p2pLogger)
+ sw.AddReactor(&quot;MEMPOOL&quot;, mempoolReactor)
+ sw.AddReactor(&quot;BLOCKCHAIN&quot;, bcReactor)
+ sw.AddReactor(&quot;CONSENSUS&quot;, consensusReactor)
+ sw.AddReactor(&quot;EVIDENCE&quot;, evidenceReactor)
+ sw.AddReactor(&quot;STATESYNC&quot;, stateSyncReactor)
+
+ sw.SetNodeInfo(nodeInfo)
+ sw.SetNodeKey(nodeKey)
+
+ p2pLogger.Info(&quot;P2P Node ID&quot;, &quot;ID&quot;, nodeKey.ID(), &quot;file&quot;, config.NodeKeyFile())
+ return sw
+&#125;
+
+func createAddrBookAndSetOnSwitch(config *cfg.Config, sw *p2p.Switch,
+ p2pLogger log.Logger, nodeKey *p2p.NodeKey,
+) (pex.AddrBook, error) &#123;
+ addrBook := pex.NewAddrBook(config.P2P.AddrBookFile(), config.P2P.AddrBookStrict)
+ addrBook.SetLogger(p2pLogger.With(&quot;book&quot;, config.P2P.AddrBookFile()))
+
+ // Add ourselves to addrbook to prevent dialing ourselves
+ if config.P2P.ExternalAddress != &quot;&quot; &#123;
+  addr, err := p2p.NewNetAddressString(p2p.IDAddressString(nodeKey.ID(), config.P2P.ExternalAddress))
+  if err != nil &#123;
+   return nil, fmt.Errorf(&quot;p2p.external_address is incorrect: %w&quot;, err)
+  &#125;
+  addrBook.AddOurAddress(addr)
+ &#125;
+ if config.P2P.ListenAddress != &quot;&quot; &#123;
+  addr, err := p2p.NewNetAddressString(p2p.IDAddressString(nodeKey.ID(), config.P2P.ListenAddress))
+  if err != nil &#123;
+   return nil, fmt.Errorf(&quot;p2p.laddr is incorrect: %w&quot;, err)
+  &#125;
+  addrBook.AddOurAddress(addr)
+ &#125;
+
+ sw.SetAddrBook(addrBook)
+
+ return addrBook, nil
+&#125;/</code></div></pre>
+<p>在通信功能构建完成以后，会再根据配置文件调用<code>createPEXReactorAndAddToSwitch</code>函数创建一个特殊的<code>pexReactor</code>,这个<code>reactor</code>会接管节点之间的连接和信息交换…</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div></div><code class="language-golang">func createPEXReactorAndAddToSwitch(addrBook pex.AddrBook, config *cfg.Config,
+ sw *p2p.Switch, logger log.Logger,
+) *pex.Reactor &#123;
+ // TODO persistent peers ? so we can have their DNS addrs saved
+ pexReactor := pex.NewReactor(addrBook,
+  &amp;pex.ReactorConfig&#123;
+   Seeds:    splitAndTrimEmpty(config.P2P.Seeds, &quot;,&quot;, &quot; &quot;),
+   SeedMode: config.P2P.SeedMode,
+   // See consensus/reactor.go: blocksToContributeToBecomeGoodPeer 10000
+   // blocks assuming 10s blocks ~ 28 hours.
+   // TODO (melekes): make it dynamic based on the actual block latencies
+   // from the live network.
+   // https://github.com/tendermint/tendermint/issues/3523
+   SeedDisconnectWaitPeriod:     28 * time.Hour,
+   PersistentPeersMaxDialPeriod: config.P2P.PersistentPeersMaxDialPeriod,
+  &#125;)
+ pexReactor.SetLogger(logger.With(&quot;module&quot;, &quot;pex&quot;))
+ sw.AddReactor(&quot;PEX&quot;, pexReactor)
+ return pexReactor
+&#125;</code></div></pre>
+<p>至此，<code>node</code>的构建流程就基本结束，<code>NewNode</code>函数后续代码是构建<code>node</code>对象等操作，这里就不再详细赘述，总结下来，创建节点主要分为以下几个过程：</p>
+<ul>
+<li>初始化区块存储与状态存储</li>
+<li>初始化通信服务和索引服务</li>
+<li>初始化验证者角色</li>
+<li>恢复存储状态</li>
+<li>构建<code>mempool</code>,<code>Evidence</code>,<code>Blockchain</code>,<code>Consensus</code>,<code>statesync</code>等核心功能</li>
+<li>建立节点节通信并构建<code>pexReactor</code></li>
+<li>构建节点</li>
+</ul>
+<h3 id="1-3-Node-启动过程">1.3 Node 启动过程</h3>
+<p>在 tendermint 系统中，核心服务都是通过<code>OnStart</code>,<code>OnStop</code>两个函数进行统一的启动和停止管理，我们这里首先看启动过程：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div></div><code class="language-golang">// OnStart starts the Node. It implements service.Service.
+func (n *Node) OnStart() error &#123;
+ now := tmtime.Now()
+ genTime := n.genesisDoc.GenesisTime
+ if genTime.After(now) &#123;
+  n.Logger.Info(&quot;Genesis time is in the future. Sleeping until then...&quot;, &quot;genTime&quot;, genTime)
+  time.Sleep(genTime.Sub(now))
+ &#125;
+
+ // Add private IDs to addrbook to block those peers being added
+ n.addrBook.AddPrivateIDs(splitAndTrimEmpty(n.config.P2P.PrivatePeerIDs, &quot;,&quot;, &quot; &quot;))
+
+ // Start the RPC server before the P2P server
+ // so we can eg. receive txs for the first block
+ if n.config.RPC.ListenAddress != &quot;&quot; &#123;
+  listeners, err := n.startRPC()
+  if err != nil &#123;
+   return err
+  &#125;
+  n.rpcListeners = listeners
+ &#125;
+
+ if n.config.Instrumentation.Prometheus &amp;&amp;
+  n.config.Instrumentation.PrometheusListenAddr != &quot;&quot; &#123;
+  n.prometheusSrv = n.startPrometheusServer(n.config.Instrumentation.PrometheusListenAddr)
+ &#125;
+
+ // Start the transport.
+ addr, err := p2p.NewNetAddressString(p2p.IDAddressString(n.nodeKey.ID(), n.config.P2P.ListenAddress))
+ if err != nil &#123;
+  return err
+ &#125;
+ if err := n.transport.Listen(*addr); err != nil &#123;
+  return err
+ &#125;
+
+ n.isListening = true
+
+ // Start the switch (the P2P server).
+ err = n.sw.Start()
+ if err != nil &#123;
+  return err
+ &#125;
+
+ // Always connect to persistent peers
+ err = n.sw.DialPeersAsync(splitAndTrimEmpty(n.config.P2P.PersistentPeers, &quot;,&quot;, &quot; &quot;))
+ if err != nil &#123;
+  return fmt.Errorf(&quot;could not dial peers from persistent_peers field: %w&quot;, err)
+ &#125;
+
+ // Run state sync
+ if n.stateSync &#123;
+  bcR, ok := n.bcReactor.(fastSyncReactor)
+  if !ok &#123;
+   return fmt.Errorf(&quot;this blockchain reactor does not support switching from state sync&quot;)
+  &#125;
+  err := startStateSync(n.stateSyncReactor, bcR, n.consensusReactor, n.stateSyncProvider,
+   n.config.StateSync, n.config.FastSyncMode, n.stateStore, n.blockStore, n.stateSyncGenesis)
+  if err != nil &#123;
+   return fmt.Errorf(&quot;failed to start state sync: %w&quot;, err)
+  &#125;
+ &#125;
+
+ return nil
+&#125;</code></div></pre>
+<p>这个启动过程中，首先同步时间，然后通过<code>startRPC</code>函数启动 RPC 通信：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div><div class="line-numbers-item">130</div><div class="line-numbers-item">131</div><div class="line-numbers-item">132</div><div class="line-numbers-item">133</div><div class="line-numbers-item">134</div><div class="line-numbers-item">135</div><div class="line-numbers-item">136</div><div class="line-numbers-item">137</div><div class="line-numbers-item">138</div><div class="line-numbers-item">139</div><div class="line-numbers-item">140</div><div class="line-numbers-item">141</div><div class="line-numbers-item">142</div><div class="line-numbers-item">143</div><div class="line-numbers-item">144</div><div class="line-numbers-item">145</div><div class="line-numbers-item">146</div><div class="line-numbers-item">147</div><div class="line-numbers-item">148</div><div class="line-numbers-item">149</div><div class="line-numbers-item">150</div><div class="line-numbers-item">151</div><div class="line-numbers-item">152</div><div class="line-numbers-item">153</div></div><code class="language-golang">// ConfigureRPC makes sure RPC has all the objects it needs to operate.
+func (n *Node) ConfigureRPC() error &#123;
+ pubKey, err := n.privValidator.GetPubKey()
+ if err != nil &#123;
+  return fmt.Errorf(&quot;can't get pubkey: %w&quot;, err)
+ &#125;
+ rpccore.SetEnvironment(&amp;rpccore.Environment&#123;
+  ProxyAppQuery:   n.proxyApp.Query(),
+  ProxyAppMempool: n.proxyApp.Mempool(),
+
+  StateStore:     n.stateStore,
+  BlockStore:     n.blockStore,
+  EvidencePool:   n.evidencePool,
+  ConsensusState: n.consensusState,
+  P2PPeers:       n.sw,
+  P2PTransport:   n,
+
+  PubKey:           pubKey,
+  GenDoc:           n.genesisDoc,
+  TxIndexer:        n.txIndexer,
+  BlockIndexer:     n.blockIndexer,
+  ConsensusReactor: n.consensusReactor,
+  EventBus:         n.eventBus,
+  Mempool:          n.mempool,
+
+  Logger: n.Logger.With(&quot;module&quot;, &quot;rpc&quot;),
+
+  Config: *n.config.RPC,
+ &#125;)
+ if err := rpccore.InitGenesisChunks(); err != nil &#123;
+  return err
+ &#125;
+
+ return nil
+&#125;
+
+func (n *Node) startRPC() ([]net.Listener, error) &#123;
+ err := n.ConfigureRPC()
+ if err != nil &#123;
+  return nil, err
+ &#125;
+
+ listenAddrs := splitAndTrimEmpty(n.config.RPC.ListenAddress, &quot;,&quot;, &quot; &quot;)
+
+ if n.config.RPC.Unsafe &#123;
+  rpccore.AddUnsafeRoutes()
+ &#125;
+
+ config := rpcserver.DefaultConfig()
+ config.MaxBodyBytes = n.config.RPC.MaxBodyBytes
+ config.MaxHeaderBytes = n.config.RPC.MaxHeaderBytes
+ config.MaxOpenConnections = n.config.RPC.MaxOpenConnections
+ // If necessary adjust global WriteTimeout to ensure it's greater than
+ // TimeoutBroadcastTxCommit.
+ // See https://github.com/tendermint/tendermint/issues/3435
+ if config.WriteTimeout &lt;= n.config.RPC.TimeoutBroadcastTxCommit &#123;
+  config.WriteTimeout = n.config.RPC.TimeoutBroadcastTxCommit + 1*time.Second
+ &#125;
+
+ // we may expose the rpc over both a unix and tcp socket
+ listeners := make([]net.Listener, len(listenAddrs))
+ for i, listenAddr := range listenAddrs &#123;
+  mux := http.NewServeMux()
+  rpcLogger := n.Logger.With(&quot;module&quot;, &quot;rpc-server&quot;)
+  wmLogger := rpcLogger.With(&quot;protocol&quot;, &quot;websocket&quot;)
+  wm := rpcserver.NewWebsocketManager(rpccore.Routes,
+   rpcserver.OnDisconnect(func(remoteAddr string) &#123;
+    err := n.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
+    if err != nil &amp;&amp; err != tmpubsub.ErrSubscriptionNotFound &#123;
+     wmLogger.Error(&quot;Failed to unsubscribe addr from events&quot;, &quot;addr&quot;, remoteAddr, &quot;err&quot;, err)
+    &#125;
+   &#125;),
+   rpcserver.ReadLimit(config.MaxBodyBytes),
+   rpcserver.WriteChanCapacity(n.config.RPC.WebSocketWriteBufferSize),
+  )
+  wm.SetLogger(wmLogger)
+  mux.HandleFunc(&quot;/websocket&quot;, wm.WebsocketHandler)
+  rpcserver.RegisterRPCFuncs(mux, rpccore.Routes, rpcLogger)
+  listener, err := rpcserver.Listen(
+   listenAddr,
+   config,
+  )
+  if err != nil &#123;
+   return nil, err
+  &#125;
+
+  var rootHandler http.Handler = mux
+  if n.config.RPC.IsCorsEnabled() &#123;
+   corsMiddleware := cors.New(cors.Options&#123;
+    AllowedOrigins: n.config.RPC.CORSAllowedOrigins,
+    AllowedMethods: n.config.RPC.CORSAllowedMethods,
+    AllowedHeaders: n.config.RPC.CORSAllowedHeaders,
+   &#125;)
+   rootHandler = corsMiddleware.Handler(mux)
+  &#125;
+  if n.config.RPC.IsTLSEnabled() &#123;
+   go func() &#123;
+    if err := rpcserver.ServeTLS(
+     listener,
+     rootHandler,
+     n.config.RPC.CertFile(),
+     n.config.RPC.KeyFile(),
+     rpcLogger,
+     config,
+    ); err != nil &#123;
+     n.Logger.Error(&quot;Error serving server with TLS&quot;, &quot;err&quot;, err)
+    &#125;
+   &#125;()
+  &#125; else &#123;
+   go func() &#123;
+    if err := rpcserver.Serve(
+     listener,
+     rootHandler,
+     rpcLogger,
+     config,
+    ); err != nil &#123;
+     n.Logger.Error(&quot;Error serving server&quot;, &quot;err&quot;, err)
+    &#125;
+   &#125;()
+  &#125;
+
+  listeners[i] = listener
+ &#125;
+
+ // we expose a simplified api over grpc for convenience to app devs
+ grpcListenAddr := n.config.RPC.GRPCListenAddress
+ if grpcListenAddr != &quot;&quot; &#123;
+  config := rpcserver.DefaultConfig()
+  config.MaxBodyBytes = n.config.RPC.MaxBodyBytes
+  config.MaxHeaderBytes = n.config.RPC.MaxHeaderBytes
+  // NOTE: GRPCMaxOpenConnections is used, not MaxOpenConnections
+  config.MaxOpenConnections = n.config.RPC.GRPCMaxOpenConnections
+  // If necessary adjust global WriteTimeout to ensure it's greater than
+  // TimeoutBroadcastTxCommit.
+  // See https://github.com/tendermint/tendermint/issues/3435
+  if config.WriteTimeout &lt;= n.config.RPC.TimeoutBroadcastTxCommit &#123;
+   config.WriteTimeout = n.config.RPC.TimeoutBroadcastTxCommit + 1*time.Second
+  &#125;
+  listener, err := rpcserver.Listen(grpcListenAddr, config)
+  if err != nil &#123;
+   return nil, err
+  &#125;
+  go func() &#123;
+   if err := grpccore.StartGRPCServer(listener); err != nil &#123;
+    n.Logger.Error(&quot;Error starting gRPC server&quot;, &quot;err&quot;, err)
+   &#125;
+  &#125;()
+  listeners = append(listeners, listener)
+
+ &#125;
+
+ return listeners, nil
+&#125;</code></div></pre>
+<p>随后通过<code>startPrometheusServer</code>函数启动监控服务：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div></div><code class="language-golang">// startPrometheusServer starts a Prometheus HTTP server, listening for metrics
+// collectors on addr.
+func (n *Node) startPrometheusServer(addr string) *http.Server &#123;
+ srv := &amp;http.Server&#123;
+  Addr: addr,
+  Handler: promhttp.InstrumentMetricHandler(
+   prometheus.DefaultRegisterer, promhttp.HandlerFor(
+    prometheus.DefaultGatherer,
+    promhttp.HandlerOpts&#123;MaxRequestsInFlight: n.config.Instrumentation.MaxOpenConnections&#125;,
+   ),
+  ),
+  ReadHeaderTimeout: readHeaderTimeout,
+ &#125;
+ go func() &#123;
+  if err := srv.ListenAndServe(); err != http.ErrServerClosed &#123;
+   // Error starting or closing listener:
+   n.Logger.Error(&quot;Prometheus HTTP server ListenAndServe&quot;, &quot;err&quot;, err)
+  &#125;
+ &#125;()
+ return srv
+&#125;</code></div></pre>
+<p>最后启动 p2p 通信并设置节点信息同步：</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div></div><code class="language-golang">// startStateSync starts an asynchronous state sync process, then switches to fast sync mode.
+func startStateSync(ssR *statesync.Reactor, bcR fastSyncReactor, conR *cs.Reactor,
+ stateProvider statesync.StateProvider, config *cfg.StateSyncConfig, fastSync bool,
+ stateStore sm.Store, blockStore *store.BlockStore, state sm.State,
+) error &#123;
+ ssR.Logger.Info(&quot;Starting state sync&quot;)
+
+ if stateProvider == nil &#123;
+  var err error
+  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+  defer cancel()
+  stateProvider, err = statesync.NewLightClientStateProvider(
+   ctx,
+   state.ChainID, state.Version, state.InitialHeight,
+   config.RPCServers, light.TrustOptions&#123;
+    Period: config.TrustPeriod,
+    Height: config.TrustHeight,
+    Hash:   config.TrustHashBytes(),
+   &#125;, ssR.Logger.With(&quot;module&quot;, &quot;light&quot;))
+  if err != nil &#123;
+   return fmt.Errorf(&quot;failed to set up light client state provider: %w&quot;, err)
+  &#125;
+ &#125;
+
+ go func() &#123;
+  state, commit, err := ssR.Sync(stateProvider, config.DiscoveryTime)
+  if err != nil &#123;
+   ssR.Logger.Error(&quot;State sync failed&quot;, &quot;err&quot;, err)
+   return
+  &#125;
+  err = stateStore.Bootstrap(state)
+  if err != nil &#123;
+   ssR.Logger.Error(&quot;Failed to bootstrap node with new state&quot;, &quot;err&quot;, err)
+   return
+  &#125;
+  err = blockStore.SaveSeenCommit(state.LastBlockHeight, commit)
+  if err != nil &#123;
+   ssR.Logger.Error(&quot;Failed to store last seen commit&quot;, &quot;err&quot;, err)
+   return
+  &#125;
+
+  if fastSync &#123;
+   // FIXME Very ugly to have these metrics bleed through here.
+   conR.Metrics.StateSyncing.Set(0)
+   conR.Metrics.FastSyncing.Set(1)
+   err = bcR.SwitchToFastSync(state)
+   if err != nil &#123;
+    ssR.Logger.Error(&quot;Failed to switch to fast sync&quot;, &quot;err&quot;, err)
+    return
+   &#125;
+  &#125; else &#123;
+   conR.SwitchToConsensus(state, true)
+  &#125;
+ &#125;()
+ return nil
+&#125;</code></div></pre>
+<p><code> 在整个启动过程中，最核心的是</code>swtich<code>的启动，该启动同样服务了基本服务的</code>Start<code>函数并最终调用了</code>swtich<code>的</code>OnStart`函数。</p>
+<h3 id="1-4-Node-停止过程">1.4 Node 停止过程</h3>
+<p>停止的核心函数是<code>OnStop</code>,没有过多需要分析的地方，就是一个个 reactor 和通信服务的停止。</p>
+<pre><div class="code-header"><span class="code-header-type">golang</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div></div><code class="language-golang">// OnStop stops the Node. It implements service.Service.
+func (n *Node) OnStop() &#123;
+ n.BaseService.OnStop()
+
+ n.Logger.Info(&quot;Stopping Node&quot;)
+
+ // first stop the non-reactor services
+ if err := n.eventBus.Stop(); err != nil &#123;
+  n.Logger.Error(&quot;Error closing eventBus&quot;, &quot;err&quot;, err)
+ &#125;
+ if err := n.indexerService.Stop(); err != nil &#123;
+  n.Logger.Error(&quot;Error closing indexerService&quot;, &quot;err&quot;, err)
+ &#125;
+
+ // now stop the reactors
+ if err := n.sw.Stop(); err != nil &#123;
+  n.Logger.Error(&quot;Error closing switch&quot;, &quot;err&quot;, err)
+ &#125;
+
+ if err := n.transport.Close(); err != nil &#123;
+  n.Logger.Error(&quot;Error closing transport&quot;, &quot;err&quot;, err)
+ &#125;
+
+ n.isListening = false
+
+ // finally stop the listeners / external services
+ for _, l := range n.rpcListeners &#123;
+  n.Logger.Info(&quot;Closing rpc listener&quot;, &quot;listener&quot;, l)
+  if err := l.Close(); err != nil &#123;
+   n.Logger.Error(&quot;Error closing listener&quot;, &quot;listener&quot;, l, &quot;err&quot;, err)
+  &#125;
+ &#125;
+
+ if pvsc, ok := n.privValidator.(service.Service); ok &#123;
+  if err := pvsc.Stop(); err != nil &#123;
+   n.Logger.Error(&quot;Error closing private validator&quot;, &quot;err&quot;, err)
+  &#125;
+ &#125;
+
+ if n.prometheusSrv != nil &#123;
+  if err := n.prometheusSrv.Shutdown(context.Background()); err != nil &#123;
+   // Error from closing listeners, or context timeout:
+   n.Logger.Error(&quot;Prometheus HTTP server Shutdown&quot;, &quot;err&quot;, err)
+  &#125;
+ &#125;
+ if n.blockStore != nil &#123;
+  if err := n.blockStore.Close(); err != nil &#123;
+   n.Logger.Error(&quot;problem closing blockstore&quot;, &quot;err&quot;, err)
+  &#125;
+ &#125;
+ if n.stateStore != nil &#123;
+  if err := n.stateStore.Close(); err != nil &#123;
+   n.Logger.Error(&quot;problem closing statestore&quot;, &quot;err&quot;, err)
+  &#125;
+ &#125;
+&#125;</code></div></pre>
+<h2 id="二、总结">二、总结</h2>
+<ul>
+<li>结合上一篇文章对 <code>P2P</code> 源码的分析，不难看出 <code>Tendermint</code> 的节点中，各个 <code>Reactor</code> 启动最后均是由 <code>Switch</code> 的启动引发的，每个 <code>Reactor</code> 启动时同时也会将自己子模块的各个功能启动。相应的 <code>reactor</code> 停止功能也是由 <code>Switch</code> 的停止引发的。</li>
+</ul>
+<h2 id="参考">参考</h2>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2023/05/56791/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2023/05/56791/">https://www.superheaoz.top/2023/05/56791/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2023/07/23398/"><span>NAS 折腾日记（1）容器化部署 nextcloud</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2023/05/34807/"><span>服务器操作指北（5）编译安装 openssh 9.3p1 with openssl3.1.0</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

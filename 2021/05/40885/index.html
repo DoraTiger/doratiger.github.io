@@ -1,0 +1,292 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Windows 终端美化【我的个人天地】</title><meta name="description" content="Windows 终端美化"><meta name="keywords" content="windows,oh-my-posh"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Windows 终端美化【我的个人天地】"><meta property="og:description" content="Windows 终端美化"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2021/05/40885/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Windows 终端美化",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2021-05-21T09:30:41.000Z",
+  "dateModified": "2021-05-21T09:30:41.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2021/05/40885/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%87%86%E5%A4%87%E7%8E%AF%E5%A2%83"><span class="toc-text">一、准备环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AE%89%E8%A3%85"><span class="toc-text">二、安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-Windows-Terminal-%E5%AE%89%E8%A3%85"><span class="toc-text">2.1 Windows Terminal 安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Cascadia-Code-PL-%E5%AD%97%E4%BD%93%E5%AE%89%E8%A3%85"><span class="toc-text">2.2 Cascadia Code PL 字体安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-oh-my-posh-%E5%AE%89%E8%A3%85"><span class="toc-text">2.3 oh-my-posh 安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-oh-my-posh-%E8%AE%BE%E7%BD%AE"><span class="toc-text">2.4 oh-my-posh 设置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color9"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color4"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Windows 终端美化</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2021-05-21</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2021-05-21</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/windows/">windows</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/oh-my-posh/">oh-my-posh</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">2546 字 · 约 9 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>以前一直使用 <code>oh-my-zsh</code> 对 <code>Linux 终端</code> 进行美化，现在在使用 <code>WSL</code> 后，对 <code>Window终端</code> 使用率在提升，故而同步寻找 <code>Windows 终端</code> 的美化方案。</p>
+<span id="more"></span>
+<h2 id="一、准备环境">一、准备环境</h2>
+<ul>
+<li>终端：<a target="_blank" rel="noopener" href="https://url.superheaoz.top/mterminal" title="Windows Terminal">Windows Terminal</a></li>
+</ul>
+<p>Windows 终端是一个面向命令行工具和 shell（如命令提示符、PowerShell 和适用于 Linux 的 Windows 子系统 (WSL)）用户的新式终端应用程序。它的主要功能包括多个选项卡、窗格、Unicode 和 UTF-8 字符支持、GPU 加速文本呈现引擎，你还可用它来创建你自己的主题并自定义文本、颜色、背景和快捷方式。</p>
+<ul>
+<li>终端美化：<a target="_blank" rel="noopener" href="https://url.superheaoz.top/ohmyposh" title="oh-my-posh">oh-my-posh</a></li>
+</ul>
+<p>Oh my Posh is a custom prompt engine for any shell that has the ability to adjust the prompt string with a function or variable.</p>
+<ul>
+<li>终端字体：<a target="_blank" rel="noopener" href="https://url.superheaoz.top/cascadiafont" title="Cascadia Code PL">Cascadia Code PL</a></li>
+</ul>
+<p>This is a fun, new monospaced font that includes programming ligatures and is designed to enhance the modern look and feel of the Windows Terminal.</p>
+<h2 id="二、安装">二、安装</h2>
+<h3 id="2-1-Windows-Terminal-安装">2.1 Windows Terminal 安装</h3>
+<p>可以从 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/kmuewu" title="Microsoft Store">Microsoft Store</a> 直接安装 <code>Windows 终端</code>。也可以通过 <code>GitHub 发布页</code> 上获取最新版本，也是本文的安装方法。</p>
+<p>安装完成以后，通过 <code>ctrl+,</code> 打开终端设置页面，在启动选项卡中，可以选择默认的启动终端类型，本文选择 <code>powershell</code> 为默认终端。</p>
+<h3 id="2-2-Cascadia-Code-PL-字体安装">2.2 Cascadia Code PL 字体安装</h3>
+<p>通过准备环境中提供的链接，到 <code>GitHub 发布页</code> 中下载最新的字体文件压缩包，从中选择<code>Cascadia Code PL</code> 和 <code>Cascadia Mono PL</code> 两种字体进行安装。不同字体区别如下，连字效果参考如动态图所示（取自微软文档）。</p>
+<p><img src="https://docs.microsoft.com/zh-cn/windows/terminal/images/programming-ligatures.gif" alt="lianzi" title="lianzi"></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">字体名称</th>
+<th style="text-align:center">包括连字</th>
+<th style="text-align:center">包括 Powerline 字形</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Cascadia Code</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">否</td>
+</tr>
+<tr>
+<td style="text-align:center">Cascadia Mono</td>
+<td style="text-align:center">否</td>
+<td style="text-align:center">否</td>
+</tr>
+<tr>
+<td style="text-align:center">Cascadia Code PL</td>
+<td style="text-align:center">是</td>
+<td style="text-align:center">是</td>
+</tr>
+<tr>
+<td style="text-align:center">Cascadia Mono PL</td>
+<td style="text-align:center">否</td>
+<td style="text-align:center">是</td>
+</tr>
+</tbody>
+</table>
+<p><code>window</code> 环境下，直接双击 <code>TTF</code> 文件安装即可。安装完成以后，在 <code>Windows Terminal</code> 中通过 <code>ctrl+,</code> 打开终端设置页面，对 <code>Windows PowerShell</code> 和 <code>命令提示符</code> 的配置文件进行修改，在 <code>外观 - 字体</code> 中，将字体改为 <code>Cascadia Mono PL</code>，如有连字需求，可改为 <code>Cascadia Code PL</code>。</p>
+<p>如需在 <code>vscode</code> 中同样使用 <code>PL 字体</code>，需要对配置文件进行修改，通过 <code>ctrl+,</code> 打开设置页面，搜索 <code>font</code>，将 <code>Code Lens Font Family</code> 的值修改为 <code>Cascadia Code PL</code>，该修改只作用于 <code>windows 终端</code>，如果需要在 <code>wsl</code> 中进行使用，需要在 <code>wsl</code> 中单独安装 <code>pl 字体</code>，通过 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/powerlinefonts" title="GitHub 仓库 powerline/fonts">GitHub 仓库 powerline/fonts</a> 下载字体库，通过内置的 <code>install.sh</code> 脚本进行安装。</p>
+<h3 id="2-3-oh-my-posh-安装">2.3 oh-my-posh 安装</h3>
+<p>微软中文文档中推荐使用以下命令在 <code>powershell</code> 中进行安装（如果尚未安装 <code>NuGet</code>，可能需要安装它。如果是这种情况，<code>PowerShell</code> 命令行会询问是否要安装 <code>NuGet</code>。选择 <code>[Y]“是”</code>。你可能还需要批准从不受信任的存储库 <code>PSGallery</code> 中安装模块。选择 <code>[Y]“是”</code>。）</p>
+<pre><div class="code-header"><span class="code-header-type">shell</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-shell">Install-Module posh-git -Scope CurrentUser
+Install-Module oh-my-posh -Scope CurrentUser</code></div></pre>
+<p>若使用 <code>PowerShell Core</code>，则需要额外安装 <code>PSReadline</code>。</p>
+<pre><div class="code-header"><span class="code-header-type">shell</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-shell">Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck</code></div></pre>
+<p>通过以上脚本对 <code>oh-my-posh</code> 进行安装后，对应 Modules 会被安装在用户目录中，然而 oh-my-posh 并不支持中文路径的识别，在后续配置默认启动后，会将中文识别为乱码，导致命令出错。本文所作出的解决方案是将已安装存储在 <code>$Home\Document\PowerShell\Modules</code> 的文件，直接剪切粘贴到 <code>C:\Program Files\WindowsPowerShell\Modules</code> 中。全新安装时，可以参考 <code>Get-ExecutionPolicy -List</code> 内容修改 <code>-Scope CurrentUser</code> 更改安装位置。</p>
+<h3 id="2-4-oh-my-posh-设置">2.4 oh-my-posh 设置</h3>
+<p>最后通过修改 <code>powershell</code> 默认脚本进行环境的自动启动，官方文档说明默认脚本存在四个路径，对应不同用户环境。配置文件路径包含以下变量：</p>
+<ul>
+<li><code>$PSHOME</code> 变量，存储 <code>PowerShell</code> 的安装目录。</li>
+<li><code>$Home</code> 变量，用于存储当前用户的主目录。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">说明</th>
+<th style="text-align:center">路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">所有用户、所有主机</td>
+<td style="text-align:center"><code>\$PSHOME\Profile.ps1</code></td>
+</tr>
+<tr>
+<td style="text-align:center">所有用户，当前主机</td>
+<td style="text-align:center"><code>\$PSHOME\Microsoft.PowerShell_profile.ps1</code></td>
+</tr>
+<tr>
+<td style="text-align:center">当前用户，所有主机</td>
+<td style="text-align:center"><code>$Home\Document\PowerShell\Profile.ps1</code></td>
+</tr>
+<tr>
+<td style="text-align:center">当前用户、当前主机</td>
+<td style="text-align:center"><code>$Home\Document\PowerShell\Microsoft.PowerShell_profile.ps1</code></td>
+</tr>
+</tbody>
+</table>
+<p>在实际测试中，<code>$Home</code> 直接指向了 <code>C:\User\username</code> 路径，但如果用户在设置中修改过文档存储路径，则应该以实际的文档存储路径为准。</p>
+<p>推荐在 <code>当前用户、当前主机</code> 的路径中对脚本进行设置，添加代码如下：</p>
+<pre><div class="code-header"><span class="code-header-type">shell</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-shell">#中文文档提供的修改命令,经测试存在问题,发现是没有同步英文文档最新设置.
+Import-Module posh-git
+Import-Module oh-my-posh
+Set-Theme Paradox  (该行存在命令错误)
+#以下为英文文档提供的修改命令,需要将以下三行导入脚本中.
+Import-Module posh-git
+Import-Module oh-my-posh
+Set-PoshPrompt -Theme paradox</code></div></pre>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/1bio4c" title="在 Windows 终端中设置 Powerline">在 Windows 终端中设置 Powerline</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/9yxsz5" title="PowerShell 执行策略">PowerShell 执行策略</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/x4hk4z" title="Cascadia Code">Cascadia Code</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2021/05/40885/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2021/05/40885/">https://www.superheaoz.top/2021/05/40885/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2021/05/6715/"><span>Ray 学习随笔（1）启动过程源码阅读</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2021/05/20689/"><span>Hyper-V 安装 Ubuntu</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

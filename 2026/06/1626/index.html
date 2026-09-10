@@ -1,0 +1,383 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>HEXO 开发笔记（6）自建主题：核心功能实现【我的个人天地】</title><meta name="description" content="HEXO 开发笔记（6）自建主题：核心功能实现"><meta name="keywords" content="hexo,主题开发,JavaScript"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（6）自建主题：核心功能实现【我的个人天地】"><meta property="og:description" content="HEXO 开发笔记（6）自建主题：核心功能实现"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/06/1626/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HEXO 开发笔记（6）自建主题：核心功能实现",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-06-19T04:00:00.000Z",
+  "dateModified": "2026-09-08T16:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/06/1626/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%96%87%E7%AB%A0%E6%B8%B2%E6%9F%93%E7%AE%A1%E7%BA%BF"><span class="toc-text">一、文章渲染管线</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B"><span class="toc-text">1.1 渲染流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E4%BB%A3%E7%A0%81%E5%9D%97%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="toc-text">1.2 代码块过滤器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%A4%8D%E5%88%B6%E6%8C%89%E9%92%AE%E7%9A%84-UI-%E8%B0%83%E8%AF%95"><span class="toc-text">1.3 复制按钮的 UI 调试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E5%A4%96%E9%93%BE%E9%87%8D%E5%AE%9A%E5%90%91"><span class="toc-text">1.4 外链重定向</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%BE%A7%E8%BE%B9%E6%A0%8F%E5%8F%8C%E9%9D%A2%E6%9D%BF"><span class="toc-text">二、侧边栏双面板</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E9%9D%A2%E6%9D%BF%E5%88%87%E6%8D%A2"><span class="toc-text">2.1 面板切换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-TOC-%E9%9D%A2%E6%9D%BF%E7%9A%84%E5%8F%8D%E5%A4%8D%E9%80%82%E9%85%8D"><span class="toc-text">2.2 TOC 面板的反复适配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E6%BB%9A%E5%8A%A8%E9%AB%98%E4%BA%AE"><span class="toc-text">2.3 滚动高亮</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%88%86%E9%A1%B5%E7%B3%BB%E7%BB%9F"><span class="toc-text">三、分页系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E9%A6%96%E9%A1%B5%E5%88%86%E9%A1%B5"><span class="toc-text">3.1 首页分页</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%96%87%E7%AB%A0%E5%89%8D%E5%90%8E%E5%AF%BC%E8%88%AA"><span class="toc-text">3.2 文章前后导航</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%BD%92%E6%A1%A3-%E6%A0%87%E7%AD%BE-%E5%88%86%E7%B1%BB%E9%A1%B5%E9%9D%A2"><span class="toc-text">四、归档&#x2F;标签&#x2F;分类页面</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-Timeline-%E6%A0%B7%E5%BC%8F%E5%BD%92%E6%A1%A3"><span class="toc-text">4.1 Timeline 样式归档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%A0%87%E7%AD%BE%E4%BA%91"><span class="toc-text">4.2 标签云</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E7%BD%AE-PV-UV-%E7%BB%9F%E8%AE%A1%E8%AE%A1%E6%95%B0%E5%99%A8"><span class="toc-text">五、内置 PV&#x2F;UV 统计计数器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E4%BB%8E%E5%8D%9C%E7%AE%97%E5%AD%90%E5%88%B0%E8%87%AA%E5%BB%BA"><span class="toc-text">5.1 从卜算子到自建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%89%8D%E7%AB%AF-UUID-Cookie"><span class="toc-text">5.2 前端 UUID + Cookie</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E5%90%8E%E7%AB%AF-counter-%E6%9C%8D%E5%8A%A1"><span class="toc-text">5.3 后端 counter 服务</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%96%87%E7%AB%A0%E9%99%84%E5%8A%A0%E5%8A%9F%E8%83%BD"><span class="toc-text">六、文章附加功能</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E9%98%85%E8%AF%BB%E6%97%B6%E9%97%B4%E4%BC%B0%E7%AE%97"><span class="toc-text">6.1 阅读时间估算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%96%87%E7%AB%A0-QR-%E7%A0%81"><span class="toc-text">6.2 文章 QR 码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%85%B6%E4%BB%96%E5%8A%9F%E8%83%BD"><span class="toc-text">6.3 其他功能</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">七、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color1"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color0"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（6）自建主题：核心功能实现</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%B8%BB%E9%A2%98%E5%BC%80%E5%8F%91/">主题开发</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/JavaScript/">JavaScript</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">5354 字 · 约 18 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>主题的文章页需要处理代码复制、目录和外链，列表页则涉及分页、归档与统计。这篇按这些功能记录实现过程，其中复制按钮的对齐和加密文章的目录适配，来回调整了比较多次。</p>
+<span id="more"></span>
+<h2 id="一、文章渲染管线">一、文章渲染管线</h2>
+<h3 id="1-1-渲染流程">1.1 渲染流程</h3>
+<p>文章从 <code>Markdown</code> 到最终页面经过多个处理阶段：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-text">Hexo 解析 Markdown
+  → after_post_render 过滤器链
+    → code.js：代码块增强（行号 + 复制按钮 + 语言标签）
+    → redirect.js：外链重定向注入 data-redirect 属性
+    → encrypt.js：文章 AES-256-GCM 加密（可选）
+  → Pug 模板渲染
+    → post.pug：标题 / 元信息 / 内容 / 版权 / QR码 / 评论</code></div></pre>
+<h3 id="1-2-代码块过滤器">1.2 代码块过滤器</h3>
+<p>将 <code>&lt;pre&gt;&lt;code&gt;</code> 块增强为带语言标签、行号和复制按钮的容器：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-javascript">// scripts/filters/lib/code.js
+const reg = /&lt;pre&gt;&lt;code(.*?)&gt;([\s\S]*?)&lt;\/code&gt;&lt;\/pre&gt;/g;
+data.content = data.content.replace(reg, (match, attrs, content) =&gt; &#123;
+    const lang = attrs.match(/class=&quot;language-(.*?)&quot;/)?.[1] || &quot;code&quot;;
+    const codeHeader = `&lt;div class=&quot;code-header&quot;&gt;
+        &lt;span class=&quot;code-type&quot;&gt;$&#123;lang&#125;&lt;/span&gt;
+        &lt;div class=&quot;code-copy&quot;&gt;$&#123;copyButton&#125;&lt;/div&gt;
+    &lt;/div&gt;`;
+    // ... 行号生成
+&#125;);</code></div></pre>
+<h3 id="1-3-复制按钮的-UI-调试">1.3 复制按钮的 UI 调试</h3>
+<p>复制按钮本身逻辑不复杂，但<strong>对齐代码块的 UI 花了不少功夫</strong>。最初想做一个带动效的花哨设计 — 点击时有个旋转/缩放反馈，hover 时有渐变背景。来来回回调整了好几版 DOM 结构和 <code>CSS</code> 动画，最后发现效果反而不稳定，在不同代码块宽度下对齐经常出问题。</p>
+<p>最终放弃了花里胡哨的 <code>DOM</code> 方案，改用<strong>纯 <code>JS</code> 实现</strong> — 直接操作 <code>classList</code> 和 <code>textContent</code>，不依赖复杂的 <code>CSS</code> 动画。效果虽然朴素，但稳定性好得多，各种代码块宽度下都能正确对齐。</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-javascript">// 简化后的复制逻辑
+button.addEventListener('click', () =&gt; &#123;
+    navigator.clipboard.writeText(codeContent).then(() =&gt; &#123;
+        button.textContent = copiedText;
+        setTimeout(() =&gt; &#123; button.textContent = copyText; &#125;, 2000);
+    &#125;);
+&#125;);</code></div></pre>
+<h3 id="1-4-外链重定向">1.4 外链重定向</h3>
+<p>构建时给外链添加 <code>data-redirect</code> 属性，运行时拦截点击：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-javascript">// scripts/filters/lib/redirect.js
+const shouldRedirect = (url) =&gt; &#123;
+    const host = new URL(url).hostname;
+    if (host === siteHostname) return false;  // 内链排除
+    if (method === &quot;include&quot;) return hostMatches(host, include);
+    if (hostMatches(host, exclude)) return false;  // 黑名单排除
+    return true;
+&#125;;</code></div></pre>
+<p>支持两种模式：<code>exclude</code>（默认，所有外链重定向，黑名单除外）和 <code>include</code>（仅白名单域名重定向）。</p>
+<h2 id="二、侧边栏双面板">二、侧边栏双面板</h2>
+<h3 id="2-1-面板切换">2.1 面板切换</h3>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-pug">// layout/_include/sidebar.pug
+- let showToc = enableToc &amp;&amp; is_post()
+if showToc
+  #sidebar-toc
+    != toc(page.content, &#123;list_number: ...&#125;)
+  .sidebar-menu-item  // 切换按钮
+  #sidebar-info.hide
+else
+  #sidebar-info
+  #sidebar-toc.hide</code></div></pre>
+<h3 id="2-2-TOC-面板的反复适配">2.2 TOC 面板的反复适配</h3>
+<p>TOC 面板是调试次数最多的组件之一。它需要同时适配两个场景：</p>
+<p><strong>场景一：侧边栏折叠/展开</strong></p>
+<ul>
+<li>侧边栏宽度从 <code>300px</code> 切换到 <code>0</code> 时，TOC 内容需要重新排版</li>
+<li>高嵌套目录（三级以上）在窄宽度下文字溢出</li>
+</ul>
+<p><strong>场景二：文章加密</strong></p>
+<ul>
+<li>加密文章的 <code>page.content</code> 在构建时被替换为密文</li>
+<li><code>toc()</code> 函数无法从密文生成目录</li>
+<li>需要在加密前单独提取目录结构</li>
+</ul>
+<p>这两个场景反复调整了好多次。把目录逻辑放在主题内，修改时可以一起检查侧边栏样式和加密前的处理顺序，不用分头适配。</p>
+<h3 id="2-3-滚动高亮">2.3 滚动高亮</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-javascript">// source/js/utils/scroll.js
+// 滚动时自动高亮当前章节
+updateActiveHeading() &#123;
+    const headings = document.querySelectorAll('.toc-item a');
+    const scrollTop = contentWrapper.scrollTop;
+    // 找到当前视口顶部最近的标题
+    headings.forEach(link =&gt; &#123;
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target &amp;&amp; target.offsetTop &lt;= scrollTop + offset) &#123;
+            link.parentElement.classList.add('toc-active');
+        &#125;
+    &#125;);
+&#125;</code></div></pre>
+<h2 id="三、分页系统">三、分页系统</h2>
+<h3 id="3-1-首页分页">3.1 首页分页</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-javascript">// scripts/generators/lib/index.js
+const pagination = require(&quot;hexo-pagination&quot;);
+
+module.exports = function (locals) &#123;
+    const posts = locals.posts.sort(this.config.index_generator.order_by);
+    const stickyPosts = posts.data.sort((a, b) =&gt; (b.sticky || 0) - (a.sticky || 0));
+
+    return pagination(path, stickyPosts, &#123;
+        format: 'page/%d/',
+        layout: ['index'],
+        perPage: this.config.index_generator.per_page,
+    &#125;);
+&#125;;</code></div></pre>
+<p>置顶文章通过 <code>sticky</code> 字段排序，确保始终显示在首页最前。</p>
+<h3 id="3-2-文章前后导航">3.2 文章前后导航</h3>
+<p>非分页页面（文章页）使用上一篇/下一篇文章导航，带 <code>border-animation</code> 效果。</p>
+<h2 id="四、归档-标签-分类页面">四、归档/标签/分类页面</h2>
+<h3 id="4-1-Timeline-样式归档">4.1 Timeline 样式归档</h3>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-pug">// 按年份分组，年份 = 大圆点，文章 = 小圆点，竖线连接
+each year in Object.keys(groupedPosts)
+  .archive-year
+    .archive-year-marker     // 大圆点
+    .archive-year-title= year
+  each post in groupedPosts[year]
+    .archive-post-item
+      .archive-post-marker  // 小圆点
+      a(href=url_for(post.path))= post.title</code></div></pre>
+<h3 id="4-2-标签云">4.2 标签云</h3>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-pug">.tagcloud
+  != tagcloud(&#123;min_font: 0.75, max_font: 2, amount: 100,
+               color: true, start_color: '#A4D8FA', end_color: '#0790E8'&#125;)</code></div></pre>
+<p>颜色从浅蓝渐变到深蓝，字号从 <code>0.75rem</code> 到 <code>2rem</code>。</p>
+<h2 id="五、内置-PV-UV-统计计数器">五、内置 PV/UV 统计计数器</h2>
+<h3 id="5-1-从卜算子到自建">5.1 从卜算子到自建</h3>
+<p>统计功能的演进路径：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-text">localStorage（最早）
+  → 不跨浏览器，换设备数据丢失
+  → 卜算子 busuanzi（第三方服务）
+    → 服务不稳定，经常挂掉
+  → 自建 counter 服务
+    → 完全可控，支持 PV + UV</code></div></pre>
+<p>卜算子不好用了，逼得只能自己写。这也是选择一体化集成的又一个原因 — 外部服务不可控，不如自己掌握。</p>
+<h3 id="5-2-前端-UUID-Cookie">5.2 前端 UUID + Cookie</h3>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div></div><code class="language-pug">// layout/_include/footer.pug — inline IIFE
+(function() &#123;
+    function getVisitorId() &#123;
+        var match = document.cookie.match(/dtc_uid=([^;]+)/);
+        if (match) return match[1];
+        var uid = crypto.randomUUID();
+        document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+        return uid;
+    &#125;
+    var visitorId = getVisitorId();
+
+    fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&amp;uid=' + visitorId)
+        .then(r =&gt; r.json())
+        .then(d =&gt; &#123;
+            sv.textContent = d.site_uv || d.site_pv || 0;
+            pv.textContent = d.page_uv || d.page_pv || 0;
+        &#125;);
+&#125;)();</code></div></pre>
+<h3 id="5-3-后端-counter-服务">5.3 后端 counter 服务</h3>
+<p><code>doratiger-counter</code> 服务（<a target="_blank" rel="noopener" href="https://github.com/DoraTiger/doratiger-counter" title="doratiger-counter GitHub" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FDoraTiger%2Fdoratiger-counter">GitHub 仓库</a>）使用内存布隆过滤器做 UV 去重：</p>
+<ul>
+<li><strong>PV</strong>：内存计数器，每 30 秒持久化到 <code>SQLite</code></li>
+<li><strong>Site UV</strong>：布隆过滤器（100 万容量，7 个哈希函数）</li>
+<li><strong>Page UV</strong>：<code>map[page]map[uid]struct&#123;&#125;</code></li>
+<li><strong>安全</strong>：Origin 白名单校验，只允许来自博客域名的请求</li>
+</ul>
+<p>布隆过滤器的选择是因为它在内存占用和查询速度之间取得了很好的平衡 — 100 万容量只需要约 120KB 内存，远小于存储每个 <code>uid</code> 的 <code>map</code>。对于个人博客的访问量级别，误判率可以接受。</p>
+<h2 id="六、文章附加功能">六、文章附加功能</h2>
+<h3 id="6-1-阅读时间估算">6.1 阅读时间估算</h3>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-pug">// layout/_include/post.pug
+- let wpm = theme.post_extend?.reading_time?.wpm ?? 300
+- let wordCount = page.content.replace(/&lt;[^&gt;]+&gt;/g, '').replace(/\s+/g, '').length
+- let readMin = Math.max(1, Math.ceil(wordCount / wpm))
+span= wordCount + ' 字 · 约 ' + readMin + ' 分钟'</code></div></pre>
+<p><code>WPM</code> 参数可配置（默认 300），但中英文混排的字数统计有局限 — 去除 <code>HTML</code> 标签后按字符数计算，中文和英文都算一个字符，实际上中文的阅读速度比英文慢不少。300 这个值是参考了一些博客的通用设定，实际体验下来偏差不大，够用。</p>
+<h3 id="6-2-文章-QR-码">6.2 文章 QR 码</h3>
+<p>自行实现了 <code>ISO 18004</code> 标准的 <code>QR</code> 码生成器（纯 <code>JS</code>，无外部依赖），渲染为 <code>SVG</code> <code>data URL</code>。选择自己实现的原因和其他本地化组件一样 — 不需要在主题编译阶段引入第三方包，让 <code>node</code> 依赖尽量少，做到自包含。</p>
+<h3 id="6-3-其他功能">6.3 其他功能</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>置顶标记</td>
+<td>front-matter <code>sticky: 100</code>，样式 <code>.post-item-header-sticky</code></td>
+</tr>
+<tr>
+<td>版权声明</td>
+<td>CC BY-NC-SA 4.0，可在配置中修改</td>
+</tr>
+<tr>
+<td>打赏按钮</td>
+<td>支付宝/微信收款码展示</td>
+</tr>
+</tbody>
+</table>
+<p>类似的实现思路贯穿整个主题 — 很多插件功能都是参考学习后自行实现的，就是为了尽量减少第三方包的安装，保持主题的自包含性。</p>
+<h2 id="七、总结">七、总结</h2>
+<p>复制按钮和目录的逻辑都不算复杂，实际调试却花了不少时间。前者要适应不同宽度的代码块，后者还要处理侧边栏折叠和文章加密。以后修改文章页时，这几种情况都需要重新检查。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/helpers" title="Hexo 辅助函数" class="external-link" data-redirect="https%3A%2F%2Fhexo.io%2Fzh-cn%2Fdocs%2Fhelpers">Hexo 过滤器文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/Web_Crypto_API" title="Web Crypto API" class="external-link" data-redirect="https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FAPI%2FWeb_Crypto_API">Web Crypto API</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Bloom_filter" title="布隆过滤器" class="external-link" data-redirect="https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FBloom_filter">布隆过滤器</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.iso.org/standard/15172.html" title="ISO 18004 QR 码标准" class="external-link" data-redirect="https%3A%2F%2Fwww.iso.org%2Fstandard%2F15172.html">ISO 18004 QR 码标准</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/DoraTiger/doratiger-counter" title="doratiger-counter GitHub" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FDoraTiger%2Fdoratiger-counter">doratiger-counter 项目</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/06/1626/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/06/1626/">https://www.superheaoz.top/2026/06/1626/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/06/9008/"><span>HEXO 开发笔记（7）自建主题：安全与SEO</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/06/50649/"><span>HEXO 开发笔记（5）自建主题：视觉系统</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

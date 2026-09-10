@@ -1,0 +1,559 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Obsidan 日记、记账与自动同步【我的个人天地】</title><meta name="description" content="Obsidan 日记、记账与自动同步"><meta name="keywords" content="Obsidian"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Obsidan 日记、记账与自动同步【我的个人天地】"><meta property="og:description" content="Obsidan 日记、记账与自动同步"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2022/06/57091/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Obsidan 日记、记账与自动同步",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2022-06-02T11:08:09.000Z",
+  "dateModified": "2023-10-27T02:58:51.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2022/06/57091/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%AE%89%E8%A3%85%E4%B8%8E%E6%8F%92%E4%BB%B6"><span class="toc-text">一、安装与插件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%AE%89%E8%A3%85"><span class="toc-text">1.1 安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E6%8F%92%E4%BB%B6%E9%80%89%E6%8B%A9"><span class="toc-text">1.2 需求分析与插件选择</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%8F%92%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="toc-text">1.3 插件配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E8%BF%90%E8%A1%8C"><span class="toc-text">二、运行</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%97%A5%E8%AE%B0%E5%8A%9F%E8%83%BD"><span class="toc-text">2.1 日记功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-todo-%E5%88%97%E8%A1%A8"><span class="toc-text">2.2 todo 列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%8F%AF%E8%A7%86%E5%8C%96"><span class="toc-text">2.3 可视化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">三、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color1"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color1"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Obsidan 日记、记账与自动同步</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2022-06-02</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2023-10-27</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Obsidian/">Obsidian</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">11494 字 · 约 39 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>以前一直在用微软的 <code>OneNote</code> 作为笔记软件，进行资料收集和文件整理，后来在经理了一次 <code>OneDrive</code> 误删文件倒是 <code>OneNote</code> 整个笔记本丢失以后，就对这些云端方案不是很感兴趣了。于是在搜寻本地化的解决方案，网上推荐最多是 <code>notion</code> 和 <code>obsidian</code>，调研了一番以后，选择了全面开源并免费的 <code>obsidian</code> 作为知识管理工具，同时也作为日常随笔记录的工具。并且基于 <code>markdown</code> 的写作，也方便快速通过 <code>hexo</code> 将内容转换为博文进行发布。</p>
+<span id="more"></span>
+<h2 id="一、安装与插件">一、安装与插件</h2>
+<h3 id="1-1-安装">1.1 安装</h3>
+<p><code>Obsidian</code> 的安装非常简单，参考 <a href="/2022/05/40505/" title="电脑重装纪实">电脑重装纪实</a>，直接一条 <code>winget install Obsidian.Obsidian</code> 命令即可安装。</p>
+<h3 id="1-2-需求分析与插件选择">1.2 需求分析与插件选择</h3>
+<p><code>Obsidian</code> 支持第三方插件，并且在软件中内置了社区插件检索，在<code>选项-第三方插件</code>中，关闭<code>安全模式</code>即可使用 <code>Obsidian</code> 庞大的第三方插件库。</p>
+<p>本人在日常记录方面有如下几个需求：</p>
+<ol>
+<li>支持快速检索：格式统一，分类自由，创建便利，方便检索。</li>
+<li>支持账单统计：方便高效的记录每一笔收支，方便控制消费欲望，避免盲目消费。</li>
+<li>多端记录同步：台式机、笔记本、手机、平板等设备可以互相同步。</li>
+</ol>
+<p><code>Obsidian</code> 本身自带的日记、ZK 卡片功能就可以快速构建笔记，而其他功能大部分都可以找到满足需求的社区插件，总结列表如下：</p>
+<ol>
+<li>（官方）日记插件：满足日记的快速生成，同时利用模板可以统计格式。</li>
+<li>（官方）ZK 卡片插件：快速生成临时笔记，记录偶然的想法。</li>
+<li>（社区）Templater 插件：模板增强插件，提供了强大的语法支持，更方便在文档创建时规整格式。</li>
+<li>（社区）Calendar 插件：增强日历功能，在侧面板中提供日历视图，快速定位日记，同时支持周记的生成，进一步归纳总结思路。</li>
+<li>（社区）Checklist 插件：在侧面板中提供任务清单视图，可以快速检索未完成的任务。</li>
+<li>（社区）Dataview 插件：提供强大的数据查询功能，利用其提供的语法，可以快速整理计算每日账单总额。</li>
+<li>（社区）Remotely Save 插件：提供远程存储和同步。</li>
+</ol>
+<h3 id="1-3-插件配置">1.3 插件配置</h3>
+<ol>
+<li>
+<p>Templater 插件：</p>
+<ol>
+<li>
+<p>首先构建一个用于存放模板的目录，由于目录管理默认安装字符排序，所以推荐直接在目录前加上数字，我这里选择 <code>0-模板</code> 作为模板目录。</p>
+</li>
+<li>
+<p>将插件的 <code>Syntax Highlighting</code>、<code>Automatic jump to cursor</code>、<code>Trigger Templater on new file creation</code> 三个功能全部激活。</p>
+</li>
+<li>
+<p>记账、日记、周记、ZK 卡片总共四个模板，具体代码如下，可以根据需求进行加减。</p>
+<ol>
+<li>记账模板（转账通过一笔支出一笔收入实现）</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">js</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div></div><code class="language-js">        &lt;%*
+        //判断模板应用模式
+        if(tp.config.run_mode==0)&#123;
+            //如果通过新建笔记应用模板，则将笔记存放到指定位置
+            tp.file.move(&quot;/2-日记/2.1-账单/&quot;+tp.date.now(&quot;YYYYMMDDHHmmss&quot;))
+        &#125;
+        //账单类型（清账用于管理账户余额）
+        const bill_type=[
+            &quot;支出&quot;,
+            &quot;收入&quot;,
+            &quot;清账&quot;
+        ]
+        //消费账户（根据需求设置消费所使用的账户）
+        const bill_account=[
+        &quot;微信&quot;,
+        &quot;支付宝&quot;,
+        &quot;其他&quot;
+        ]
+        //消费渠道（根据需求设置消费渠道）
+        const bill_source = [
+        &quot;线下支付&quot;,
+        &quot;在线支付&quot;,
+        &quot;淘宝&quot;,
+        &quot;京东&quot;
+        ]
+        //消费类型（根据需求设置消费类型）
+        const expense_type=[
+        &quot;食品酒水&quot;,
+        &quot;日常用品&quot;,
+        &quot;学习进修&quot;,
+        &quot;衣服饰品&quot;,
+        &quot;数码产品&quot;,
+        &quot;行车交通&quot;,
+        &quot;交流通讯&quot;,
+        &quot;寝室住宿&quot;,
+        &quot;休闲娱乐&quot;,
+        &quot;人情往来&quot;,
+        &quot;医疗保险&quot;,
+        &quot;转账&quot;,
+        &quot;其他&quot;
+        ]
+        //收入类型（根据需求设置收入类型）
+        const income_type=[
+        &quot;工资&quot;,
+        &quot;转账&quot;,
+        &quot;生活费&quot;,
+        &quot;红包&quot;
+        ]
+        //首先选择账单类型
+        billType= await tp.system.suggester(bill_type, bill_type,false,'请选择账单类型')
+        //随后根据不同类型选择不同记录过程
+        //支出
+        if (billType == bill_type[0]) &#123;
+        billAccount = await tp.system.suggester(bill_account, bill_account,false,'请选择消费账户')
+        billSource = await tp.system.suggester(bill_source, bill_source,false,'请选择消费渠道')
+        type = await tp.system.suggester(expense_type,expense_type,false,'请选择账单类型')
+        goods = await tp.system.prompt(&quot;请输入账单内容&quot;)
+        price = await tp.system.prompt(&quot;请输入价格&quot;)
+        date = await tp.system.prompt(&quot;请输入账单日期&quot;,tp.date.now(&quot;YYYY-MM-DD&quot;))
+        &#125;
+        //收入
+        if (billType == bill_type[1]) &#123;
+        billAccount = await tp.system.suggester(bill_account, bill_account,false,'请选择入账账户')
+        billSource = await tp.system.suggester(bill_source, bill_source,false,'请选择入账资金来源')
+        type = await tp.system.suggester(income_type,income_type,false,'请选择收入类型')
+        goods = await tp.system.prompt(&quot;请输入入账明细&quot;)
+        price = await tp.system.prompt(&quot;请输入入账金额&quot;)
+        date = await tp.system.prompt(&quot;请输入入账日期&quot;,tp.date.now(&quot;YYYY-MM-DD&quot;))
+        &#125;
+        //清账
+        if (billType == bill_type[2]) &#123;
+        billAccount = await tp.system.suggester(bill_account, bill_account,false,'请选择清账账户')
+        billSource = &quot;手动输入&quot;
+        type = &quot;资金清账&quot;
+        goods = &quot;清账&quot;
+        price = await tp.system.prompt(&quot;请输入目前账户金额&quot;)
+        date = await tp.system.prompt(&quot;请输入清账日期&quot;,tp.date.now(&quot;YYYY-MM-DD&quot;))
+        &#125;
+
+        -%&gt;
+        ---
+        tags:
+        - 账单
+        date: &lt;% date %&gt;
+        goods:
+        - &lt;% goods  %&gt;&lt;% tp.file.cursor(0) %&gt;
+        type: &lt;% type  %&gt;
+        price: &lt;% price  %&gt;
+        billSource: &lt;% billSource %&gt;
+        billAccount: &lt;% billAccount %&gt;
+        billType: &lt;% billType %&gt;
+        ---
+        [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 0, date, &quot;YYYY-MM-DD&quot;) %&gt;]]</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">code</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code>  2. 日记模板（在生成模板的同时，链接到前一天后一天以及当周周报）</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">js</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div></div><code class="language-js">         ---
+         title: tiger 的生活小记 (&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 0, tp.file.title, &quot;YYYY-MM-DD ddd&quot;) %&gt;)
+         author: tiger
+         categories:
+         - 生活
+         location:
+         - 地点
+         locations:
+         weather:
+         - 天气
+         tags:
+         - 日记
+         date: &lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;) %&gt;
+         ---
+         &lt;&lt;[[&lt;% tp.date.now(&quot;gggg-[W]ww&quot;, 0, tp.file.title, &quot;YYYY-MM-DD ddd&quot;) %&gt;|每周总结]]&gt;&gt;
+
+         &lt;&lt; [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, -1, tp.file.title, &quot;YYYY-MM-DD ddd&quot;) %&gt;]] | [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 1, tp.file.title, &quot;YYYY-MM-DD ddd&quot;) %&gt;]] &gt;&gt;
+
+         ## 生活记录
+
+         ### 上午`(06:00-13:00)`
+
+         ### 下午`(13:00-18:00)`
+
+         ### 晚上`(18:00-24:00)`
+
+         ### 熬夜`(24:00-06:00)`
+
+         ## 学习记录
+         ## 待办事项
+         #todo
+         - [ ]
+         ## ZK 卡片
+         ```dataviewjs
+         const data = dv.pages('&quot;7-ZK 卡片&quot;') //查询 ZK 卡片目录下的笔记
+         .where( b =&gt; dv.equal(b.date.split(&quot; &quot;)[0],&quot;&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 0, tp.file.title, &quot;YYYY-MM-DD ddd&quot;) %&gt;&quot;))//过滤出当天卡片
+
+         const tableData = data.sort(b =&gt; b.date,'desc') //按日期倒序
+             .map(b =&gt; [b.file.link, b.title,b.date]) //取出主要字段
+         dv.table([&quot;笔记&quot;, &quot;标题&quot;,&quot;创建时间&quot;], tableData) //收入表格
+         ```
+         ## 日常收支
+         ```dataviewjs
+         const data = dv.pages('&quot;2-日记/2.1-账单&quot;') //查询账单目录下的笔记
+         .where(b=&gt; dv.equal(b.date,dv.date(&quot;&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 0, tp.file.title, &quot;YYYY-MM-DD ddd&quot;) %&gt;&quot;)))//过滤出当天账单
+
+         const indata = data.where(b =&gt; dv.equal(b.billType,&quot;收入&quot;))
+
+         const outdata = data.where(b =&gt; dv.equal(b.billType,&quot;支出&quot;))
+
+         const intableData = indata.sort(b =&gt; b.date,'desc') //按日期倒序
+             .map(b =&gt; [b.file.link, b.billSource,b.billAccount, b.type, b.date, b.goods, b.price]) //取出主要字段
+
+         const outtableData = outdata.sort(b =&gt; b.date,'desc') //按日期倒序
+             .map(b =&gt; [b.file.link, b.billSource,b.billAccount, b.type, b.date, b.goods, b.price]) //取出主要字段
+
+         var totalout = 0
+         var totalin =0
+
+         // 统计收入总计
+         for(let price of indata.price.array()) &#123;
+             totalin += price
+         &#125;
+         // 统计消费总计
+         for(let price of outdata.price.array()) &#123;
+             totalout += price
+         &#125;
+         dv.header(3, &quot;汇总&quot;)
+         const a='账单数量：'+ data.length //账单数量
+         const b='消费汇总：￥'+ Math.round(totalout*100-totalin*100)/100 //收支总计
+
+
+         var num= data.length
+         var sum=Math.round(totalin*100-totalout*100)/100
+         dv.table([&quot;账单数量&quot;, &quot;结余汇总￥&quot;], dv.array([[[num],[sum]]])) //收入表格
+
+         if(totalout&gt;0)&#123;
+         dv.header(4, &quot;支出明细&quot;)
+         const c='支出总计：￥'+ Math.round(totalout*100)/100 //消费总计
+         dv.list([c])
+         dv.table([&quot;笔记&quot;, &quot;来源&quot;,&quot;账户&quot;, &quot;类型&quot;,&quot;日期&quot;, &quot;商品&quot;, &quot;价格￥&quot;], outtableData) //支出表格
+         &#125;
+         if(totalin&gt;0)&#123;
+         dv.header(4, &quot;收入明细&quot;)
+         const d='收入总计：￥'+ Math.round(totalin*100)/100 //收入总计
+         dv.list([d])
+         dv.table([&quot;笔记&quot;, &quot;来源&quot;,&quot;账户&quot;, &quot;类型&quot;,&quot;日期&quot;, &quot;商品&quot;, &quot;价格￥&quot;], intableData) //收入表格
+         &#125;
+         ```</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">code</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code>  3. 周记模板（汇总当周收支，并连接每天的日记）</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">js</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div></div><code class="language-js">         ---
+         title: tiger 的生活小记 (&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 0, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt; - &lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 6, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;)
+         author: tiger
+         categories:
+         - 生活
+         tags:
+         - 周记
+         ---
+         &lt;&lt; [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 0, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;]] | [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 1, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;]] | [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 2, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;]] | [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 3, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;]] | [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 4, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;]] | [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 5, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;]] | [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;, 6, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;]]&gt;&gt;
+
+         ## 每周总结
+         ```dataviewjs
+         const data = dv.pages('&quot;7-ZK 卡片&quot;') //查询 ZK 卡片目录下的笔记
+         .where(b=&gt; dv.date(b.date.split(&quot; &quot;)[0]) &gt;= dv.date(&quot;&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 0, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;&quot;))//过滤出当周卡片
+         .where(b=&gt; dv.date(b.date.split(&quot; &quot;)[0]) &lt;= dv.date(&quot;&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 6, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;&quot;))//过滤出当周卡片
+         dv.header(3, &quot;卡片汇总&quot;)
+         const tableData = data.sort(b =&gt; b.date,'desc') //按日期倒序
+             .map(b =&gt; [b.file.link, b.title,b.date]) //取出主要字段
+         dv.table([&quot;笔记&quot;, &quot;标题&quot;,&quot;创建时间&quot;], tableData) //收入表格
+         ```
+         ```dataviewjs
+         const data = dv.pages('&quot;2-日记/2.1-账单&quot;') //查询账单目录下的笔记
+         .where(b=&gt; b.date &gt;= dv.date(&quot;&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 0, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;&quot;))//过滤出当周账单
+         .where(b=&gt; b.date &lt;= dv.date(&quot;&lt;% tp.date.now(&quot;YYYY-MM-DD&quot;, 6, tp.file.title, &quot;gggg-[W]ww&quot;) %&gt;&quot;))//过滤出当周账单
+
+         const indata = data.where(b =&gt; dv.equal(b.billType,&quot;收入&quot;))
+
+         const outdata = data.where(b =&gt; dv.equal(b.billType,&quot;支出&quot;))
+
+         const intableData = indata.sort(b =&gt; b.date,'desc') //按日期倒序
+             .map(b =&gt; [b.file.link, b.billSource,b.billAccount, b.type, b.date, b.goods, b.price]) //取出主要字段
+
+         const outtableData = outdata.sort(b =&gt; b.date,'desc') //按日期倒序
+             .map(b =&gt; [b.file.link, b.billSource,b.billAccount, b.type, b.date, b.goods, b.price]) //取出主要字段
+
+         var totalout = 0
+         var totalin =0
+
+         // 统计收入总计
+         for(let price of indata.price.array()) &#123;
+             totalin += price
+         &#125;
+         // 统计消费总计
+         for(let price of outdata.price.array()) &#123;
+             totalout += price
+         &#125;
+         dv.header(3, &quot;汇总&quot;)
+         const a='账单数量：'+ data.length //账单数量
+         const b='消费汇总：￥'+ Math.round(totalout*100-totalin*100)/100 //收支总计
+
+
+         var num= data.length
+         var sum=Math.round(totalin*100-totalout*100)/100
+         dv.table([&quot;账单数量&quot;, &quot;结余汇总￥&quot;], dv.array([[[num],[sum]]])) //收入表格
+
+         if(totalout&gt;0)&#123;
+         dv.header(4, &quot;支出明细&quot;)
+         const c='支出总计：￥'+ Math.round(totalout*100)/100 //消费总计
+         dv.list([c])
+         dv.table([&quot;笔记&quot;, &quot;来源&quot;,&quot;账户&quot;, &quot;类型&quot;,&quot;日期&quot;, &quot;商品&quot;, &quot;价格￥&quot;], outtableData) //支出表格
+         &#125;
+         if(totalin&gt;0)&#123;
+         dv.header(4, &quot;收入明细&quot;)
+         const d='收入总计：￥'+ Math.round(totalin*100)/100 //收入总计
+         dv.list([d])
+         dv.table([&quot;笔记&quot;, &quot;来源&quot;,&quot;账户&quot;, &quot;类型&quot;,&quot;日期&quot;, &quot;商品&quot;, &quot;价格￥&quot;], intableData) //收入表格
+         &#125;
+         ```</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">code</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code>  4. ZK 模板</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">js</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-js">         ---
+         title: &lt;% title = await tp.system.prompt(&quot;请输入卡片标题&quot;) %&gt;
+         aliases: [&lt;% title %&gt;]
+         author: tiger
+         tags:
+         -
+         date: '&lt;% tp.date.now(&quot;YYYY-MM-DD HH:MM:SS&quot;,0,tp.file.title,&quot;YYYYMMDDHHMMSS&quot;) %&gt;'
+         &lt;%tp.file.rename(tp.date.now(&quot;YYYYMMDD-&quot;,0,tp.file.title,&quot;YYYYMMDDHHMMSS&quot;) +title)%&gt;
+         ---
+         &lt;&lt; [[&lt;% tp.date.now(&quot;YYYY-MM-DD ddd&quot;) %&gt;]] &gt;&gt;
+         ## &lt;% title %&gt;
+
+         ## 参考
+         -</code></div></pre>
+<ol start="2">
+<li>日记插件：
+<ol>
+<li>将日期格式改为 <code>YYYY-MM-DD ddd</code>。前一节的日记模板通过读取文件名称获取日期，需要时间格式在语法上一直，本文将时间格式设置为 <code>2022-06-05 周日</code>。</li>
+<li>设置新日记保存目录，本文将其设置为 <code>2-日记</code>，前一节账单目录为 <code>/2-日记/2.1-账单/</code>。</li>
+<li>根据模板名称，设置日记模板位置，本文为 <code>0-模板/日记模板</code>。</li>
+</ol>
+</li>
+<li>ZK 卡片插件：
+<ol>
+<li>设置新卡片保存目录，本文将其设置为 <code>7-ZK卡片</code>。</li>
+<li>根据模板名称，设置 ZK 卡片模板位置，本文为 <code>0-模板/ZK模板</code>。</li>
+<li>设置 ZK 卡 ID 格式，本文将其设置为 <code>YYYYMMDDHHMMSS</code>。参考样例 <code>20220605160629</code>，精确到秒防止连续创建导致卡片重名。</li>
+</ol>
+</li>
+<li>Calendar 插件：
+<ol>
+<li>设置每周开始时间，默认为周一。</li>
+<li>打开 <code>Show week number</code>，方便建立周报。</li>
+<li>在 <code>Weekly Note Settings</code> 中：
+<ol>
+<li>将 <code>Weekly note format</code> 设置为 <code>gggg-[W]ww</code>。参考样例为 <code>2022-W23</code>。</li>
+<li>将 <code>Weekly note template</code> 设置为 <code>0-模板/周记模板</code>。</li>
+<li>将 <code>Weekly note folder</code> 设置为 <code>2-日记</code>。</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>Checklist 插件：
+<ol>
+<li>根据需求，在 <code>Tag name</code> 中添加检索用的 <code>tag</code>，默认只有 <code>todo</code>，可以再添加一个中文的 <code>待办事项</code>。</li>
+</ol>
+</li>
+<li>Dataview 插件：
+<ol>
+<li>打开 <code>Enable JavaScript Queries</code>。</li>
+<li>将 <code>Date Format</code> 设置为 <code>yyyy-MM-dd</code>，参考样例为 <code>2022-06-05</code>。</li>
+<li>将 <code>Date + Time Format</code> 设置为 <code>yyyy-MM-dd t</code>，参考样例为 <code>2022-06-05 16:47</code>。</li>
+</ol>
+</li>
+<li>Remotely Save 插件：（本文使用 <code>webdav</code> 作为远程存储方式，以下以坚果云为例）
+<ol>
+<li>注册 <a target="_blank" rel="noopener" href="https://url.superheaoz.top/jianguoyun" title="坚果云">坚果云</a> 账户，登录后，在安全选项页面中，添加应用，获取对应密码。坚果云默认的 WebDAV 地址为 <a target="_blank" rel="noopener" href="https://dav.jianguoyun.com/dav/" class="external-link" data-redirect="https%3A%2F%2Fdav.jianguoyun.com%2Fdav%2F">https://dav.jianguoyun.com/dav/</a>。</li>
+<li>在插件的 <code>WebDav</code> 设置中，对应填写 <code>服务器地址</code>，<code>用户名</code>，<code>密码</code>，随后检查连接是否可用。</li>
+<li>在插件的基本设置中，修改运行条件，本文设置为 <code>启动后30s运行一次</code>，<code>每30分钟</code> 运行一次。</li>
+</ol>
+</li>
+</ol>
+<h2 id="二、运行">二、运行</h2>
+<h3 id="2-1-日记功能">2.1 日记功能</h3>
+<p>在 <code>Obsidian</code> 主页面右侧找到日记插件界面，点击每日日期或左侧周数，即可创建对应笔记。</p>
+<img src="https://cdn.superheaoz.top/images/2022/06/57091/日历插件.png" data-cdn-image-fallback-src="/2022/06/57091/%E6%97%A5%E5%8E%86%E6%8F%92%E4%BB%B6.png" class="" title="日历插件">
+<h3 id="2-2-todo-列表">2.2 todo 列表</h3>
+<p>在 <code>Obsidian</code> 主页面右侧找到 Tode list 插件界面，快速确定每个任务完成情况。</p>
+<img src="https://cdn.superheaoz.top/images/2022/06/57091/todolist.png" data-cdn-image-fallback-src="/2022/06/57091/todolist.png" class="" title="todolist">
+<h3 id="2-3-可视化">2.3 可视化</h3>
+<p>在 <code>Obsidian</code> 的关系图谱页面中，可以清晰的看到每笔日记的关联关系。</p>
+<img src="https://cdn.superheaoz.top/images/2022/06/57091/关系图谱.png" data-cdn-image-fallback-src="/2022/06/57091/%E5%85%B3%E7%B3%BB%E5%9B%BE%E8%B0%B1.png" class="" title="关系图谱">
+<h2 id="三、总结">三、总结</h2>
+<p>目前 <code>Obsidian</code> 完美的满足了我对应全部文档数据的掌控欲，终究还是将数据存在本地比较安心。后续 <code>Obsidian</code> 还有许多有意思的功能值得分享，比如文本导出 <code>PDF</code>、<code>Word</code>，地理地图，整合 <code>zotero</code> 等。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/3z01t0" title="用 Obsidian 记账 - 知乎">用 Obsidian 记账 - 知乎</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/obsidiandataview" title="obsidian-dataview">obsidian-dataview</a></li>
+<li><a target="_blank" rel="noopener" href="https://url.superheaoz.top/obsidianemplater" title="obsidian-Templater doc">obsidian-Templater doc</a></li>
+</ul>
+<!-- image -->
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2022/06/57091/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2022/06/57091/">https://www.superheaoz.top/2022/06/57091/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2022/10/1036/"><span>Tendermint 学习随笔（1）环境配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2022/06/8279/"><span>VScode 整合 MikTex 论文写作</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

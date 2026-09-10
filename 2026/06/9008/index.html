@@ -1,0 +1,309 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>HEXO 开发笔记（7）自建主题：安全与SEO【我的个人天地】</title><meta name="description" content="HEXO 开发笔记（7）自建主题：安全与SEO"><meta name="keywords" content="hexo,主题开发,安全,SEO"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（7）自建主题：安全与SEO【我的个人天地】"><meta property="og:description" content="HEXO 开发笔记（7）自建主题：安全与SEO"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.superheaoz.top/2026/06/9008/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><!-- SEO 结构化数据--><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HEXO 开发笔记（7）自建主题：安全与SEO",
+  "author": {
+    "@type": "Person",
+    "name": "有次元袋的 tiger"
+  },
+  "datePublished": "2026-06-19T05:00:00.000Z",
+  "dateModified": "2026-09-08T16:00:00.000Z",
+  "publisher": {
+    "@type": "Organization",
+    "name": "我的个人天地"
+  },
+  "mainEntityOfPage": "https://www.superheaoz.top/2026/06/9008/"
+}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"tiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="我的个人天地" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%96%87%E7%AB%A0%E5%8A%A0%E5%AF%86"><span class="toc-text">一、文章加密</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%8A%A0%E5%AF%86"><span class="toc-text">1.1 为什么需要加密</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88"><span class="toc-text">1.2 加密方案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%9E%84%E5%BB%BA%E7%AB%AF%E5%8A%A0%E5%AF%86"><span class="toc-text">1.3 构建端加密</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E8%BF%90%E8%A1%8C%E6%97%B6%E8%A7%A3%E5%AF%86"><span class="toc-text">1.4 运行时解密</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="toc-text">1.5 使用方式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%A4%96%E9%93%BE%E9%87%8D%E5%AE%9A%E5%90%91%E6%8B%A6%E6%88%AA"><span class="toc-text">二、外链重定向拦截</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%BB%8E%E5%85%AC%E5%AE%89%E5%A4%87%E6%A1%88%E5%88%B0%E5%A4%96%E9%93%BE%E5%AE%89%E5%85%A8"><span class="toc-text">2.1 从公安备案到外链安全</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%9E%84%E5%BB%BA%E6%97%B6%E6%B3%A8%E5%85%A5"><span class="toc-text">2.2 构建时注入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%8B%A6%E6%88%AA"><span class="toc-text">2.3 运行时拦截</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E9%85%8D%E7%BD%AE"><span class="toc-text">2.4 配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%8E%9F%E7%94%9F-Sitemap-%E4%B8%8E-SEO"><span class="toc-text">三、原生 Sitemap 与 SEO</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%BB%8E%E6%8F%92%E4%BB%B6%E5%88%B0%E5%86%85%E7%BD%AE"><span class="toc-text">3.1 从插件到内置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-Sitemap-%E7%94%9F%E6%88%90%E5%99%A8"><span class="toc-text">3.2 Sitemap 生成器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-SEO-%E5%AE%9E%E9%99%85%E6%95%88%E6%9E%9C"><span class="toc-text">3.3 SEO 实际效果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-JSON-LD-%E7%BB%93%E6%9E%84%E5%8C%96%E6%95%B0%E6%8D%AE"><span class="toc-text">3.4 JSON-LD 结构化数据</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">四、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color2"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color5"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">我的个人天地</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（7）自建主题：安全与SEO</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%B8%BB%E9%A2%98%E5%BC%80%E5%8F%91/">主题开发</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E5%AE%89%E5%85%A8/">安全</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/SEO/">SEO</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">4347 字 · 约 15 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>文章加密、外链跳转和 <code>SEO</code> 最早都是通过第三方插件实现的。重构主题时，我把它们移到了内部，方便与页面模板一起调整。下面记录 <code>AES-256-GCM</code> 加密、外链拦截，以及 <code>Sitemap</code>、<code>Robots.txt</code> 和 <code>JSON-LD</code> 的生成方式。</p>
+<span id="more"></span>
+<h2 id="一、文章加密">一、文章加密</h2>
+<h3 id="1-1-为什么需要加密">1.1 为什么需要加密</h3>
+<p>加密功能最初也是用的第三方插件（<code>hexo-blog-encrypt</code>），重构时一体化集成到主题内部。原因是加密功能和文章渲染管线耦合很深 — 加密后的文章需要特殊的渲染流程（先解密再渲染），第三方插件的实现和主题的渲染管线配合起来有各种边界问题。</p>
+<p>目前只加密了一篇文章 — 本科同学录。属于私密内容，不适合公开。</p>
+<h3 id="1-2-加密方案">1.2 加密方案</h3>
+<p>采用构建时加密 + 运行时解密的方案，无需后端服务：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-text">构建时（Node.js 服务端）：
+  明文内容 → PBKDF2 密钥派生（100K 迭代）→ AES-256-GCM 加密
+  → 加密数据 + Salt + IV + Auth Tag 嵌入 HTML data 属性
+
+运行时（浏览器 Web Crypto API）：
+  用户输入密码 → PBKDF2 派生相同密钥 → AES-GCM 解密 → 显示内容</code></div></pre>
+<h3 id="1-3-构建端加密">1.3 构建端加密</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-javascript">// scripts/filters/lib/encrypt.js
+function encryptContent(content, password) &#123;
+    const salt = crypto.randomBytes(16);       // 16 字节随机盐值
+    const iv = crypto.randomBytes(12);          // 12 字节随机 IV
+    const key = crypto.pbkdf2Sync(              // PBKDF2 派生密钥
+        password, salt, 100000, 32, &quot;sha256&quot;    // 100K 迭代，SHA-256
+    );
+    const cipher = crypto.createCipheriv(&quot;aes-256-gcm&quot;, key, iv);
+    // ... 加密 + 提取 auth tag
+&#125;</code></div></pre>
+<h3 id="1-4-运行时解密">1.4 运行时解密</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-javascript">// 内联在 footer.pug 中
+async function decrypt(pwd) &#123;
+    var keyMat = await crypto.subtle.importKey('raw', ...);
+    var key = await crypto.subtle.deriveKey(&#123;
+        name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256'
+    &#125;, keyMat, ...);
+    var pt = await crypto.subtle.decrypt(&#123;
+        name: 'AES-GCM', iv, tagLength: 128
+    &#125;, key, combined);
+    return new TextDecoder().decode(pt);
+&#125;</code></div></pre>
+<h3 id="1-5-使用方式">1.5 使用方式</h3>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml"># front-matter
+password: &quot;my-secret-password&quot;
+abstract: &quot;本文已加密，请输入密码查看&quot;   # 可选，覆盖默认提示
+message: &quot;请输入密码&quot;                     # 可选，覆盖默认按钮文字</code></div></pre>
+<p>加密后对搜索引擎的影响：加密页面的内容对爬虫不可见，不会被收录。对于私密内容这正是期望的效果。</p>
+<h2 id="二、外链重定向拦截">二、外链重定向拦截</h2>
+<h3 id="2-1-从公安备案到外链安全">2.1 从公安备案到外链安全</h3>
+<p>这个功能的由来有一个小故事。博客最初只做了 <code>ICP</code> 备案，后来接到公安电话通知需要做<strong>公安备案</strong>。备案完成后，自然就考虑到了外链安全性的问题 — 如果博客上的链接指向了恶意网站，作为站长是有责任的。</p>
+<p>最早是利用 <code>Yourls</code> 短链服务做的外链跳转 — 每个外链先转成短链，用户点击时经过 <code>Yourls</code> 中间页。有一段时间 <code>Hexo</code> 的提交记录全是改链接的，把旧的直接链接替换成短链格式（顺便说一下，这也催生了那篇 <a href="/2023/10/32630/" title="服务器操作指北（6）Yourls 短链接服务部署">服务器操作指北（6）Yourls 短链接服务部署</a>）。</p>
+<p>但后来觉得每次加外链都得去 <code>Yourls</code> 后台手动加一条记录，太麻烦了。就像图片之前用七牛云 <code>CDN</code>，最后也是嫌麻烦放弃了。所以参考知乎的外链跳转风格，构建了一个主题自用的方案 — 构建时自动识别外链，运行时通过中间页拦截。同时因为做了 <a href="/2023/10/54005/" title="网站公安备案小记">网站公安备案小记</a>，外链安全性也成了必须考虑的问题。</p>
+<h3 id="2-2-构建时注入">2.2 构建时注入</h3>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-javascript">// scripts/filters/lib/redirect.js
+data.content = data.content.replace(
+    /&lt;a\s+([^&gt;]*?)href=[&quot;']([^&quot;']+)[&quot;']([^&gt;]*)&gt;/gi,
+    (match, pre, url, post) =&gt; &#123;
+        if (!shouldRedirect(url)) return match;
+        return `&lt;a ... class=&quot;external-link&quot; 
+            data-redirect=&quot;$&#123;encodeURIComponent(url)&#125;&quot; 
+            target=&quot;_blank&quot; ...&gt;`;
+    &#125;
+);</code></div></pre>
+<h3 id="2-3-运行时拦截">2.3 运行时拦截</h3>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-pug">// layout/_include/_layout.pug
+script.
+    document.addEventListener('click', (e) =&gt; &#123;
+        const link = e.target.closest('a[data-redirect]');
+        if (link) &#123;
+            e.preventDefault();
+            window.open('/redirect/?url=' + link.dataset.redirect);
+        &#125;
+    &#125;);</code></div></pre>
+<h3 id="2-4-配置">2.4 配置</h3>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-yaml">redirect:
+  method: exclude          # exclude（默认）| include
+  exclude:
+    - &quot;superheaoz.top&quot;     # 自己的域名不拦截
+    - &quot;github.com&quot;</code></div></pre>
+<h2 id="三、原生-Sitemap-与-SEO">三、原生 Sitemap 与 SEO</h2>
+<h3 id="3-1-从插件到内置">3.1 从插件到内置</h3>
+<p><code>Sitemap</code> 和 <code>Robots.txt</code> 最初也是用的第三方插件（<code>hexo-generator-sitemap</code>），重构时一体化集成。原因是这两个生成器逻辑不复杂，但和主题的配置体系（<code>theme-config()</code>）结合后可以做到更精细的控制。</p>
+<h3 id="3-2-Sitemap-生成器">3.2 Sitemap 生成器</h3>
+<p>支持 <code>XML</code>、<code>TXT</code> 或两者同时输出，优先级和更新频率可通过配置调整：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div></div><code class="language-javascript">// scripts/generators/lib/sitemap.js
+module.exports = function (locals) &#123;
+    const urls = [];
+    urls.push(&#123; loc: siteUrl + &quot;/&quot;, freq: &quot;daily&quot;, priority: 1.0 &#125;);
+    locals.posts.sort(&quot;-date&quot;).forEach(post =&gt; &#123;
+        urls.push(&#123;
+            loc: siteUrl + &quot;/&quot; + post.path,
+            freq: changefreq,
+            priority: 0.8,
+            lastmod: post.updated
+        &#125;);
+    &#125;);
+
+    if (format === &quot;xml&quot; || format === &quot;both&quot;)
+        results.push(&#123; path: &quot;sitemap.xml&quot;, data: buildXml(urls) &#125;);
+    if (format === &quot;txt&quot; || format === &quot;both&quot;)
+        results.push(&#123; path: &quot;sitemap.txt&quot;, data: buildTxt(urls) &#125;);
+&#125;;</code></div></pre>
+<h3 id="3-3-SEO-实际效果">3.3 SEO 实际效果</h3>
+<p>这个博客主要还是以学习为目的，没有专门做 <code>SEO</code> 优化。简单对接了百度、谷歌、微软的站长统计功能 — 提交了 <code>sitemap</code>，配置了 <code>robots.txt</code>，加了 <code>JSON-LD</code> 结构化数据。对搜索引擎收录有一定帮助，但没有做过系统的 <code>SEO</code> 策略分析。</p>
+<h3 id="3-4-JSON-LD-结构化数据">3.4 JSON-LD 结构化数据</h3>
+<pre><div class="code-header"><span class="code-header-type">pug</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div></div><code class="language-pug">// layout/_include/head.pug
+if(is_post())
+    script(type=&quot;application/ld+json&quot;).
+        &#123;
+            &quot;@type&quot;: &quot;Article&quot;,
+            &quot;headline&quot;: &quot;#&#123;page.title&#125;&quot;,
+            &quot;author&quot;: &#123; &quot;@type&quot;: &quot;Person&quot;, &quot;name&quot;: &quot;#&#123;config.author&#125;&quot; &#125;,
+            &quot;datePublished&quot;: &quot;#&#123;page.date&#125;&quot;,
+            &quot;dateModified&quot;: &quot;#&#123;page.updated&#125;&quot;
+        &#125;
+else
+    script(type=&quot;application/ld+json&quot;).
+        &#123;
+            &quot;@type&quot;: &quot;WebSite&quot;,
+            &quot;name&quot;: &quot;#&#123;config.title&#125;&quot;,
+            &quot;url&quot;: &quot;#&#123;config.url&#125;&quot;
+        &#125;</code></div></pre>
+<h2 id="四、总结">四、总结</h2>
+<p>这些功能现在随主题一起维护。加密需要配合文章渲染，外链跳转需要处理页面中的链接，<code>Sitemap</code> 和结构化数据则使用站点与文章元信息。调整模板或渲染流程时，也要检查这些输出是否仍然正确。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/API/Web_Crypto_API" title="Web Crypto API" class="external-link" data-redirect="https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FAPI%2FWeb_Crypto_API">Web Crypto API</a></li>
+<li><a target="_blank" rel="noopener" href="https://schema.org/Article" title="Schema.org Article" class="external-link" data-redirect="https%3A%2F%2Fschema.org%2FArticle">Schema.org Article</a></li>
+<li><a target="_blank" rel="noopener" href="https://search.google.com/test/rich-results" title="Google 结构化数据测试" class="external-link" data-redirect="https%3A%2F%2Fsearch.google.com%2Ftest%2Frich-results">Google 结构化数据测试</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.robotstxt.org/robotstxt.html" title="robots.txt 规范" class="external-link" data-redirect="https%3A%2F%2Fwww.robotstxt.org%2Frobotstxt.html">robots.txt 规范</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.superheaoz.top/2026/06/9008/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.superheaoz.top/2026/06/9008/">https://www.superheaoz.top/2026/06/9008/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.superheaoz.top">我的个人天地</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/06/57042/"><span>HEXO 开发笔记（8）自建主题：搜索与国际化</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/06/1626/"><span>HEXO 开发笔记（6）自建主题：核心功能实现</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div><span class="footer-right-community-records-item"><a href="https://icp.gov.moe/?keyword=20262110" target="_blank" rel="noopener" title="萌ICP备"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/moe-icp.png" alt="" aria-hidden="true" width="16" height="16">萌ICP备20262110号</a></span><span class="footer-right-community-records-item"><a href="https://icp.felicity.land/id.php?keyword=20269850" target="_blank" rel="noopener" title="Felicity ICP"><img class="footer-right-record-icon footer-right-community-records-icon" src="/images/community-records/felicity-icp.png" alt="" aria-hidden="true" width="16" height="16">幸ICP备20269850号</a></span><div id="footer-right-miit"><a class="miit-text" rel="noopener" href="https://beian.miit.gov.cn" target="_blank">豫ICP备17022618号-1</a></div><div id="footer-right-mps"><a class="mps-text" rel="noopener" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=41030302000678" target="_blank"><img class="footer-right-record-icon mps-img" src="/images/police_beian.png" alt="" aria-hidden="true" width="16" height="16">豫公网安备41030302000678号</a></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
