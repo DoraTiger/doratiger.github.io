@@ -1,0 +1,359 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置【DoraTiger 的异次元】</title><meta name="description" content="Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置"><meta name="keywords" content="迷你主机,homelab,debian,ups,nut"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置【DoraTiger 的异次元】"><meta property="og:description" content="Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/31179/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/31179/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-09T07:00:00.000Z","dateModified":"2026-09-09T07:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/31179/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%BB%8E%E8%BF%B7%E4%BD%A0%E4%B8%BB%E6%9C%BA%E7%9A%84%E5%8F%96%E8%88%8D%E8%AF%B4%E8%B5%B7"><span class="toc-text">一、从迷你主机的取舍说起</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-W150%EF%BC%8C%E6%B2%A1%E6%9C%89%E4%B9%B0-W180"><span class="toc-text">二、为什么选 W150，没有买 W180</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%AE%A9-Debian-%E5%85%88%E8%AF%BB%E5%88%B0-UPS"><span class="toc-text">三、让 Debian 先读到 UPS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%AE%89%E8%A3%85%E4%B8%8E%E8%AF%86%E5%88%AB"><span class="toc-text">3.1 安装与识别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%8D%95%E6%9C%BA%E6%A8%A1%E5%BC%8F%E4%B8%8E%E9%A9%B1%E5%8A%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">3.2 单机模式与驱动配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%BD%93%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%A4%E4%B8%AA%E9%94%99%E8%AF%AF"><span class="toc-text">3.3 当时遇到的两个错误</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%AE%9E%E9%99%85%E8%AF%BB%E5%88%B0%E4%BA%86%E5%93%AA%E4%BA%9B%E7%8A%B6%E6%80%81"><span class="toc-text">四、实际读到了哪些状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%85%8D%E7%BD%AE%E7%9B%91%E6%8E%A7%E4%B8%8E%E5%8D%8A%E5%B0%8F%E6%97%B6%E5%BB%B6%E8%BF%9F%E7%AD%96%E7%95%A5"><span class="toc-text">五、配置监控与半小时延迟策略</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%85%88%E6%8E%A5%E9%80%9A-upsmon"><span class="toc-text">5.1 先接通 upsmon</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A2%9E%E5%8A%A0%E8%AE%A1%E6%97%B6%E5%99%A8"><span class="toc-text">5.2 为什么增加计时器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-upssched-%E9%85%8D%E7%BD%AE"><span class="toc-text">5.3 upssched 配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E5%A4%84%E7%90%86%E8%84%9A%E6%9C%AC%E4%B8%8E%E5%85%B3%E6%9C%BA%E6%9D%83%E9%99%90"><span class="toc-text">5.4 处理脚本与关机权限</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E5%90%AF%E5%8A%A8%E7%9B%91%E6%8E%A7"><span class="toc-text">5.5 启动监控</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E8%AE%A1%E6%97%B6%E4%B8%8E%E6%81%A2%E5%A4%8D%E4%BE%9B%E7%94%B5%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-text">六、计时与恢复供电的处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color5"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color6"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">55</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">97</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E8%BF%B7%E4%BD%A0%E4%B8%BB%E6%9C%BA/">迷你主机</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/homelab/">homelab</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/debian/">debian</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ups/">ups</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nut/">nut</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">6572 字 · 约 22 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>我目前还在读博，这台开发服务器就放在实验室的桌面上，平时 24 小时开机。把开发环境集中在一台机器上之后，在宿舍、家里或者出差时，都能接着远程工作，不用每换一个地方就重新配置环境。</p>
+<p>但实验室的供电并不总是那么省心，尤其是假期，经常遇到跳闸。电一断，远程连接也就没了，我还得想办法到实验室处理。这台联想来酷迷你主机又有一个让我头疼的问题：断电后重新开机会卡死。到现在还没确定是固件、硬件还是系统引导的问题，不能直接归因于 Debian；可以确定的是，我不能指望它每次恢复供电都能自己回到可访问状态。</p>
+<p>所以这次给主机加了一台瓦力方程 W150 UPS。短时间停电时尽量维持运行，长时间停电时则希望给系统留出正常关机的机会。下面记录选购考虑、USB 状态读取、NUT 配置，以及接入过程中遇到的几个问题。</p>
+<span id="more"></span>
+<h2 id="一、从迷你主机的取舍说起">一、从迷你主机的取舍说起</h2>
+<a href="/2026/06/40732/" title="Homelab 搭建手记（1）迷你主机选购与 Debian 系统安装">Homelab 搭建手记（1）迷你主机选购与 Debian 系统安装</a> 已经记录了当时的配件涨价背景和最终购入配置：联想来酷 Mini Pro，R7 8745H、24G 内存、512G 硬盘，购入价格为 2499 元。这里补一点第一篇没有展开的取舍。
+<p>最初选机器时，我也考虑过用手头的 DDR4 内存搭配旧平台准系统，尽量利用已有配件。后来选择这台成品机，很大程度上是受当时内存和整机价格影响，并不是觉得板载内存更适合开发服务器。这台机器的内存扩展空间有限，后面容器、开发服务和模型实验多起来，很难再靠加内存解决。若不是预算和配件价格的限制，我会更倾向于能更换、扩充内存的平台。</p>
+<p>这些是当时购买时的取舍，不是现在的硬件购买推荐。继续使用已有机器后，供电和恢复能力也成了需要补上的部分。UPS 可以减少突然失电的机会，但不能修复主机断电后启动卡死的问题。</p>
+<h2 id="二、为什么选-W150，没有买-W180">二、为什么选 W150，没有买 W180</h2>
+<p>UPS 也要放在实验室桌面上，我更看重体积、适合长期放置的电池方案，以及能否接入 Linux 监控。这次只考虑保护这台迷你主机，没有打算把整张桌面的设备都接进去，也没有为了更大的标称功率上 W180。</p>
+<p>厂商的 <a target="_blank" rel="noopener" href="https://www.wallecube.com/products/differences/" title="W150 与 W180 产品对比" class="external-link" data-redirect="https%3A%2F%2Fwww.wallecube.com%2Fproducts%2Fdifferences%2F">W150 与 W180 对比页</a> 列出，W150 使用磷酸铁锂（LiFePO4），W180 使用三元锂。这与 W150 在本次 USB 读取中上报的 <code>battery.type: LiFePO4</code> 一致。考虑到放在实验室桌面、长期接电，我更偏向磷酸铁锂的热稳定性，因此选择了 W150。这是我的选购权衡，并不代表三元锂产品不能使用，整机安全也不能只看电芯化学体系。</p>
+<p>W150 属于面向直流设备的 UPS。实际接入前，要按机器和 UPS 的说明核对输入输出电压、接口极性、线材以及负载功率，不能只凭接口插得上、型号里带有某个数字就判断合适。功率决定能否带动负载，电池能量和实际负载才共同影响续航。</p>
+<p>供电和监控是两条连接：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">供电：市电 → 匹配的电源适配器 → W150 → 迷你主机
+监控：W150 → USB 数据线 → Debian 上的 NUT</code></div></pre>
+<p>USB 让系统知道 UPS 当前的状态，并不代替主机供电。UPS 也只保护接在其输出上的设备；上游网络设备如果同时失电，即使主机还在运行，也未必能继续远程访问。</p>
+<h2 id="三、让-Debian-先读到-UPS">三、让 Debian 先读到 UPS</h2>
+<h3 id="3-1-安装与识别">3.1 安装与识别</h3>
+<p>本次记录的环境是 Debian 13，NUT 版本为 2.8.1。先安装所需组件：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo apt update
+sudo apt install nut-client nut-server usbutils
+
+lsusb
+upsc -V
+sudo nut-scanner -U</code></div></pre>
+<p>当时的 USB 识别结果为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">ID 04d8:d005 Microchip Technology, Inc. Smart UPS W150</code></div></pre>
+<p>扫描结果推荐 <code>usbhid-ups</code> 驱动，随后实际读取也确认使用该驱动。不要只根据“UPS”这个设备类别就预先套驱动；同一个品牌的不同设备，也应以本机扫描和读取结果为准。<a target="_blank" rel="noopener" href="https://networkupstools.org/docs/man/usbhid-ups.html" title="usbhid-ups 驱动" class="external-link" data-redirect="https%3A%2F%2Fnetworkupstools.org%2Fdocs%2Fman%2Fusbhid-ups.html">usbhid-ups 文档</a></p>
+<p>后续会修改 <code>/etc/nut/</code> 中的配置。已有配置时，先备份：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo cp -a /etc/nut &quot;/etc/nut.backup-$(date +%Y%m%d-%H%M%S)&quot;</code></div></pre>
+<p>下面列出关键有效项；编辑发行版已有配置时，修改对应项并保留相关默认设置，避免追加出重复定义。整个配置过程应在市电正常、可以处理主机状态的时段进行。</p>
+<h3 id="3-2-单机模式与驱动配置">3.2 单机模式与驱动配置</h3>
+<p>这次由 UPS 通过 USB 直接连接主机，NUT 的服务端和监控端都运行在本机。<code>/etc/nut/nut.conf</code> 设置为：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-conf">MODE=standalone</code></div></pre>
+<p>在 <code>/etc/nut/ups.conf</code> 中加入设备：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-conf">[w150]
+    driver = usbhid-ups
+    port = auto
+    vendorid = 04d8
+    productid = d005
+    desc = &quot;WalleCube W150&quot;</code></div></pre>
+<p><code>w150</code> 是本机配置中的逻辑名称，后面的查询、监控和服务实例都使用这个名称。只有一台对应设备时，这组标识已经能定位本次 UPS；多台同型号设备需要进一步区分，不能照搬为同一个实例。</p>
+<p><code>/etc/nut/upsd.conf</code> 只保留本机监听：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-conf">LISTEN 127.0.0.1 3493
+LISTEN ::1 3493</code></div></pre>
+<p>无需为了本机监控把 NUT 端口开放给整个网络。随后启动驱动枚举和信息服务：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">sudo systemctl restart nut-driver-enumerator.service
+sudo systemctl enable --now nut-server.service
+sudo systemctl restart nut-server.service
+
+systemctl status nut-driver@w150.service --no-pager
+systemctl status nut-server.service --no-pager
+upsc w150@localhost</code></div></pre>
+<p>这里使用 Debian 13 的 systemd 驱动实例管理。其他版本若没有对应单元，应先检查发行版提供的服务方式，不要同时用手工驱动进程和 systemd 管理同一台 USB 设备。</p>
+<h3 id="3-3-当时遇到的两个错误">3.3 当时遇到的两个错误</h3>
+<p>第一个是前台调试驱动时出现 USB <code>Resource busy</code>。检查后发现，<code>nut-driver@w150.service</code> 已经在运行，再启动一个 <code>usbhid-ups</code> 进程就会争用设备。因此，驱动服务正常时直接查询数据即可，无需再开第二个实例。</p>
+<p>第二个是驱动已经运行，<code>upsc</code> 却返回 <code>Connection refused</code>。<code>upsc</code> 连接的是 <code>upsd</code>，不是直接读取 USB；启动 <code>nut-server</code> 后才打通了这段链路：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">W150 → usbhid-ups → upsd → upsc</code></div></pre>
+<p>这两个问题分别发生在 USB 驱动层和本机服务层，检查顺序也应沿着这条链路进行。</p>
+<h2 id="四、实际读到了哪些状态">四、实际读到了哪些状态</h2>
+<p>市电正常时，日志中的部分字段如下，设备序列号已省略：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-text">battery.charge: 100
+battery.type: LiFePO4
+battery.runtime: 17354
+device.model: Smart UPS W150
+driver.name: usbhid-ups
+driver.version: 2.8.1
+driver.version.data: openUPS HID 0.5
+ups.status: OL</code></div></pre>
+<p>在当时的断电识别检查中，又读到了：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">input.current: 0.000
+ups.status: OB DISCHRG</code></div></pre>
+<p><code>OL</code> 表示市电在线，<code>OB</code> 表示由电池供电，<code>DISCHRG</code> 表示正在放电。这次状态变化已经观察到，所以可以确认设备能够向 NUT 报告掉电。</p>
+<p>不过 <code>battery.runtime</code> 是设备上报的估计值，不是我测出的续航。两次采样中它还出现了明显变化，不适合直接用来承诺运行时间。日志里的电压字段也有变化，读数的含义、不同供电状态下的输出和主机电压要求，都要结合设备说明核对；这里只把它们作为遥测，不能当作供电兼容性认证。</p>
+<h2 id="五、配置监控与半小时延迟策略">五、配置监控与半小时延迟策略</h2>
+<h3 id="5-1-先接通-upsmon">5.1 先接通 upsmon</h3>
+<p><code>upsmon</code> 负责监视供电条件，并在达到关机条件时启动系统关机流程。先生成单独的监控密码：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">openssl rand -base64 24</code></div></pre>
+<p>将生成的值填入 <code>/etc/nut/upsd.users</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-conf">[upsmon]
+    password = your_random_password
+    upsmon primary</code></div></pre>
+<p>再修改 <code>/etc/nut/upsmon.conf</code>，两处密码保持一致：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-conf">MONITOR w150@localhost 1 upsmon your_random_password primary
+MINSUPPLIES 1
+SHUTDOWNCMD &quot;/sbin/shutdown -h +0&quot;
+POWERDOWNFLAG /etc/killpower
+
+NOTIFYCMD /usr/sbin/upssched
+NOTIFYFLAG ONLINE SYSLOG+EXEC
+NOTIFYFLAG ONBATT SYSLOG+EXEC
+NOTIFYFLAG LOWBATT SYSLOG+EXEC</code></div></pre>
+<p>这是单 UPS、单主机的配置。<code>primary</code> 让本机承担该 UPS 的主要监控角色，<code>MINSUPPLIES 1</code> 与唯一的供电来源相对应。配置文件包含监控密码，应限制读取权限：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo chown root:nut /etc/nut/upsd.users /etc/nut/upsmon.conf
+sudo chmod 640 /etc/nut/upsd.users /etc/nut/upsmon.conf</code></div></pre>
+<p><code>NOTIFYCMD</code> 的路径需要按安装包核对。当时普通用户的 <code>command -v upssched</code> 没有输出，通过包文件列表才确认实际位置：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">dpkg -L nut-client nut-server | grep '/upssched$'</code></div></pre>
+<p>结果为 <code>/usr/sbin/upssched</code>。PATH 中找不到程序，不等于程序没有安装。</p>
+<h3 id="5-2-为什么增加计时器">5.2 为什么增加计时器</h3>
+<p>我当时希望断电后留出半小时，给短时跳闸恢复供电留一点余量；超过这个时间，就进入关机流程。这个时间按自己的使用需求设置，实际部署时应结合负载和可用续航调整，给服务退出和文件系统写回留出余量。</p>
+<p>计时策略为：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">事件</th>
+<th style="text-align:left">处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">转为电池供电 <code>ONBATT</code></td>
+<td style="text-align:left">启动 1800 秒计时器</td>
+</tr>
+<tr>
+<td style="text-align:left">计时结束前恢复市电 <code>ONLINE</code></td>
+<td style="text-align:left">取消尚未触发的计时器</td>
+</tr>
+<tr>
+<td style="text-align:left">计时到期</td>
+<td style="text-align:left">请求 NUT 执行 FSD 关机流程</td>
+</tr>
+<tr>
+<td style="text-align:left">电池供电期间报告低电量 <code>LOWBATT</code></td>
+<td style="text-align:left">提前进入关机处理，不等待半小时</td>
+</tr>
+</tbody>
+</table>
+<p>低电量本身也是 <code>upsmon</code> 的关键供电判断之一；下面的 LOWBATT 回调保留当时的配置，不能理解成“没有这个脚本，NUT 就不会处理低电量”。<a target="_blank" rel="noopener" href="https://networkupstools.org/docs/man/upsmon.conf.html" title="upsmon.conf 配置" class="external-link" data-redirect="https%3A%2F%2Fnetworkupstools.org%2Fdocs%2Fman%2Fupsmon.conf.html">upsmon 配置说明</a></p>
+<h3 id="5-3-upssched-配置">5.3 upssched 配置</h3>
+<p><code>/etc/nut/upssched.conf</code> 的关键内容为：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-conf">CMDSCRIPT /usr/bin/upssched-cmd
+PIPEFN /run/nut/upssched/upssched.pipe
+LOCKFN /run/nut/upssched/upssched.lock
+
+AT ONBATT w150@localhost START-TIMER onbatt_shutdown 1800
+AT ONLINE w150@localhost CANCEL-TIMER onbatt_shutdown
+AT LOWBATT w150@localhost EXECUTE lowbatt_shutdown</code></div></pre>
+<p><code>NOTIFYFLAG</code> 中的 <code>EXEC</code> 不能漏掉，否则事件不会调用 <code>NOTIFYCMD</code>。<code>START-TIMER</code> 到期后把事件名传给处理脚本，<code>CANCEL-TIMER</code> 用于撤销仍在等待的计时器。<a target="_blank" rel="noopener" href="https://networkupstools.org/docs/man/upssched.conf.html" title="upssched.conf 配置" class="external-link" data-redirect="https%3A%2F%2Fnetworkupstools.org%2Fdocs%2Fman%2Fupssched.conf.html">upssched 配置说明</a></p>
+<p>Debian 当时已经提供了专用运行目录：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-text">/run/nut/upssched/
+owner: nut:nut
+mode: 0770</code></div></pre>
+<p>因此沿用这个目录存放管道和锁文件，没有把它们放进任何用户都能写的公共目录。<code>/run</code> 是运行期目录，重启后也需要由发行版的 tmpfiles/服务机制重建。</p>
+<h3 id="5-4-处理脚本与关机权限">5.4 处理脚本与关机权限</h3>
+<p>当时修改的是 Debian 提供的 <code>/usr/bin/upssched-cmd</code>，其原始内容只有示例事件。下面保留本次使用的核心逻辑：</p>
+<pre><div class="code-header"><span class="code-header-type">sh</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div></div><code class="language-sh">#!/bin/sh
+
+case &quot;$1&quot; in
+    onbatt_shutdown)
+        logger -t upssched-cmd \
+            &quot;UPS has been on battery for 30 minutes, requesting FSD&quot;
+        /lib/nut/upsmon -c fsd
+        ;;
+    lowbatt_shutdown)
+        logger -t upssched-cmd \
+            &quot;UPS battery is low, requesting FSD&quot;
+        /lib/nut/upsmon -c fsd
+        ;;
+    *)
+        logger -t upssched-cmd &quot;Unrecognized command: $1&quot;
+        ;;
+esac</code></div></pre>
+<p>脚本使用实际安装的 <code>/lib/nut/upsmon</code> 路径，请先通过包文件列表核对。编辑已有脚本前也要备份；本次脚本设置为 <code>root:root</code>、<code>0755</code>，使监控用户可执行但不可修改：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">sudo cp -p /usr/bin/upssched-cmd &quot;/usr/bin/upssched-cmd.backup-$(date +%Y%m%d-%H%M%S)&quot;
+# 编辑完成后检查脚本语法和权限
+sh -n /usr/bin/upssched-cmd
+sudo chown root:root /usr/bin/upssched-cmd
+sudo chmod 755 /usr/bin/upssched-cmd</code></div></pre>
+<p>这是当时直接修改发行版脚本的记录。若重新整理部署，我会把自定义脚本放在 <code>/etc/nut/upssched-cmd</code>，同时修改 <code>CMDSCRIPT</code>，避免软件包升级覆盖自己的逻辑。</p>
+<p><code>upsmon -c fsd</code> 会请求真正的关机流程，不是无害的连通性测试。通知脚本通常在非特权监控用户下运行，最终的 <code>SHUTDOWNCMD</code> 才由有权限的部分执行。部署时要确保监控用户可执行处理脚本，并具备向运行中的 <code>upsmon</code> 发出控制请求所需的权限。<a target="_blank" rel="noopener" href="https://manpages.debian.org/trixie/nut-client/upsmon.8.en.html" title="Debian upsmon 手册" class="external-link" data-redirect="https%3A%2F%2Fmanpages.debian.org%2Ftrixie%2Fnut-client%2Fupsmon.8.en.html">upsmon 手册</a></p>
+<h3 id="5-5-启动监控">5.5 启动监控</h3>
+<p>确认配置后启动监控：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo systemctl restart nut-server.service
+sudo systemctl enable --now nut-monitor.service
+sudo systemctl restart nut-monitor.service
+
+systemctl status nut-monitor.service --no-pager
+sudo journalctl -u nut-monitor -n 50 --no-pager</code></div></pre>
+<p>当时的服务状态为 <code>active (running)</code>，日志也列出了 <code>w150@localhost (primary)</code>。监控进程至此已经加载目标 UPS，供电状态和事件处理也有了统一的日志入口。</p>
+<h2 id="六、计时与恢复供电的处理">六、计时与恢复供电的处理</h2>
+<p>这套配置通过 <code>ONBATT</code> 启动计时、<code>ONLINE</code> 取消计时，将短时停电和持续停电分开处理。<code>ONLINE</code> 只能取消仍在等待的计时器；一旦进入 FSD 关机流程，来电事件不会撤回关机。计时依赖正在运行的调度进程，也不应当作跨重启保存的停电时钟。<a target="_blank" rel="noopener" href="https://manpages.debian.org/trixie/nut-client/upssched.8.en.html" title="Debian upssched 手册" class="external-link" data-redirect="https%3A%2F%2Fmanpages.debian.org%2Ftrixie%2Fnut-client%2Fupssched.8.en.html">upssched 手册</a></p>
+<p>UPS 缓冲供电与主机恢复开机也有不同的条件。主机正常关机后，如果 UPS 一直维持输出，市电恢复时主板未必经历一次新的供电恢复事件。因此，BIOS 中的恢复供电自动启动选项，需要结合 UPS 的输出行为理解。</p>
+<p>本次采用的是由 NUT 监视供电状态、按时间或低电量条件请求系统关机的配置。对于放在实验室长期运行的开发主机，这让突然失电之前多了一段缓冲时间，也把供电状态纳入了 Debian 的服务管理和日志中。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.wallecube.com/products/differences/" title="W150 与 W180 产品对比" class="external-link" data-redirect="https%3A%2F%2Fwww.wallecube.com%2Fproducts%2Fdifferences%2F">瓦力方程 W150 与 W180 产品对比</a></li>
+<li><a target="_blank" rel="noopener" href="https://networkupstools.org/docs/man/usbhid-ups.html" title="usbhid-ups 驱动" class="external-link" data-redirect="https%3A%2F%2Fnetworkupstools.org%2Fdocs%2Fman%2Fusbhid-ups.html">NUT usbhid-ups 驱动</a></li>
+<li><a target="_blank" rel="noopener" href="https://manpages.debian.org/trixie/nut-client/upsmon.8.en.html" title="Debian upsmon 手册" class="external-link" data-redirect="https%3A%2F%2Fmanpages.debian.org%2Ftrixie%2Fnut-client%2Fupsmon.8.en.html">Debian trixie 的 upsmon 手册</a></li>
+<li><a target="_blank" rel="noopener" href="https://networkupstools.org/docs/man/upsmon.conf.html" title="upsmon.conf 配置" class="external-link" data-redirect="https%3A%2F%2Fnetworkupstools.org%2Fdocs%2Fman%2Fupsmon.conf.html">NUT upsmon.conf 配置</a></li>
+<li><a target="_blank" rel="noopener" href="https://networkupstools.org/docs/man/upssched.conf.html" title="upssched.conf 配置" class="external-link" data-redirect="https%3A%2F%2Fnetworkupstools.org%2Fdocs%2Fman%2Fupssched.conf.html">NUT upssched.conf 配置</a></li>
+<li><a target="_blank" rel="noopener" href="https://manpages.debian.org/trixie/nut-client/upssched.8.en.html" title="Debian upssched 手册" class="external-link" data-redirect="https%3A%2F%2Fmanpages.debian.org%2Ftrixie%2Fnut-client%2Fupssched.8.en.html">Debian trixie 的 upssched 手册</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/31179/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/31179/">https://www.doratiger.top/2026/09/31179/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/40338/"><span>Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://www.superheaoz.top/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_uv || d.site_pv || 0;
+          if (pv) pv.textContent = d.page_uv || d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
