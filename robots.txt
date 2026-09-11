@@ -1,4 +1,4 @@
-# https://www.superheaoz.top/robots.txt
+# https://www.doratiger.top/robots.txt
 
 User-agent: *
 Allow: /
@@ -6,5 +6,3 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 Disallow: /tmp/
-
-Sitemap: https://www.superheaoz.top/sitemap.xml
