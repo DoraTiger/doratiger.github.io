@@ -1938,6 +1938,16 @@ html[data-appearance='day'] #celestial-sky #celestial-orbit {
     display: none;
   }
 }
+@container footer-records (max-width: 85rem) {
+  #footer-right .footer-right-community-records-item:nth-of-type(3) {
+    display: none;
+  }
+}
+@container footer-records (max-width: 96rem) {
+  #footer-right .footer-right-community-records-item:nth-of-type(4) {
+    display: none;
+  }
+}
 @media (pointer: coarse) {
   #footer-left-sidebar-icon {
     width: 44px;
