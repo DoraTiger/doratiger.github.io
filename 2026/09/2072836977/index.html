@@ -1,0 +1,847 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理【DoraTiger 的异次元】</title><meta name="description" content="服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理"><meta name="keywords" content="服务器,ipv6,edgeos,ndp"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理【DoraTiger 的异次元】"><meta property="og:description" content="服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/2072836977/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/2072836977/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-19T08:00:00.000Z","dateModified":"2026-09-19T09:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/2072836977/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A3%80%E6%9F%A5-IPv6-%E5%9C%B0%E5%9D%80%E4%B8%8E%E8%B7%AF%E7%94%B1"><span class="toc-text">一、检查 IPv6 地址与路由</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%A3%80%E6%9F%A5%E5%9C%B0%E5%9D%80%E7%B1%BB%E5%9E%8B%E5%8F%8A%E5%87%BA%E5%8F%A3%E8%BF%9E%E9%80%9A%E6%80%A7"><span class="toc-text">1.1 检查地址类型及出口连通性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-RA%E3%80%81SLAAC%E3%80%81DHCPv6-%E4%B8%8E-NDP-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-text">1.2 RA、SLAAC、DHCPv6 与 NDP 的作用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%BF%AE%E5%A4%8D%E9%BB%98%E8%AE%A4%E8%B7%AF%E7%94%B1%E5%B9%B6%E6%A3%80%E6%9F%A5%E5%89%8D%E7%BC%80%E5%A7%94%E6%B4%BE"><span class="toc-text">二、修复默认路由并检查前缀委派</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%88%A0%E9%99%A4%E9%94%99%E8%AF%AF%E7%9A%84%E6%8E%A5%E5%8F%A3%E9%BB%98%E8%AE%A4%E8%B7%AF%E7%94%B1"><span class="toc-text">2.1 删除错误的接口默认路由</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-DHCPv6-PD-%E8%BF%94%E5%9B%9E-NoPrefixAvail"><span class="toc-text">2.2 DHCPv6-PD 返回 NoPrefixAvail</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E7%A1%AE%E5%AE%9A-NDP-%E4%BB%A3%E7%90%86%E6%96%B9%E6%A1%88"><span class="toc-text">三、确定 NDP 代理方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%85%8D%E7%BD%AE-ndppd%E3%80%81%E7%AD%96%E7%95%A5%E8%B7%AF%E7%94%B1%E4%B8%8E%E9%98%B2%E7%81%AB%E5%A2%99"><span class="toc-text">四、配置 ndppd、策略路由与防火墙</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E9%83%A8%E7%BD%B2%E4%BD%8D%E7%BD%AE%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%A3%80%E6%9F%A5"><span class="toc-text">4.1 部署位置与环境检查</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%9C%A8%E5%BC%80%E5%8F%91%E7%94%B5%E8%84%91%E4%B8%8A%E7%BC%96%E8%AF%91-ndppd"><span class="toc-text">4.2 在开发电脑上编译 ndppd</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%88%9B%E5%BB%BA%E5%90%8C%E6%AD%A5%E8%84%9A%E6%9C%AC%E5%92%8C%E6%9C%8D%E5%8A%A1%E6%96%87%E4%BB%B6"><span class="toc-text">4.3 创建同步脚本和服务文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-NDP-%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE"><span class="toc-text">4.4 NDP 代理配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-%E9%85%8D%E7%BD%AE-WAN-%E5%85%A5%E7%AB%99%E5%9B%9E%E7%A8%8B%E8%B7%AF%E7%94%B1"><span class="toc-text">4.5 配置 WAN 入站回程路由</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-6-%E9%85%8D%E7%BD%AE-WAN-%E5%85%A5%E7%AB%99%E9%98%B2%E7%81%AB%E5%A2%99"><span class="toc-text">4.6 配置 WAN 入站防火墙</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E5%89%8D%E7%BC%80%E4%B8%8E%E5%90%AF%E5%8A%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">五、自动同步前缀与启动配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%89%8D%E7%BC%80%E6%A3%80%E6%B5%8B%E4%B8%8E%E5%90%8C%E6%AD%A5%E8%8C%83%E5%9B%B4"><span class="toc-text">5.1 前缀检测与同步范围</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%89%8D%E7%BC%80%E5%8F%98%E5%8C%96%E4%B8%8E%E6%8E%89%E7%BA%BF%E5%A4%84%E7%90%86"><span class="toc-text">5.2 前缀变化与掉线处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E5%90%AF%E5%8A%A8%E9%A1%BA%E5%BA%8F%E4%B8%8E%E9%85%8D%E7%BD%AE%E4%BF%9D%E5%AD%98"><span class="toc-text">5.3 启动顺序与配置保存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E4%BF%9D%E5%AD%98-LAN-RA-%E5%90%AF%E5%8A%A8%E5%9F%BA%E7%BA%BF"><span class="toc-text">5.4 保存 LAN RA 启动基线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E5%AE%89%E8%A3%85%E5%BC%80%E6%9C%BA%E9%92%A9%E5%AD%90%E5%B9%B6%E9%A6%96%E6%AC%A1%E5%90%AF%E5%8A%A8"><span class="toc-text">5.5 安装开机钩子并首次启动</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E8%BF%9E%E9%80%9A%E6%80%A7%E4%B8%8E%E9%87%8D%E5%90%AF%E9%AA%8C%E8%AF%81"><span class="toc-text">六、连通性与重启验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%AE%9E%E6%9C%BA%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C"><span class="toc-text">6.1 实机验证结果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%90%8C%E6%AD%A5%E7%A8%8B%E5%BA%8F%E6%B5%8B%E8%AF%95"><span class="toc-text">6.2 同步程序测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%81%9C%E6%AD%A2%E4%B8%8E%E5%9B%9E%E6%BB%9A"><span class="toc-text">七、停止与回滚</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%80%82%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="toc-text">八、适用条件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color3"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">59</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">111</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">服务器</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ipv6/">ipv6</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/edgeos/">edgeos</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ndp/">ndp</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">21003 字 · 约 71 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>服务器通过 EdgeRouter 接入上游网络后，IPv4 正常，IPv6 只有链路本地地址和 ULA，无法访问 IPv6 外网。同一上游网络中的直连服务器可以正常使用 IPv6。</p>
+<p>排查确认了以下问题：</p>
+<ol>
+<li>路由器存在一条只指定出口接口、未指定下一跳的错误 IPv6 默认路由。</li>
+<li>上游 DHCPv6-PD 请求返回 <code>NoPrefixAvail</code>，未获得用于下游网络的委派前缀。</li>
+<li>LAN 使用上游相同的 <code>/64</code> 时，需要 NDP 代理处理跨接口邻居发现，并配置 WAN 到 LAN 的回程路由。</li>
+</ol>
+<p>修复采用 RA/SLAAC、ndppd 和策略路由，并通过 systemd 定时同步前缀。路由器及服务器的 IPv6 连通性、入站防火墙和整机重启后的自动恢复均已验证。</p>
+<p>以下记录配置与验证过程。地址和接口名已替换为示例；<code>2001:db8:100::/64</code> 为文档专用前缀，使用时需替换为实际前缀。</p>
+<span id="more"></span>
+<h2 id="一、检查-IPv6-地址与路由">一、检查 IPv6 地址与路由</h2>
+<h3 id="1-1-检查地址类型及出口连通性">1.1 检查地址类型及出口连通性</h3>
+<p>在服务器上检查 IPv6 地址、路由，并发起 IPv6 HTTPS 请求：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">ip -6 addr show
+ip -6 route show
+curl --noproxy '*' -6 --connect-timeout 10 --max-time 20 \
+  -I https://www.cloudflare.com/</code></div></pre>
+<p><code>fe80::/10</code> 是链路本地地址，通常用于同一链路上的通信；<code>fc00::/7</code> 范围内的 ULA 也不能直接当作公网地址使用。即使拿到了全球单播地址，缺少正确路由、邻居解析失败或者被防火墙拦截，外网仍然不通。</p>
+<p><code>--noproxy '*'</code> 禁用本次请求的代理，测试服务器本身的 IPv6 出口。<code>-6</code> 则限制目标连接使用 IPv6；DNS 查询本身不因此保证走 IPv6。</p>
+<h3 id="1-2-RA、SLAAC、DHCPv6-与-NDP-的作用">1.2 RA、SLAAC、DHCPv6 与 NDP 的作用</h3>
+<p>相关协议的作用如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">机制</th>
+<th style="text-align:left">在本次问题中的作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">RA，路由器通告</td>
+<td style="text-align:left">告知主机默认路由器、链路前缀及相关标志</td>
+</tr>
+<tr>
+<td style="text-align:left">SLAAC，无状态地址自动配置</td>
+<td style="text-align:left">主机根据 RA 中允许自动配置的前缀生成地址</td>
+</tr>
+<tr>
+<td style="text-align:left">DHCPv6 地址分配</td>
+<td style="text-align:left">由 DHCPv6 服务向客户端分配地址等参数</td>
+</tr>
+<tr>
+<td style="text-align:left">DHCPv6-PD，前缀委派</td>
+<td style="text-align:left">向下游路由器委派用于其下游网络的前缀</td>
+</tr>
+<tr>
+<td style="text-align:left">NDP，邻居发现</td>
+<td style="text-align:left">在链路上发现邻居，并解析目标 IPv6 地址对应的链路层地址</td>
+</tr>
+</tbody>
+</table>
+<p>默认路由器由 RA 通告，开启 DHCPv6 不等于已配置默认路由。<a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc4861" title="IPv6 Neighbor Discovery" class="external-link" data-redirect="https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc4861">RFC 4861</a> 和 <a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc4862.html" title="IPv6 Stateless Address Autoconfiguration" class="external-link" data-redirect="https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc4862.html">RFC 4862</a> 分别描述了邻居发现与 SLAAC 的相关机制。</p>
+<p>WAN 获得 <code>/64</code> 内的地址，只能证明该接口具有地址配置。下游独立子网还需要上游提供前缀委派或相应的静态路由。</p>
+<h2 id="二、修复默认路由并检查前缀委派">二、修复默认路由并检查前缀委派</h2>
+<h3 id="2-1-删除错误的接口默认路由">2.1 删除错误的接口默认路由</h3>
+<p>排查时，路由器存在一条只指定出口接口的 IPv6 默认路由，形式如下：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">default dev eth0</code></div></pre>
+<p>在这次以太网接入环境中，这条路由缺少上游下一跳。对于没有更具体路由的目的地址，它会让系统尝试直接在出口链路解析目的地址，而上游实际上要求把这些流量交给网关。</p>
+<p>删除这条错误静态配置后，由上游 RA 学习到的默认路由可以正常承担转发，其形式变为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">default via fe80::1 dev eth0 proto ra</code></div></pre>
+<p>这里的接口和网关均为示例。<code>fe80::1</code> 这样的链路本地地址作为下一跳并不异常，只要同时绑定正确接口即可。</p>
+<p>在 EdgeOS 配置模式中，删除对应配置的命令结构如下。执行前应先确认当前配置确实存在这一项，不要把它当作通用初始化命令：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">configure
+# eth0 为示例名称，替换为实际 WAN 接口
+delete protocols static interface-route6 ::/0 next-hop-interface eth0
+commit
+save
+exit</code></div></pre>
+<p>删除后，在路由器上执行 IPv6 HTTPS 测试，确认 WAN 出口恢复，再检查 LAN 转发。</p>
+<h3 id="2-2-DHCPv6-PD-返回-NoPrefixAvail">2.2 DHCPv6-PD 返回 NoPrefixAvail</h3>
+<p>随后尝试 DHCPv6 前缀委派。在本次测试中，三次请求都收到了 <code>NoPrefixAvail</code>，状态码为 <code>6</code>。该状态表示服务器没有可提供给请求方的前缀，含义可查阅 <a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc8415.html" title="Dynamic Host Configuration Protocol for IPv6" class="external-link" data-redirect="https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc8415.html">DHCPv6 协议中的状态码说明</a>。</p>
+<p>本次接入未获得 PD，因此无法按“获取委派前缀，再分配给 LAN”的方式配置。该结果仅对应本次请求及当时的上游策略。</p>
+<h2 id="三、确定-NDP-代理方案">三、确定 NDP 代理方案</h2>
+<p>DHCPv6 relay 转发的是 DHCPv6 消息。它本身不会同时完成 RA 传递、默认路由配置和跨接口的邻居发现。即使 DHCPv6 成功分配了地址，上游依然需要知道返回流量应该发到哪里。</p>
+<p>上游提供链路前缀 <code>/64</code>，WAN 与 LAN 位于不同的二层链路。方案示意如下：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-text">上游 IPv6 链路
+    |
+WAN：获得上游 /64 内的地址，学习 RA 默认路由
+    |
+EdgeRouter：路由转发、NDP 代理、防火墙
+    |
+LAN：广播同一 /64，终端通过 SLAAC 配置地址</code></div></pre>
+<p>LAN 广播相同的 <code>/64</code> 后，终端可以生成地址。但上游仍将这些地址视为链路上的邻居，在 WAN 一侧发送邻居请求；LAN 主机无法直接接收并回应。NDP 代理用于处理这部分查询。</p>
+<p>本次未获得 PD，且需要保留现有 IPv4 路由配置，因此采用共享前缀的 NDP 代理方案。桥接会改变二层结构，未采用。</p>
+<h2 id="四、配置-ndppd、策略路由与防火墙">四、配置 ndppd、策略路由与防火墙</h2>
+<h3 id="4-1-部署位置与环境检查">4.1 部署位置与环境检查</h3>
+<p><strong>ndppd 和同步程序安装在 EdgeRouter 上，下游服务器不安装 ndppd。</strong> 下游接口需要启用 IPv6 自动配置并接受 RA。本次服务器已有这些设置，无需修改服务器的持久网络配置。</p>
+<p>本文使用以下示例参数，操作前替换为自己的配置：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">参数</th>
+<th style="text-align:left">本文示例</th>
+<th style="text-align:left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">路由器 SSH 目标</td>
+<td style="text-align:left"><code>router-admin@192.0.2.1</code></td>
+<td style="text-align:left">上传及登录，替换用户名和管理地址</td>
+</tr>
+<tr>
+<td style="text-align:left">WAN</td>
+<td style="text-align:left"><code>eth0</code></td>
+<td style="text-align:left">连接上游的以太网接口</td>
+</tr>
+<tr>
+<td style="text-align:left">LAN</td>
+<td style="text-align:left"><code>switch0</code></td>
+<td style="text-align:left">EdgeOS switch 类型接口</td>
+</tr>
+<tr>
+<td style="text-align:left">程序目录</td>
+<td style="text-align:left"><code>/config/ipv6-proxy</code></td>
+<td style="text-align:left">本文指定的安装目录</td>
+</tr>
+<tr>
+<td style="text-align:left">策略表与优先级</td>
+<td style="text-align:left"><code>10640</code></td>
+<td style="text-align:left">必须未被其他策略占用</td>
+</tr>
+</tbody>
+</table>
+<p><code>192.0.2.1</code> 是文档地址。接口名也是示例，不表示所有 EdgeRouter 都使用相同端口。下方脚本默认 LAN 为 switch 类型；若使用 ethernet 或 bridge 类型接口，还需修改脚本中的 <code>RA</code> 配置路径，不能只替换接口名称。</p>
+<p>在 <strong>EdgeRouter 的普通 shell</strong> 中执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash">uname -a
+dpkg --print-architecture
+file /bin/bash
+python --version
+systemctl --version
+ip -o link show
+ip -6 addr show dev eth0
+ip -6 route show default
+ip -6 rule show
+sudo sysctl net.ipv6.conf.all.forwarding
+sudo sysctl net.ipv6.conf.eth0.accept_ra</code></div></pre>
+<p>本文对应 EdgeOS 3.0.1、MIPS32 大端用户态、Python 2.7 和 systemd。IPv6 转发应为 <code>1</code>；转发开启时，WAN 若仍通过 RA 学习路由，Linux 的 <code>accept_ra</code> 应为 <code>2</code>。本次在原生自动配置生效后满足这些条件。若尚未满足，先修复 WAN 的自动配置与转发，再安装代理。</p>
+<p>WAN 原生自动配置的命令结构如下，接口名按实际情况修改：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">configure
+set interfaces ethernet eth0 ipv6 address autoconf
+commit
+save
+exit</code></div></pre>
+<p>执行后重新检查公网地址、<code>accept_ra</code> 和 <code>default via ... dev eth0 proto ra</code>。路由器自身的 IPv6 HTTPS 测试必须先通过。已有 WAN IPv6 本机入站防火墙时，还需要允许上游 RA 和必要的邻居发现消息。</p>
+<p>修改前在路由器上备份原生配置和相关运行状态：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash"># 在 EdgeRouter 上执行，记录命令输出的备份目录
+backup_dir=&quot;/config/ipv6-before-proxy-$(date +%Y%m%d-%H%M%S)&quot;
+sudo mkdir -p &quot;$backup_dir&quot;
+sudo cp /config/config.boot &quot;$backup_dir/config.boot&quot;
+ip -6 route show table all | sudo tee &quot;$backup_dir/routes.txt&quot; &gt;/dev/null
+ip -6 rule show | sudo tee &quot;$backup_dir/rules.txt&quot; &gt;/dev/null
+sudo ip6tables-save | sudo tee &quot;$backup_dir/ip6tables.txt&quot; &gt;/dev/null
+printf '%s\n' &quot;$backup_dir&quot;</code></div></pre>
+<p>以下步骤面向首次部署。如果已存在同名 ndppd 服务、安装目录或 post-config 钩子，先备份并比较文件，不要直接覆盖。</p>
+<h3 id="4-2-在开发电脑上编译-ndppd">4.2 在开发电脑上编译 ndppd</h3>
+<p>在有 Docker 和 Git 的 <strong>Linux 开发电脑</strong>上执行以下命令。这里固定构建 MIPS32 大端程序，其他架构需要更换工具链。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-bash">mkdir -p edgerouter-ipv6-build
+cd edgerouter-ipv6-build
+git clone https://github.com/DanielAdolfsson/ndppd.git
+cd ndppd
+git checkout --detach 4f0301f94345c92b723392ed2d73f04f910e6c30
+
+docker run --rm \
+  -v &quot;$PWD:/src&quot; -w /src debian:trixie sh -ec '
+    apt-get update
+    apt-get install -y --no-install-recommends make g++-mips-linux-gnu file
+    make CXX=mips-linux-gnu-g++ LDFLAGS=-static
+    file ndppd
+  '</code></div></pre>
+<p>检查 <code>file ndppd</code> 输出应包含 <code>ELF 32-bit</code>、<code>MSB</code>、<code>MIPS</code> 和 <code>statically linked</code>。只执行 <code>make</code> 会默认使用构建机器的编译器，可能得到无法在路由器上运行的 x86 程序。静态链接用于避免依赖构建容器中的动态库版本。</p>
+<h3 id="4-3-创建同步脚本和服务文件">4.3 创建同步脚本和服务文件</h3>
+<p>以下命令在 <strong>Linux 开发电脑</strong>上执行，从上一步的 <code>ndppd</code> 源码目录开始：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">mkdir -p ../ipv6-proxy-deploy
+cp ndppd LICENSE ../ipv6-proxy-deploy/
+cd ../ipv6-proxy-deploy</code></div></pre>
+<p>先创建同步脚本。修改开头的 <code>WAN</code>、<code>LAN</code> 和 <code>TABLE</code>，其中 <code>RA</code> 的第二项是 EdgeOS 接口类型：switch 接口用 <code>switch</code>，以太网接口用 <code>ethernet</code>，桥接口用 <code>bridge</code>。目录统一使用本文示例的 <code>/config/ipv6-proxy</code>。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div><div class="line-numbers-item">130</div><div class="line-numbers-item">131</div><div class="line-numbers-item">132</div><div class="line-numbers-item">133</div><div class="line-numbers-item">134</div><div class="line-numbers-item">135</div><div class="line-numbers-item">136</div><div class="line-numbers-item">137</div><div class="line-numbers-item">138</div><div class="line-numbers-item">139</div><div class="line-numbers-item">140</div><div class="line-numbers-item">141</div><div class="line-numbers-item">142</div><div class="line-numbers-item">143</div><div class="line-numbers-item">144</div><div class="line-numbers-item">145</div><div class="line-numbers-item">146</div><div class="line-numbers-item">147</div><div class="line-numbers-item">148</div><div class="line-numbers-item">149</div><div class="line-numbers-item">150</div><div class="line-numbers-item">151</div><div class="line-numbers-item">152</div><div class="line-numbers-item">153</div><div class="line-numbers-item">154</div><div class="line-numbers-item">155</div><div class="line-numbers-item">156</div><div class="line-numbers-item">157</div><div class="line-numbers-item">158</div><div class="line-numbers-item">159</div><div class="line-numbers-item">160</div><div class="line-numbers-item">161</div><div class="line-numbers-item">162</div><div class="line-numbers-item">163</div><div class="line-numbers-item">164</div><div class="line-numbers-item">165</div><div class="line-numbers-item">166</div><div class="line-numbers-item">167</div><div class="line-numbers-item">168</div><div class="line-numbers-item">169</div><div class="line-numbers-item">170</div><div class="line-numbers-item">171</div><div class="line-numbers-item">172</div><div class="line-numbers-item">173</div><div class="line-numbers-item">174</div><div class="line-numbers-item">175</div><div class="line-numbers-item">176</div><div class="line-numbers-item">177</div><div class="line-numbers-item">178</div><div class="line-numbers-item">179</div><div class="line-numbers-item">180</div><div class="line-numbers-item">181</div><div class="line-numbers-item">182</div><div class="line-numbers-item">183</div></div><code class="language-bash">cat &gt; prefix_sync.py &lt;&lt;'EOF'
+#!/usr/bin/python
+&quot;&quot;&quot;Reconcile EdgeOS NDP/SLAAC with WAN /64s. Python 2.7 and 3, stdlib only.&quot;&quot;&quot;
+from __future__ import print_function
+import fcntl, grp, json, os, re, shlex, socket, subprocess, sys, tempfile, time
+
+BASE='/config/ipv6-proxy'
+RUN='/run/ndppd'
+WAN='eth0'
+LAN='switch0'
+TABLE='10640'
+RA=['interfaces','switch',LAN,'ipv6','router-advert']
+CFG='/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper'
+API='/bin/cli-shell-api'
+GRACE=300
+
+
+def validate_prefix(prefix):
+    try:
+        addr, length=prefix.split('/')
+        packed=socket.inet_pton(socket.AF_INET6,addr)
+        first=bytearray(packed)[0]
+        if length!='64' or first &amp; 0xe0 != 0x20 or packed[8:]!=b'\0'*8:
+            raise ValueError('not a public /64 network')
+        return socket.inet_ntop(socket.AF_INET6,packed)+'/64'
+    except (ValueError, socket.error):
+        raise ValueError('invalid public /64: '+prefix)
+
+
+def wan_prefixes(text):
+    result=set()
+    for line in text.splitlines():
+        if re.search(r'\b(tentative|dadfailed|deprecated)\b',line): continue
+        m=re.search(r'inet6 ([0-9a-fA-F:]+)/64\b',line)
+        life=re.search(r'preferred_lft (forever|[0-9]+sec)',line)
+        if not m or not life or life.group(1)=='0sec': continue
+        p=socket.inet_pton(socket.AF_INET6,m.group(1))
+        try: result.add(validate_prefix(socket.inet_ntop(socket.AF_INET6,p[:8]+b'\0'*8)+'/64'))
+        except ValueError: pass
+    return sorted(result)
+
+
+def plan(state, active, now):
+    active=sorted(set(validate_prefix(p) for p in active))
+    retiring=&#123;validate_prefix(p):expiry for p,expiry in state.get('retiring',&#123;&#125;).items()
+              if expiry&gt;now and p not in active&#125;
+    for p in state.get('active',[]):
+        if p not in active and p not in retiring: retiring[validate_prefix(p)]=now+GRACE
+    return &#123;'active':active,'retiring':retiring&#125;
+
+
+def proxy_config(prefixes):
+    if not prefixes: return ''
+    blocks=['# Generated by prefix_sync.py; edit the controller, not this file.']
+    for iface,other,autowire in [(WAN,LAN,True),(LAN,WAN,False)]:
+        blocks.append('proxy %s &#123;\n    router yes\n    timeout 1000\n    ttl 30000'%iface)
+        if autowire: blocks.append('    autowire yes')
+        for p in sorted(prefixes):
+            blocks.append('    rule %s &#123;\n        iface %s\n    &#125;'%(validate_prefix(p),other))
+        blocks.append('&#125;')
+    return '\n'.join(blocks)+'\n'
+
+
+def run(args, check=True):
+    p=subprocess.Popen(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    out,err=p.communicate()
+    out=out.decode('utf-8','replace'); err=err.decode('utf-8','replace')
+    if check and p.returncode:
+        raise RuntimeError('%s: %s'%(args[0],(out+err).strip()[:1500]))
+    return out,p.returncode
+
+
+def read(path, fallback=''):
+    try:
+        with open(path) as f:return f.read()
+    except IOError:return fallback
+
+
+def atomic(path, content):
+    if read(path,None)==content:return False
+    fd,tmp=tempfile.mkstemp(prefix='.sync-',dir=os.path.dirname(path))
+    try:
+        with os.fdopen(fd,'w') as f:f.write(content)
+        os.chmod(tmp,0o644)
+        os.rename(tmp,path)
+    finally:
+        if os.path.exists(tmp):os.unlink(tmp)
+    return True
+
+
+def store(path, obj):return atomic(path,json.dumps(obj,sort_keys=True)+'\n')
+
+
+def route_sync(prefixes, managed):
+    rules=run(['ip','-6','rule','show'])[0]
+    routes=run(['ip','-6','route','show','table',TABLE])[0]
+    for p in prefixes:
+        marker='to %s iif %s lookup %s'%(p,WAN,TABLE)
+        if not re.search(r'^'+re.escape(p)+r' dev '+LAN+r'\b',routes,re.M):
+            run(['ip','-6','route','replace',p,'dev',LAN,'table',TABLE])
+        if marker not in rules:
+            run(['ip','-6','rule','add','pref',TABLE,'iif',WAN,'to',p,'lookup',TABLE])
+    for p in sorted(set(managed)-set(prefixes)):
+        marker='to %s iif %s lookup %s'%(p,WAN,TABLE)
+        for _ in range(rules.count(marker)):
+            run(['ip','-6','rule','del','pref',TABLE,'iif',WAN,'to',p,'lookup',TABLE])
+        if re.search(r'^'+re.escape(p)+r'\b',routes,re.M):
+            run(['ip','-6','route','del',p,'dev',LAN,'table',TABLE])
+
+
+def apply_ra(desired, managed):
+    # These wrappers require the vyattacfg group and one stable session id.
+    os.setgid(grp.getgrnam('vyattacfg').gr_gid)
+    os.environ['CMD_WRAPPER_SESSION_ID']=str(os.getpid())
+    current=shlex.split(run([API,'listActiveNodes']+RA+['prefix'])[0])
+    wanted=sorted(desired['active']+list(desired['retiring']))
+    run([CFG,'begin'])
+    try:
+        for p in sorted(set(current)&amp;set(managed)-set(wanted)):
+            run([CFG,'delete']+RA+['prefix',p])
+        for p in wanted:
+            values=&#123;'autonomous-flag':'true','on-link-flag':'true',
+                    'preferred-lifetime':'900' if p in desired['active'] else '0',
+                    'valid-lifetime':'1800' if p in desired['active'] else str(GRACE)&#125;
+            for key,value in sorted(values.items()):
+                run([CFG,'set']+RA+['prefix',p,key,value])
+        run([CFG,'set']+RA+['default-lifetime','1800' if desired['active'] else '0'])
+        run([CFG,'set']+RA+['managed-flag','false'])
+        run([CFG,'commit'])
+    except Exception:
+        run([CFG,'discard'],False)
+        raise
+    finally:
+        run([CFG,'end'],False)
+
+
+def sync(dry_run=False):
+    registry=json.loads(read(BASE+'/managed-prefixes.json','[]'))
+    for p in registry:validate_prefix(p)
+    old=json.loads(read(RUN+'/state.json',json.dumps(&#123;'active':registry,'retiring':&#123;&#125;&#125;)))
+    links=run(['ip','-o','link','show','dev',WAN])[0]
+    defaults=run(['ip','-6','route','show','default'])[0]
+    addresses=run(['ip','-6','-o','addr','show','dev',WAN,'scope','global'])[0]
+    online='LOWER_UP' in links and re.search(r'^default via .* dev '+WAN+r'\b',defaults,re.M)
+    active=wan_prefixes(addresses) if online else []
+    desired=plan(old,active,int(time.time()))
+    prefixes=sorted(desired['active']+list(desired['retiring']))
+    managed=sorted(set(registry+prefixes))
+    if dry_run:
+        print(json.dumps(&#123;'online':bool(online),'desired':desired,'managed':managed&#125;,sort_keys=True))
+        return
+    # Remember ownership before touching config, so a partial commit is retried safely.
+    store(BASE+'/managed-prefixes.json',managed)
+    route_sync(prefixes,[])
+    proxy_changed=atomic(RUN+'/ndppd.conf',proxy_config(prefixes))
+    if prefixes:
+        running=run(['systemctl','is-active','--quiet','ndppd'],False)[1]==0
+        if proxy_changed or not running:run(['systemctl','restart','ndppd'])
+    changed=desired!=old or not os.path.exists(RUN+'/state.json')
+    if changed:apply_ra(desired,managed)
+    route_sync(prefixes,managed)
+    if not prefixes:run(['systemctl','stop','ndppd'])
+    store(RUN+'/state.json',desired)
+    store(BASE+'/managed-prefixes.json',prefixes)
+    if changed:
+        run(['logger','-t','ndppd-sync','active=%s retiring=%s'%(desired['active'],sorted(desired['retiring']))])
+        print(json.dumps(desired,sort_keys=True))
+
+
+def main():
+    os.environ['PATH']='/usr/sbin:/usr/bin:/sbin:/bin:/opt/vyatta/bin:/opt/vyatta/sbin'
+    if not os.path.isdir(RUN):os.makedirs(RUN,0o755)
+    with open(RUN+'/sync.lock','w') as lock:
+        try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except IOError:return
+        try:sync('--dry-run' in sys.argv)
+        except Exception as e:
+            run(['logger','-t','ndppd-sync','ERROR: '+str(e)],False)
+            print('ERROR: '+str(e),file=sys.stderr)
+            sys.exit(1)
+
+if __name__=='__main__':main()
+EOF</code></div></pre>
+<p>创建代理服务。配置文件由同步脚本生成，服务以前台方式运行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-bash">cat &gt; ndppd.service &lt;&lt;'EOF'
+[Unit]
+Description=NDP proxy for automatically learned WAN IPv6 prefixes
+After=network.target
+ConditionPathExists=/run/ndppd/ndppd.conf
+
+[Service]
+Type=simple
+Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+ExecStartPre=/usr/bin/test -s /run/ndppd/ndppd.conf
+ExecStart=/config/ipv6-proxy/ndppd -c /run/ndppd/ndppd.conf
+Restart=on-failure
+RestartSec=5
+EOF</code></div></pre>
+<p>创建一次性同步服务，在 EdgeOS 原生配置加载完成后运行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash">cat &gt; ndppd-sync.service &lt;&lt;'EOF'
+[Unit]
+Description=Synchronize EdgeOS IPv6 prefixes, NDP proxy and return routing
+After=network.target vyatta-router.service
+ConditionPathExists=/run/ndppd/edgeos-ready
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python /config/ipv6-proxy/prefix_sync.py
+TimeoutStartSec=90
+EOF</code></div></pre>
+<p>创建定时器，每次同步结束后约 30 秒再次执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-bash">cat &gt; ndppd-sync.timer &lt;&lt;'EOF'
+[Unit]
+Description=Check WAN IPv6 prefix changes every 30 seconds
+
+[Timer]
+OnBootSec=30
+OnUnitInactiveSec=30
+AccuracySec=1
+Unit=ndppd-sync.service
+
+[Install]
+WantedBy=timers.target
+EOF</code></div></pre>
+<p>创建开机钩子。它恢复单元链接、标记配置已就绪并启动 timer：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-bash">cat &gt; 50-ndppd &lt;&lt;'EOF'
+#!/bin/sh
+set -eu
+mkdir -p /run/ndppd
+for unit in ndppd.service ndppd-sync.service ndppd-sync.timer; do
+    ln -sf &quot;/config/ipv6-proxy/$unit&quot; &quot;/etc/systemd/system/$unit&quot;
+done
+systemctl daemon-reload
+if [ -L /etc/systemd/system/multi-user.target.wants/ndppd.service ]; then
+    rm /etc/systemd/system/multi-user.target.wants/ndppd.service
+fi
+systemctl enable ndppd-sync.timer
+touch /run/ndppd/edgeos-ready
+systemctl start ndppd-sync.timer
+EOF</code></div></pre>
+<p>文件创建完成后，检查 Python 与 shell 语法，再上传。以下操作仍在开发电脑执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-bash">python3 -m py_compile prefix_sync.py
+sh -n 50-ndppd
+
+# 替换为路由器的实际管理账号和地址
+router_target=router-admin@192.0.2.1
+ssh &quot;$router_target&quot; 'mkdir -p /tmp/ipv6-proxy-upload'
+scp ndppd LICENSE prefix_sync.py \
+  ndppd.service ndppd-sync.service ndppd-sync.timer 50-ndppd \
+  &quot;$router_target:/tmp/ipv6-proxy-upload/&quot;
+ssh &quot;$router_target&quot;</code></div></pre>
+<p>使用自定义 SSH 端口时，<code>ssh</code> 使用 <code>-p</code>，<code>scp</code> 使用 <code>-P</code>；也可以在本机 SSH 配置中设置别名。</p>
+<p>登录 <strong>EdgeRouter</strong> 后安装文件，此时还不启动服务：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash">sudo install -d -m 0755 /config/ipv6-proxy
+sudo install -m 0755 /tmp/ipv6-proxy-upload/ndppd /config/ipv6-proxy/ndppd
+sudo install -m 0644 /tmp/ipv6-proxy-upload/LICENSE /config/ipv6-proxy/LICENSE
+sudo install -m 0644 /tmp/ipv6-proxy-upload/prefix_sync.py /config/ipv6-proxy/
+sudo install -m 0644 /tmp/ipv6-proxy-upload/ndppd.service /config/ipv6-proxy/
+sudo install -m 0644 /tmp/ipv6-proxy-upload/ndppd-sync.service /config/ipv6-proxy/
+sudo install -m 0644 /tmp/ipv6-proxy-upload/ndppd-sync.timer /config/ipv6-proxy/
+sudo install -m 0755 /tmp/ipv6-proxy-upload/50-ndppd /config/ipv6-proxy/
+
+file /config/ipv6-proxy/ndppd
+sudo python -m py_compile /config/ipv6-proxy/prefix_sync.py</code></div></pre>
+<p>后续启动服务时，如果执行程序时报 <code>Exec format error</code>，返回检查编译架构；如果程序存在却提示找不到文件，检查 ELF 解释器与动态链接依赖。不要继续执行后续启动步骤。</p>
+<h3 id="4-4-NDP-代理配置">4.4 NDP 代理配置</h3>
+<p>同步程序会生成 <code>/run/ndppd/ndppd.conf</code>，内容结构如下。<strong>这段配置用于解释代理行为，无需手工保存，也不要把文档示例前缀写入路由器。</strong> 实際前缀由脚本读取 WAN 地址后生成：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div></div><code class="language-conf"># 示例配置，不可直接用于生产网络
+proxy eth0 &#123;
+    router yes
+    timeout 1000
+    ttl 30000
+    autowire yes
+    rule 2001:db8:100::/64 &#123;
+        iface switch0
+    &#125;
+&#125;
+
+proxy switch0 &#123;
+    router yes
+    timeout 1000
+    ttl 30000
+    rule 2001:db8:100::/64 &#123;
+        iface eth0
+    &#125;
+&#125;</code></div></pre>
+<p>WAN 一侧的规则将该前缀的邻居查询送往 LAN，LAN 一侧则能够查询 WAN 上的同前缀邻居。这里使用 <code>iface</code> 探测实际邻居，没有让代理无条件宣称整个 <code>/64</code> 的所有地址都存在。</p>
+<p>LAN 仍由 EdgeOS 原生 RA 配置广播前缀，启用自主地址配置，<code>managed-flag</code> 为 <code>false</code>。原来的 ULA 保留，服务器通过 SLAAC 获得全球单播地址，不需要给每台服务器手工写固定公网地址。</p>
+<h3 id="4-5-配置-WAN-入站回程路由">4.5 配置 WAN 入站回程路由</h3>
+<p>测试发现，仅依靠 <code>autowire</code> 学习 <code>/128</code> 主机路由，仍存在回程转发失败。</p>
+<p>上游可能已经缓存了邻居信息，在代理尚未学习到对应 <code>/128</code> 路由时，返回数据包就已经到达 WAN。此时主路由表中的共享 <code>/64</code> 仍指向 WAN，返回包可能再次被选到 WAN，而没有转入 LAN。</p>
+<p>因此又增加了一张单独的路由表，并限制只有从 WAN 进入、目的地址属于共享前缀的流量查询它：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 以下均为示例值；先检查规则与表号是否已被占用
+sudo ip -6 route replace 2001:db8:100::/64 dev switch0 table 10640
+sudo ip -6 rule add pref 10640 iif eth0 \
+  to 2001:db8:100::/64 lookup 10640</code></div></pre>
+<p>这两条命令说明同步程序所执行的操作，按本文自动部署时不必手工执行。它们是运行时配置，且 <code>ip rule add</code> 重复执行会产生重复规则；同步程序负责检查现状、避免重复添加，并在重启后重建。</p>
+<p><code>iif eth0</code> 将规则限制为 WAN 入站流量。若直接将主表的 <code>/64</code> 指向 LAN，访问上游同前缀主机的流量也会被送入 LAN。配置后的路由选择如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">数据包</th>
+<th style="text-align:left">路由选择</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">从 WAN 进入，目标为共享前缀中的下游地址</td>
+<td style="text-align:left">查专用表，转入 LAN</td>
+</tr>
+<tr>
+<td style="text-align:left">从 LAN 进入，访问上游同前缀主机</td>
+<td style="text-align:left">继续查主表，经 WAN 到达上游</td>
+</tr>
+<tr>
+<td style="text-align:left">目标是路由器自己的地址</td>
+<td style="text-align:left">优先由优先级为 0 的 local 表处理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="4-6-配置-WAN-入站防火墙">4.6 配置 WAN 入站防火墙</h3>
+<p>服务器获得全球单播地址后，还检查了 WAN 入站转发规则。最终保留的策略是允许已建立连接及其关联流量，允许 ICMPv6，其余入站转发默认丢弃。</p>
+<p>ICMPv6 不只有 ping，还参与邻居发现和错误报告，不能为了关闭 ping 就整体屏蔽。这里描述的是 WAN 到 LAN 的转发策略，路由器自身管理面的访问控制应另行检查。</p>
+<p>验证时，从上游直连主机访问内网服务器的 TCP/22 超时，同时观察到对应防火墙 DROP 计数增加。确认请求命中了丢弃规则。</p>
+<p>下面给出独立的新规则集示例。在 <strong>EdgeOS 配置模式</strong>执行，WAN 名称按实际情况修改：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash">configure
+set firewall ipv6-name IPV6_PROXY_IN default-action drop
+set firewall ipv6-name IPV6_PROXY_IN rule 10 action accept
+set firewall ipv6-name IPV6_PROXY_IN rule 10 state established enable
+set firewall ipv6-name IPV6_PROXY_IN rule 10 state related enable
+set firewall ipv6-name IPV6_PROXY_IN rule 20 action accept
+set firewall ipv6-name IPV6_PROXY_IN rule 20 protocol ipv6-icmp
+set interfaces ethernet eth0 firewall in ipv6-name IPV6_PROXY_IN
+commit
+save
+exit</code></div></pre>
+<p><strong>已有 WAN 入站 IPv6 规则集时，应将所需规则合并到现有规则集，不要直接替换绑定。</strong> 上面的命令适用于该方向没有既有规则集的情况。配置提交报错时先查看错误并处理，不要继续启动自动同步，更不要以手工创建 ip6tables 链代替原生配置提交。</p>
+<h2 id="五、自动同步前缀与启动配置">五、自动同步前缀与启动配置</h2>
+<h3 id="5-1-前缀检测与同步范围">5.1 前缀检测与同步范围</h3>
+<p>为处理上游前缀变化和路由器重启，增加同步程序，统一维护 RA、代理规则和策略路由。</p>
+<p>这次使用 Python 标准库实现同步程序，通过 systemd timer 周期运行。程序兼容设备上的 Python 2.7，也在本地 Python 3 下执行了测试。每次执行读取 WAN 地址、链路状态和默认路由，筛选可用的全球单播 <code>/64</code>，排除暂定、重复地址检测失败、已经弃用或首选寿命为零的地址。</p>
+<p>只有链路已连接，并存在经 WAN 的 IPv6 下一跳默认路由时，才把这些前缀作为当前可用前缀。这里检查的是接口和路由就绪情况，没有持续探测互联网；如果上游链路仍在但远端发生黑洞，不能保证仅靠这组条件检测出来。</p>
+<p>同步过程同时维护三处状态：</p>
+<ul>
+<li>LAN 的原生 RA 配置；</li>
+<li>ndppd 的运行时配置；</li>
+<li>WAN 入站流量使用的前缀路由与策略规则。</li>
+</ul>
+<p>程序记录自己管理的前缀，删除旧配置时只处理这些前缀，保留 ULA 和其他手工配置。运行状态放在 <code>/run</code>，持久目录只记录必要的管理信息；没有每隔几十秒保存一次完整 EdgeOS 配置。</p>
+<h3 id="5-2-前缀变化与掉线处理">5.2 前缀变化与掉线处理</h3>
+<p>当前前缀的 RA 首选寿命为 900 秒，有效寿命为 1800 秒。检测到前缀退出后，将其首选寿命设为 0，并保留 300 秒的代理和路由过渡时间；过渡到期后移除对应配置。WAN 不再满足就绪条件时，LAN 广播的默认路由寿命降为 0，恢复后重新发布。</p>
+<p>300 秒仅表示旧代理与路由配置的保留时间，不代表客户端会在 300 秒后删除旧地址。主机还受已有地址寿命及 SLAAC 的寿命更新规则影响，具体行为见 <a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc4862.html" title="IPv6 Stateless Address Autoconfiguration" class="external-link" data-redirect="https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc4862.html">RFC 4862 第 5.5.3 节</a>。如果旧前缀已被上游撤回，保留本地规则也无法保证旧连接继续工作。</p>
+<p>定时器的关键配置如下：</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-ini">[Timer]
+OnBootSec=30
+OnUnitInactiveSec=30
+AccuracySec=1
+Unit=ndppd-sync.service</code></div></pre>
+<p><code>OnUnitInactiveSec=30</code> 表示上次执行结束约 30 秒后再次运行。同步失败时保留可重试状态，由后续执行重试；并发执行通过文件锁避免重叠。状态未变化时，不重写配置，也不重启代理进程。</p>
+<h3 id="5-3-启动顺序与配置保存">5.3 启动顺序与配置保存</h3>
+<p>同步程序需要在 EdgeOS 原生配置加载完成后执行。</p>
+<p>这次通过 EdgeOS 的 post-config 钩子恢复 systemd 单元链接、设置就绪标志并启动 timer，同步服务同时声明在路由器配置服务之后执行。钩子只负责启动定时器，不在配置加载过程中阻塞等待同步完成。</p>
+<p>保存的启动配置保留 ULA，LAN 的默认路由广播寿命初始为 0，也不固定保存当前公网前缀。等 WAN 就绪后，同步程序再提交运行时 RA 配置、启动代理并建立路由。</p>
+<p>实现中使用 EdgeOS 自带的配置命令包装器，并为同一事务保持会话标识及 <code>vyattacfg</code> 组身份，完成 begin、set/delete、commit 和 end；失败时执行 discard。同步结果以配置事务提交成功为准。</p>
+<p>公网前缀由同步程序管理。直接编辑生成文件会被后续同步覆盖；手动保存整个配置前，应确认是否把当前动态前缀一并保存了进去。</p>
+<h3 id="5-4-保存-LAN-RA-启动基线">5.4 保存 LAN RA 启动基线</h3>
+<p>在 <strong>EdgeOS 配置模式</strong>设置 LAN 的启动基线。这里假定 LAN 是 <code>switch0</code>，ULA 沿用现有配置，不新增示例 ULA：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">configure
+set interfaces switch switch0 ipv6 router-advert send-advert true
+set interfaces switch switch0 ipv6 router-advert managed-flag false
+set interfaces switch switch0 ipv6 router-advert default-lifetime 0
+commit
+save
+exit</code></div></pre>
+<p>如果之前手工配置过公网 RA 前缀，应先删除那一条公网前缀，再 <code>commit</code> 和 <code>save</code>；不要删除原有 ULA。命令结构为 <code>delete interfaces switch switch0 ipv6 router-advert prefix 实际旧前缀/64</code>。</p>
+<p>首次启动前，公网 RA 前缀应为空，默认路由寿命为 0。同步程序在 WAN 就绪后发布真实前缀并将默认路由寿命设为 1800。不要在自动同步完成后，为了“保存 NDP”再次保存整个原生配置；程序、服务及启动钩子已位于持久目录。</p>
+<h3 id="5-5-安装开机钩子并首次启动">5.5 安装开机钩子并首次启动</h3>
+<p>上文创建的 <code>ndppd.service</code> 使用以下启动命令，代理以 root 身份访问原始套接字：</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-ini">[Service]
+Type=simple
+Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+ExecStartPre=/usr/bin/test -s /run/ndppd/ndppd.conf
+ExecStart=/config/ipv6-proxy/ndppd -c /run/ndppd/ndppd.conf
+Restart=on-failure
+RestartSec=5</code></div></pre>
+<p><code>ndppd-sync.service</code> 调用 <code>/usr/bin/python /config/ipv6-proxy/prefix_sync.py</code>，并在 EdgeOS 配置服务之后执行。第 4.3 节已给出完整文件，以上片段仅说明服务的启动方式。</p>
+<p>先在 <strong>EdgeRouter 普通 shell</strong> 中执行只读规划，核对检测到的前缀：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo python /config/ipv6-proxy/prefix_sync.py --dry-run</code></div></pre>
+<p>输出中的 <code>online</code> 应为 <code>true</code>，<code>desired.active</code> 应包含实际 WAN 公网 <code>/64</code>。这里的 dry-run 可能创建运行目录和锁文件，但不修改网络配置。若 <code>active</code> 为空，先检查接口参数、地址首选寿命和默认路由。</p>
+<p>确认后安装并执行开机钩子：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-bash"># 首次部署前确认该文件名没有被已有配置使用
+sudo install -d -m 0755 /config/scripts/post-config.d
+sudo install -m 0755 /config/ipv6-proxy/50-ndppd \
+  /config/scripts/post-config.d/50-ndppd
+sudo /config/scripts/post-config.d/50-ndppd
+
+# 首次安装立即执行一次；后续由 timer 周期执行
+sudo systemctl start ndppd-sync.service
+sudo systemctl show ndppd-sync.service -p Result -p ExecMainStatus
+sudo systemctl status ndppd.service ndppd-sync.timer --no-pager
+sudo cat /run/ndppd/state.json
+sudo cat /run/ndppd/ndppd.conf
+ip -6 rule show
+ip -6 route show table 10640
+sudo cat /etc/radvd.conf</code></div></pre>
+<p>预期状态如下：</p>
+<ul>
+<li>同步服务 <code>Result=success</code>、<code>ExecMainStatus=0</code>。</li>
+<li>ndppd 和 timer 均为 <code>active</code>。</li>
+<li><code>state.json</code> 中有当前前缀，代理配置同时包含 WAN 与 LAN。</li>
+<li>优先级 10640 的规则带有 <code>iif eth0</code>，表 10640 的对应前缀指向 <code>switch0</code>。</li>
+<li><code>radvd.conf</code> 中出现实际公网前缀，允许 SLAAC，默认路由寿命为 1800。</li>
+</ul>
+<p>故障日志可按以下方式查看：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo journalctl -u ndppd.service -u ndppd-sync.service -n 80 --no-pager
+# 本次设备没有可用的 journal 文件，使用系统日志
+sudo grep -E 'ndppd-sync|ndppd' /var/log/messages | tail -80</code></div></pre>
+<p>本方案不需要额外启用 <code>proxy_ndp</code> 内核静态代理；ndppd 自身负责 NDP 消息处理。不要再为每个服务器地址重复添加静态 proxy neighbor 条目。</p>
+<h2 id="六、连通性与重启验证">六、连通性与重启验证</h2>
+<h3 id="6-1-实机验证结果">6.1 实机验证结果</h3>
+<p>实机验证结果如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">检查项</th>
+<th style="text-align:left">实际结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">路由器 IPv6 HTTPS</td>
+<td style="text-align:left">返回 HTTP 200</td>
+</tr>
+<tr>
+<td style="text-align:left">三台服务器的两个被测网口</td>
+<td style="text-align:left">六个网口均通过 IPv6 HTTPS 测试</td>
+</tr>
+<tr>
+<td style="text-align:left">下游与上游直连主机互相 ping</td>
+<td style="text-align:left">双向通过</td>
+</tr>
+<tr>
+<td style="text-align:left">上游主动连接下游 TCP/22</td>
+<td style="text-align:left">超时，WAN 入站 DROP 计数增加</td>
+</tr>
+<tr>
+<td style="text-align:left">连续执行前缀同步</td>
+<td style="text-align:left">配置时间戳和代理 PID 保持不变</td>
+</tr>
+<tr>
+<td style="text-align:left">整台路由器重启</td>
+<td style="text-align:left">启动标识改变，代理、timer、RA 和策略路由自动恢复</td>
+</tr>
+<tr>
+<td style="text-align:left">重启后重复连通性测试</td>
+<td style="text-align:left">路由器及服务器均通过</td>
+</tr>
+</tbody>
+</table>
+<p>按接口测试可以避免多网卡机器恰好走另一个正常出口：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash"># eno1 为示例被测接口，另一接口应单独再测一次
+curl --noproxy '*' -6 --interface eno1 \
+  --connect-timeout 10 --max-time 20 \
+  -sS -o /dev/null -w 'IPv6 HTTPS %&#123;http_code&#125;\n' \
+  https://www.cloudflare.com/</code></div></pre>
+<p>整机重启前，先检查登录会话和现有入站连接，核对来源归属；确认没有其他用户正在使用后，才执行重启。恢复后没有手动启动代理，也没有手动执行同步程序，因此这次结果能够验证启动流程本身，而不只是运行期间的配置。</p>
+<p>服务器侧应能看到新地址和默认路由：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 在每台下游服务器执行，接口名按实际情况替换
+ip -6 addr show dev eno1
+ip -6 route show default
+sysctl net.ipv6.conf.eno1.accept_ra</code></div></pre>
+<p>如果服务器本身启用了 IPv6 转发，需要检查其网络管理器是否允许转发模式下接收 RA；仅看到路由器广播成功，并不能证明客户端会采用配置。本次客户端原有配置即可接收 RA，未额外修改。</p>
+<p>连通性通过后，核对在线用户和入站连接，确认可以中断网络，再在路由器上执行 <code>sudo reboot</code>。重新登录后先重复 5.5 节的状态检查，<strong>不要手动启动服务</strong>，随后再跑各服务器的 IPv6 HTTPS 测试，以验证自动启动。</p>
+<h3 id="6-2-同步程序测试">6.2 同步程序测试</h3>
+<p>同步程序的 10 项测试在本地和路由器上均通过，覆盖了前缀筛选、换号、退出与恢复、过渡期不被反复延长、提交失败后重试，以及不变状态下不重写文件、不重启进程等行为。</p>
+<p>前缀变更和上游退出、恢复采用模拟输入测试，未执行真实上游换号。实机测试覆盖当前前缀下的双向通信、防火墙和整机重启恢复。</p>
+<p>此外，timer 触发的一次性服务执行结束后显示 <code>inactive</code> 是正常现象，应结合 <code>Result=success</code>、退出码以及运行状态判断，不能把它当作守护进程异常退出。</p>
+<h2 id="七、停止与回滚">七、停止与回滚</h2>
+<p>停止自动配置前，先记录当前管理的前缀，后续用于精确删除：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash"># 在 EdgeRouter 上执行
+sudo cat /config/ipv6-proxy/managed-prefixes.json
+sudo systemctl disable --now ndppd-sync.timer
+sudo systemctl stop ndppd-sync.service
+# 保留钩子备份，但移出 post-config.d，避免重启后再次执行
+sudo mv /config/scripts/post-config.d/50-ndppd \
+  /config/ipv6-proxy/50-ndppd.disabled</code></div></pre>
+<p>随后进入 EdgeOS 配置模式，将 LAN <code>default-lifetime</code> 设为 <code>0</code>，并删除记录中的公网 RA 前缀。保留 ULA，执行 <code>commit</code>、<code>save</code> 后退出，再停止代理：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo systemctl stop ndppd.service
+
+# 将示例前缀和接口替换为记录中的实际值；多个前缀逐个处理
+sudo ip -6 rule del pref 10640 iif eth0 \
+  to 2001:db8:100::/64 lookup 10640
+sudo ip -6 route del 2001:db8:100::/64 dev switch0 table 10640</code></div></pre>
+<p>最后根据备份恢复此次改动的 WAN 自动配置、LAN RA 和防火墙绑定。不要清空整张 IPv6 路由表或所有防火墙规则。完整加载 <code>config.boot</code> 备份会覆盖备份之后的其他配置，回滚前应先比较差异。</p>
+<h2 id="八、适用条件">八、适用条件</h2>
+<p>该配置适用于上游提供 SLAAC 链路前缀、允许代理邻居通信，但本次接入未获得 PD 的环境。上游地址绑定或接入策略变化后，需要重新验证。若能够获得 PD，可改为下游独立前缀的路由配置。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc4861" title="IPv6 Neighbor Discovery" class="external-link" data-redirect="https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc4861">RFC 4861：IPv6 邻居发现</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc4862.html" title="IPv6 Stateless Address Autoconfiguration" class="external-link" data-redirect="https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc4862.html">RFC 4862：IPv6 无状态地址自动配置</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc8415.html" title="Dynamic Host Configuration Protocol for IPv6" class="external-link" data-redirect="https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc8415.html">RFC 8415：DHCPv6 协议与状态码</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/DanielAdolfsson/ndppd" title="NDP Proxy Daemon" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FDanielAdolfsson%2Fndppd">ndppd 上游仓库与配置说明</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/2072836977/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/2072836977/">https://www.doratiger.top/2026/09/2072836977/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/61942/"><span>服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/31179/"><span>Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

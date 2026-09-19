@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置【DoraTiger 的异次元】</title><meta name="description" content="服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置"><meta name="keywords" content="k3s,freeipa,podman,traefik,ipv6,https"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置【DoraTiger 的异次元】"><meta property="og:description" content="服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/61942/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/61942/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置【DoraTiger 的异次元】</title><meta name="description" content="服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置"><meta name="keywords" content="k3s,freeipa,ipv6,podman,traefik,https"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置【DoraTiger 的异次元】"><meta property="og:description" content="服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/61942/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/61942/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
   try {
     var appearance = window.localStorage.getItem('doratiger-appearance');
     if (appearance === 'day' || appearance === 'night') {
@@ -6,7 +6,7 @@
     }
   } catch (_) {}
 })();
-</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-19T12:00:00.000Z","dateModified":"2026-09-19T13:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/61942/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-19T12:00:00.000Z","dateModified":"2026-09-19T15:55:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/61942/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
 
         <script>
             window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
@@ -22,11 +22,16 @@
 <link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
 <link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
 <link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
-</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%83%A8%E7%BD%B2-FreeIPA"><span class="toc-text">一、部署 FreeIPA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%9F%9F%E5%90%8D%E4%B8%8E%E7%BD%91%E7%BB%9C%E5%87%86%E5%A4%87"><span class="toc-text">1.1 域名与网络准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%AE%89%E8%A3%85-Podman-%E4%B8%8E%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95"><span class="toc-text">1.2 安装 Podman 与创建数据目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%88%9B%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%B9%B6%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">1.3 创建容器并初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E9%85%8D%E7%BD%AE%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8"><span class="toc-text">1.4 配置开机启动</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-%E9%85%8D%E7%BD%AE%E5%86%85%E9%83%A8-DNS"><span class="toc-text">1.5 配置内部 DNS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-6-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%85%A5%E5%9F%9F%E4%B8%8E-sudo-%E6%9D%83%E9%99%90"><span class="toc-text">1.6 客户端入域与 sudo 权限</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%83%A8%E7%BD%B2-K3s"><span class="toc-text">二、部署 K3s</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%89%E8%A3%85%E6%8E%A7%E5%88%B6%E8%8A%82%E7%82%B9"><span class="toc-text">2.1 安装控制节点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%8A%A0%E5%85%A5%E5%B7%A5%E4%BD%9C%E8%8A%82%E7%82%B9"><span class="toc-text">2.2 加入工作节点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%9B%86%E7%BE%A4%E5%86%85%E9%83%A8%E8%A7%A3%E6%9E%90-FreeIPA"><span class="toc-text">2.3 集群内部解析 FreeIPA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E6%81%A2%E5%A4%8D%E4%B8%9A%E5%8A%A1%E4%B8%8E%E6%8C%81%E4%B9%85%E5%8C%96"><span class="toc-text">2.4 恢复业务与持久化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%A4%84%E7%90%86-Podman-%E4%B8%8E-K3s-%E7%9A%84%E7%BD%91%E7%BB%9C%E5%86%B2%E7%AA%81"><span class="toc-text">三、处理 Podman 与 K3s 的网络冲突</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E7%BD%91%E9%A1%B5%E7%AB%AF%E5%8F%A3%E7%94%B1-Traefik-%E7%BB%9F%E4%B8%80%E6%8E%A5%E5%85%A5"><span class="toc-text">3.1 网页端口由 Traefik 统一接入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%A3%80%E6%9F%A5-FORWARD-%E4%B8%8E%E5%AE%B9%E5%99%A8%E8%BD%AC%E5%8F%91%E8%A7%84%E5%88%99"><span class="toc-text">3.2 检查 FORWARD 与容器转发规则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%A2%9E%E5%8A%A0-IPv6-%E5%85%A5%E5%8F%A3"><span class="toc-text">3.3 增加 IPv6 入口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%BB%9F%E4%B8%80%E9%85%8D%E7%BD%AE-HTTPS-%E8%AF%81%E4%B9%A6"><span class="toc-text">四、统一配置 HTTPS 证书</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%85%AC%E5%85%B1%E8%AF%81%E4%B9%A6%E4%B8%8E-IPA-CA-%E7%9A%84%E7%94%A8%E9%80%94"><span class="toc-text">4.1 公共证书与 IPA CA 的用途</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E8%85%BE%E8%AE%AF%E4%BA%91-DNSPod-%E6%9D%83%E9%99%90%E4%B8%8E%E5%87%AD%E6%8D%AE"><span class="toc-text">4.2 腾讯云 DNSPod 权限与凭据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%8C%81%E4%B9%85%E5%8C%96-ACME-%E6%95%B0%E6%8D%AE"><span class="toc-text">4.3 持久化 ACME 数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E9%85%8D%E7%BD%AE-Traefik-DNS-01"><span class="toc-text">4.4 配置 Traefik DNS-01</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-%E6%B3%9B%E8%A7%A3%E6%9E%90-CNAME-%E5%AF%BC%E8%87%B4%E9%AA%8C%E8%AF%81%E5%A4%B1%E8%B4%A5"><span class="toc-text">4.5 泛解析 CNAME 导致验证失败</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-6-%E7%94%B3%E8%AF%B7%E6%B3%9B%E5%9F%9F%E5%90%8D%E5%B9%B6%E9%85%8D%E7%BD%AE%E4%B8%9A%E5%8A%A1%E8%B7%AF%E7%94%B1"><span class="toc-text">4.6 申请泛域名并配置业务路由</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E5%A4%96%E7%BD%91%E8%AE%BF%E9%97%AE%E4%B8%8E%E5%BA%94%E7%94%A8%E8%AE%BE%E7%BD%AE"><span class="toc-text">五、内外网访问与应用设置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%85%AC%E7%BD%91%E8%A7%A3%E6%9E%90%E4%B8%8E%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91"><span class="toc-text">5.1 公网解析与端口转发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-Gitea-%E4%B8%8E-Nextcloud-%E7%9A%84%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E8%AE%BE%E7%BD%AE"><span class="toc-text">5.2 Gitea 与 Nextcloud 的反向代理设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%AA%8C%E8%AF%81%E6%9C%8D%E5%8A%A1%E4%B8%8E%E8%AF%81%E4%B9%A6"><span class="toc-text">5.3 验证服务与证书</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color7"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">58</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">109</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/k3s/">k3s</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/freeipa/">freeipa</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/podman/">podman</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/traefik/">traefik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ipv6/">ipv6</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/https/">https</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">18461 字 · 约 62 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%83%A8%E7%BD%B2-FreeIPA"><span class="toc-text">一、部署 FreeIPA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%9F%9F%E5%90%8D%E4%B8%8E%E7%BD%91%E7%BB%9C%E5%87%86%E5%A4%87"><span class="toc-text">1.1 域名与网络准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%AE%89%E8%A3%85-Podman-%E4%B8%8E%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95"><span class="toc-text">1.2 安装 Podman 与创建数据目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%88%9B%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%B9%B6%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">1.3 创建容器并初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E9%85%8D%E7%BD%AE%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8"><span class="toc-text">1.4 配置开机启动</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-%E9%85%8D%E7%BD%AE%E5%86%85%E9%83%A8-DNS"><span class="toc-text">1.5 配置内部 DNS</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%83%A8%E7%BD%B2-K3s"><span class="toc-text">二、部署 K3s</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%89%E8%A3%85%E6%8E%A7%E5%88%B6%E8%8A%82%E7%82%B9"><span class="toc-text">2.1 安装控制节点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%8A%A0%E5%85%A5%E5%B7%A5%E4%BD%9C%E8%8A%82%E7%82%B9"><span class="toc-text">2.2 加入工作节点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%9B%86%E7%BE%A4%E5%86%85%E9%83%A8%E8%A7%A3%E6%9E%90-FreeIPA"><span class="toc-text">2.3 集群内部解析 FreeIPA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E7%A1%AE%E8%AE%A4%E8%8A%82%E7%82%B9%E4%B8%8E%E5%AD%98%E5%82%A8"><span class="toc-text">2.4 确认节点与存储</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%A4%84%E7%90%86-Podman-%E4%B8%8E-K3s-%E7%9A%84%E7%BD%91%E7%BB%9C%E5%86%B2%E7%AA%81"><span class="toc-text">三、处理 Podman 与 K3s 的网络冲突</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E7%BD%91%E9%A1%B5%E7%AB%AF%E5%8F%A3%E7%94%B1-Traefik-%E7%BB%9F%E4%B8%80%E6%8E%A5%E5%85%A5"><span class="toc-text">3.1 网页端口由 Traefik 统一接入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%A3%80%E6%9F%A5-FORWARD-%E4%B8%8E%E5%AE%B9%E5%99%A8%E8%BD%AC%E5%8F%91%E8%A7%84%E5%88%99"><span class="toc-text">3.2 检查 FORWARD 与容器转发规则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E9%AA%8C%E8%AF%81%E5%8F%8C%E6%A0%88%E5%85%A5%E5%8F%A3"><span class="toc-text">3.3 验证双栈入口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%85%A5%E5%9F%9F%E4%B8%8E-sudo-%E6%9D%83%E9%99%90"><span class="toc-text">3.4 客户端入域与 sudo 权限</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%BB%9F%E4%B8%80%E9%85%8D%E7%BD%AE-HTTPS-%E8%AF%81%E4%B9%A6"><span class="toc-text">四、统一配置 HTTPS 证书</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%85%AC%E5%85%B1%E8%AF%81%E4%B9%A6%E4%B8%8E-IPA-CA-%E7%9A%84%E7%94%A8%E9%80%94"><span class="toc-text">4.1 公共证书与 IPA CA 的用途</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E8%85%BE%E8%AE%AF%E4%BA%91-DNSPod-%E6%9D%83%E9%99%90%E4%B8%8E%E5%87%AD%E6%8D%AE"><span class="toc-text">4.2 腾讯云 DNSPod 权限与凭据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%8C%81%E4%B9%85%E5%8C%96-ACME-%E6%95%B0%E6%8D%AE"><span class="toc-text">4.3 持久化 ACME 数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E9%85%8D%E7%BD%AE-Traefik-DNS-01"><span class="toc-text">4.4 配置 Traefik DNS-01</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-%E6%B3%9B%E8%A7%A3%E6%9E%90-CNAME-%E5%AF%BC%E8%87%B4%E9%AA%8C%E8%AF%81%E5%A4%B1%E8%B4%A5"><span class="toc-text">4.5 泛解析 CNAME 导致验证失败</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-6-%E7%94%B3%E8%AF%B7%E6%B3%9B%E5%9F%9F%E5%90%8D%E5%B9%B6%E9%85%8D%E7%BD%AE%E4%B8%9A%E5%8A%A1%E8%B7%AF%E7%94%B1"><span class="toc-text">4.6 申请泛域名并配置业务路由</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E5%A4%96%E7%BD%91%E8%AE%BF%E9%97%AE%E4%B8%8E%E5%BA%94%E7%94%A8%E8%AE%BE%E7%BD%AE"><span class="toc-text">五、内外网访问与应用设置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%85%AC%E7%BD%91%E8%A7%A3%E6%9E%90%E4%B8%8E%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91"><span class="toc-text">5.1 公网解析与端口转发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-Gitea-%E4%B8%8E-Nextcloud-%E7%9A%84%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E8%AE%BE%E7%BD%AE"><span class="toc-text">5.2 Gitea 与 Nextcloud 的反向代理设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%AA%8C%E8%AF%81%E6%9C%8D%E5%8A%A1%E4%B8%8E%E8%AF%81%E4%B9%A6"><span class="toc-text">5.3 验证服务与证书</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color1"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color8"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">59</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">111</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/k3s/">k3s</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/freeipa/">freeipa</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ipv6/">ipv6</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/podman/">podman</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/traefik/">traefik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/https/">https</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">30967 字 · 约 104 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
 <p>由于服务器上的用户和权限需要统一管理，故而部署 <code>FreeIPA</code>，通过 LDAP、Kerberos 和 SSSD 管理用户认证及 sudo 规则。同时，服务器上还运行着 Gitea、Nextcloud 等容器服务，使用 <code>K3s</code> 管理部署，并通过 <code>Traefik</code> 统一配置 HTTPS 入口。</p>
 <p>FreeIPA 使用 Podman 部署，与 K3s 共用宿主机时，遇到了网页端口占用和容器转发规则的问题。另外，服务器使用 IPv6 访问外网，内部认证需要稳定地址，因此也配置了双栈网络和内网 DNS。本文按 FreeIPA、K3s、HTTPS 的部署顺序记录相关配置及问题处理。</p>
-<p>操作环境为 <code>Ubuntu 24.04</code>，FreeIPA 版本为 <code>4.12.2</code>，K3s 版本为 <code>v1.34.5+k3s1</code>，Traefik 版本为 <code>3.6.9</code>。域名、地址、端口和自定义目录均已替换为示例值，使用时需自行修改。首次安装示例用于空环境；已有 FreeIPA 数据目录或 K3s 集群，应先备份，再按对应迁移步骤处理。</p>
+<p>操作环境为 <code>Ubuntu 24.04</code>，FreeIPA 版本为 <code>4.12.2</code>，K3s 版本为 <code>v1.34.5+k3s1</code>，Traefik 版本为 <code>3.6.9</code>。域名、地址、端口和自定义目录均已替换为示例值，使用时需自行修改。下文记录安装配置和遇到的问题。已有服务调整配置前，应先备份数据。</p>
 <span id="more"></span>
+<ul>
+<li>20260919：补充网络准备、完整双栈容器参数、DNS 记录、转发规则、客户端入域及证书申请步骤。</li>
+</ul>
+<p>本文以三台位于同一二层内网的 Ubuntu 24.04 为例：<code>host-a</code> 为控制和数据节点，<code>host-b</code>、<code>host-c</code> 为工作节点。命令默认在 <code>host-a</code> 执行，其他位置会另行标注。三台机器已安装系统、可通过 SSH 和 sudo 管理，数据盘已挂载到 <code>/srv/example</code>；分区、RAID 和数据迁移不在本文范围内。</p>
+<p>准备一个自己持有、已在 DNSPod 托管的公网域名。<code>example.com</code>、邮箱和全部地址都需要替换；示例域名不能用于实际申请证书。网络应能拉取镜像、访问软件源、NTP、DNSPod API 和 ACME 服务。先完成第一至三节的内网部署，再配置公共证书，最后部署后续两篇的业务。</p>
 <h2 id="一、部署-FreeIPA">一、部署 FreeIPA</h2>
 <h3 id="1-1-域名与网络准备">1.1 域名与网络准备</h3>
 <p>FreeIPA 提供用户、用户组、主机和权限管理，客户端通过 SSSD 获取身份及 sudo 策略，Kerberos 负责认证，DNS 提供服务发现。安装前应先确定域名与 Realm，后续客户端入域及服务证书都会使用这些名称。</p>
@@ -73,12 +78,125 @@
 </tbody>
 </table>
 <p><code>ipa</code> 与 <code>host-a</code> 可以解析到相同宿主地址，但两者保留独立名称。不要为了部署 IPA 把已入域宿主机的 hostname 改成 IPA 服务名。</p>
-<p>如果公网 IPv6 前缀由上游动态分配，内部身份记录仍使用固定 IPv4 和 ULA。公网地址用于外网通信，避免地址变化影响主机认证和 LDAP 连接。宿主机的时间同步也需要正常，安装前检查：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">hostname -f
-timedatectl
-chronyc tracking
-ip -br address</code></div></pre>
-<p>首次安装前，客户端 DNS 或临时 hosts 应能正确解析 IPA 服务名。容器内部则使用 Podman 分配的容器地址，不能把宿主机入口地址直接当成容器接口地址。</p>
+<p>三台机器的地址约定如下；网关为 <code>192.168.50.1</code>，网卡名示例为 <code>eno1</code>。ULA 前缀需自行规划，并确认不与 VPN、容器网络重叠。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">节点</th>
+<th style="text-align:left">IPv4</th>
+<th style="text-align:left">IPv6 ULA</th>
+<th style="text-align:left">hostname</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">控制和数据节点</td>
+<td style="text-align:left"><code>192.168.50.10/24</code></td>
+<td style="text-align:left"><code>fd12:3456:789a::10/64</code></td>
+<td style="text-align:left"><code>host-a.lab.example.com</code></td>
+</tr>
+<tr>
+<td style="text-align:left">工作节点一</td>
+<td style="text-align:left"><code>192.168.50.11/24</code></td>
+<td style="text-align:left"><code>fd12:3456:789a::11/64</code></td>
+<td style="text-align:left"><code>host-b.lab.example.com</code></td>
+</tr>
+<tr>
+<td style="text-align:left">工作节点二</td>
+<td style="text-align:left"><code>192.168.50.12/24</code></td>
+<td style="text-align:left"><code>fd12:3456:789a::12/64</code></td>
+<td style="text-align:left"><code>host-c.lab.example.com</code></td>
+</tr>
+</tbody>
+</table>
+<p>在每台机器先安装工具，并设置各自的主机名。以下为 <code>host-a</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo apt update
+sudo apt install -y curl ca-certificates openssl dnsutils chrony jq iptables
+sudo hostnamectl set-hostname host-a.lab.example.com
+sudo systemctl enable --now chrony
+ip -br address
+sudo netplan get</code></div></pre>
+<p>下面以 Netplan + systemd-networkd 为例。编辑当前管理 <code>eno1</code> 的 Netplan 文件，将该接口配置调整为下列内容，保留其他接口。不要另写一份与现有接口配置冲突的文件；使用 NetworkManager 的机器应在其现有连接中设置同样的地址、DNS 和自动 IPv6。</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-yaml">network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eno1:
+      dhcp4: false
+      addresses:
+        - 192.168.50.10/24
+        - fd12:3456:789a::10/64
+      routes:
+        - to: default
+          via: 192.168.50.1
+      accept-ra: true
+      nameservers:
+        addresses: [192.168.50.1]</code></div></pre>
+<p><code>host-b</code>、<code>host-c</code> 分别替换地址。公网 IPv6 地址和默认路由继续从路由器 RA 获得，内部认证使用固定 ULA；不手工填写动态公网前缀。操作网络时保留控制台或第二条连接，再检查并应用：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo netplan generate
+sudo netplan try
+ip -br address show eno1
+ip -6 route show default
+ping -c 3 192.168.50.1
+chronyc tracking</code></div></pre>
+<p><code>netplan try</code> 确认连通后按提示接受配置。若网络由 NetworkManager 管理，可用 <code>nmcli connection show --active</code> 找到连接名，再执行下面的等价修改；不要同时应用上面的 networkd 配置。将连接名、地址和主机名按各节点替换：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">sudo nmcli connection modify 'YOUR_CONNECTION' \
+  ipv4.method manual ipv4.addresses 192.168.50.10/24 \
+  ipv4.gateway 192.168.50.1 ipv4.dns 192.168.50.1 \
+  ipv6.method auto ipv6.addresses fd12:3456:789a::10/64
+sudo nmcli connection up 'YOUR_CONNECTION'</code></div></pre>
+<p>三台机器的 <code>/etc/hosts</code> 中加入下列记录，删除同名的旧地址映射，并把本机 FQDN 放在对应行的第一个名称。保留 localhost 行：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-text">192.168.50.10 host-a.lab.example.com host-a ipa.lab.example.com ipa
+192.168.50.11 host-b.lab.example.com host-b
+192.168.50.12 host-c.lab.example.com host-c</code></div></pre>
+<p>这仅用于安装前的引导，不代替后面的 DNS。执行 <code>hostname -f</code> 应返回本机 FQDN。宿主使用服务入口地址，容器的 hostname 则为 <code>ipa.lab.example.com</code>，其 <code>/etc/hosts</code> 由 Podman 按容器接口生成。</p>
+<p>在三台机器上启用转发；从 RA 获取默认路由的接口使用 <code>accept_ra=2</code>。保存为 <code>/etc/sysctl.d/90-example-k3s.conf</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-conf">net.ipv4.ip_forward=1
+net.ipv6.conf.all.forwarding=1
+net.ipv6.conf.eno1.accept_ra=2</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">sudo sysctl --system
+ip -6 route show default
+# 从另外两台主机分别测试，不能只在本机测试
+ping -c 3 192.168.50.10
+ping -6 -c 3 fd12:3456:789a::10</code></div></pre>
+<p>默认使用 Flannel VXLAN。按 <a target="_blank" rel="noopener" href="https://docs.k3s.io/installation/requirements" title="K3s 网络要求" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Finstallation%2Frequirements">K3s 网络要求</a>在已有防火墙中放行以下内网流量；不要开启另一套防火墙覆盖原规则：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">来源 → 目标</th>
+<th style="text-align:left">协议/端口</th>
+<th style="text-align:left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">三台节点 → 控制节点</td>
+<td style="text-align:left">TCP 6443</td>
+<td style="text-align:left">集群 API 与节点加入</td>
+</tr>
+<tr>
+<td style="text-align:left">三台节点相互访问</td>
+<td style="text-align:left">UDP 8472、TCP 10250</td>
+<td style="text-align:left">VXLAN、节点指标</td>
+</tr>
+<tr>
+<td style="text-align:left">内网客户端与 Pod → IPA 宿主</td>
+<td style="text-align:left">TCP/UDP 53、88、464；TCP 389、636</td>
+<td style="text-align:left">DNS、Kerberos、LDAP</td>
+</tr>
+<tr>
+<td style="text-align:left">内网客户端 → 入口节点</td>
+<td style="text-align:left">TCP 80、443、8443</td>
+<td style="text-align:left">IPA、业务 HTTPS</td>
+</tr>
+<tr>
+<td style="text-align:left">Traefik 所在节点/Pod → IPA 宿主</td>
+<td style="text-align:left">TCP 18081、18444</td>
+<td style="text-align:left">IPA 网页后端</td>
+</tr>
+</tbody>
+</table>
+<p>规则应同时覆盖计划使用的 IPv4 与 ULA，以及 Pod 网段。宿主和网关仍需允许必要 ICMPv6、返回流量与出站访问。本文假定这些内网流量可达；有 UFW、firewalld 或交换机 ACL 时，先在原规则中完成放行，再继续。第三节的专用规则只解决 IPA 容器的 FORWARD，不代替整套边界防火墙。</p>
 <h3 id="1-2-安装-Podman-与创建数据目录">1.2 安装 Podman 与创建数据目录</h3>
 <p>容器部署参考 <a target="_blank" rel="noopener" href="https://github.com/freeipa/freeipa-container" title="FreeIPA 容器" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ffreeipa%2Ffreeipa-container">FreeIPA 官方容器说明</a>。FreeIPA 容器内部通过 systemd 管理目录服务、Kerberos、HTTP 和 CA，本次使用 rootful Podman 运行。</p>
 <pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-bash">sudo apt update
@@ -95,16 +213,25 @@ sudo podman image inspect quay.io/freeipa/freeipa-server:almalinux-10 \
 <p>镜像标签会随构建更新，本文安装命令是按当前配置整理的首次部署示例，不代表重新执行了原始安装。<code>/data</code> 保存容器配置与身份数据，后续重建容器时继续挂载同一目录。已有数据目录不能当成一次全新安装重新初始化。</p>
 <h3 id="1-3-创建容器并初始化">1.3 创建容器并初始化</h3>
 <p>为了给 K3s 的 Traefik 留出网页入口，这里直接把 FreeIPA 容器的 80、443 发布到宿主机高位端口。LDAP、Kerberos 和 DNS 仍使用各自的标准协议端口，并只绑定内网地址。</p>
-<p>以下是首次安装的 IPv4 示例，示例宿主地址必须先在本机存在。双栈网络与 IPv6 发布在第三节说明。</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div></div><code class="language-bash"># 子网不能与宿主、VPN、K3s Pod/Service 网络重叠
-sudo podman network create --subnet 10.90.0.0/24 ipa-net
+<p>以下直接创建最终使用的双栈网络，宿主的 IPv4 与 ULA 必须已经存在。先检查 <code>sudo ss -lntup</code>，确认计划发布的端口未被其他服务占用。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div></div><code class="language-bash"># 子网不能与宿主、VPN、K3s Pod/Service 网络重叠
+sudo podman network create --subnet 10.90.0.0/24 \
+  --ipv6 --subnet fd12:3456:789c::/64 ipa-dualstack
+
+# 明确容器使用自身 named，不依赖容器网络后端的 DNS 转发
+sudo install -d -m 0755 /etc/example-ipa
+printf 'nameserver 127.0.0.1\n' | sudo tee /etc/example-ipa/resolv.conf &gt;/dev/null
 
 # 首次交互安装；根据提示输入目录管理密码与 IPA admin 密码
 sudo podman run --name ipa-server -it \
   --hostname ipa.lab.example.com \
-  --network ipa-net --ip 10.90.0.10 \
+  --network ipa-dualstack --ip 10.90.0.10 --ip6 fd12:3456:789c::10 \
+  --dns=none \
+  --add-host=ipa.lab.example.com:10.90.0.10 \
+  -e IPA_SERVER_IP=no-update \
   --read-only \
   -v /srv/example/ipa-data:/data:Z \
+  -v /etc/example-ipa/resolv.conf:/etc/resolv.conf:ro \
   -p 192.168.50.10:18081:80/tcp \
   -p 192.168.50.10:18444:443/tcp \
   -p 192.168.50.10:389:389/tcp \
@@ -115,12 +242,25 @@ sudo podman run --name ipa-server -it \
   -p 192.168.50.10:464:464/udp \
   -p 192.168.50.10:53:53/tcp \
   -p 192.168.50.10:53:53/udp \
+  -p '[fd12:3456:789a::10]:389:389/tcp' \
+  -p '[fd12:3456:789a::10]:636:636/tcp' \
+  -p '[fd12:3456:789a::10]:88:88/tcp' \
+  -p '[fd12:3456:789a::10]:88:88/udp' \
+  -p '[fd12:3456:789a::10]:464:464/tcp' \
+  -p '[fd12:3456:789a::10]:464:464/udp' \
+  -p '[fd12:3456:789a::10]:53:53/tcp' \
+  -p '[fd12:3456:789a::10]:53:53/udp' \
   quay.io/freeipa/freeipa-server:almalinux-10 \
   ipa-server-install \
   --domain=lab.example.com \
   --realm=LAB.EXAMPLE.COM \
+  --ip-address=10.90.0.10 \
+  --setup-dns --no-host-dns --no-reverse \
+  --forwarder=2606:4700:4700::1111 \
+  --forwarder=2606:4700:4700::1001 \
   --no-ntp</code></div></pre>
-<p>此例先安装身份服务，再配置 integrated DNS。安装成功后容器会继续运行，可以从另一个终端检查：</p>
+<p>本例一次安装身份服务和 integrated DNS。<code>--ip-address</code> 使用容器实际接口地址，稍后再把权威记录改为宿主入口；<code>--no-reverse</code> 表示不在这里创建反向区域。转发器必须能从容器访问，若本地不能访问示例公共 IPv6 DNS，应换成可达的递归 DNS。</p>
+<p>按 <a target="_blank" rel="noopener" href="https://docs.podman.io/en/latest/markdown/podman-run.1.html" title="Podman 容器参数" class="external-link" data-redirect="https%3A%2F%2Fdocs.podman.io%2Fen%2Flatest%2Fmarkdown%2Fpodman-run.1.html">Podman 文件与 DNS 参数</a>，本例挂载只含 <code>127.0.0.1</code> 的解析文件，并用 <code>--dns=none</code> 停止 Podman 自动生成该文件，让容器查询自己的 named。<code>--add-host</code> 提前提供安装时的容器主机名映射，避免只读 hosts 被安装器修改；<code>IPA_SERVER_IP=no-update</code> 避免每次启动把对外记录改回容器地址。按安装提示确认域名，并分别设置 Directory Manager 与 IPA admin 密码。安装可能持续数分钟，看到成功提示后容器仍在前台运行，可按 Podman 的 <code>Ctrl-P</code>、<code>Ctrl-Q</code> 脱离终端，或另开终端检查：</p>
 <pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo podman exec ipa-server ipactl status
 sudo podman logs --tail 100 ipa-server</code></div></pre>
 <p>容器显示 Running 时，IPA 内部服务可能还在启动，应等待 <code>ipactl status</code> 中各服务正常。健康检查另外保存为文件，便于查看具体错误，而不只看被终端截断的输出：</p>
@@ -154,60 +294,320 @@ sudo podman exec ipa-server ipactl status</code></div></pre>
 ExecStop=-/usr/bin/timeout 10 /usr/bin/podman exec ipa-server /bin/kill -s RTMIN+3 1</code></div></pre>
 <p>实测服务停止时间从超时缩短到约 4 秒。这是针对当前运行环境的兼容处理，不需要在没有该问题的安装中默认加入。</p>
 <h3 id="1-5-配置内部-DNS">1.5 配置内部 DNS</h3>
-<p>本次将 FreeIPA 设为内部区域权威 DNS，网关与 CoreDNS 对该区域进行条件转发。容器内安装 DNS 时必须能查询自身的 named，因此需要检查 <code>/etc/resolv.conf</code>，不能只根据 Podman 启动参数推测其最终内容。</p>
-<p>为容器准备专用解析文件：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo install -d -m 0755 /etc/example-ipa
-printf 'nameserver 127.0.0.1\n' | sudo tee /etc/example-ipa/resolv.conf &gt;/dev/null</code></div></pre>
-<p>进入 DNS 配置阶段时，正常停止容器并保留 <code>/data</code>，用原创建参数重建容器，补充以下参数，再执行 DNS 安装。此时本地 named 尚未启动，切换到本机解析与完成安装应安排在同一维护窗口。</p>
-<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">-v /etc/example-ipa/resolv.conf:/etc/resolv.conf:ro
--e IPA_SERVER_IP=no-update</code></div></pre>
-<p>已有 rootful Podman 容器需要由原 systemd 管理服务停止，不能让自动重启与手工重建同时运行。</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">sudo podman exec ipa-server cat /etc/resolv.conf
-
-# 在已经安装 IPA、但尚未配置 integrated DNS 的实例中执行
-# forwarder 替换为容器可达的递归 DNS；下面为公开 IPv6 解析器示例
-sudo podman exec -it ipa-server ipa-dns-install \
-  --forwarder=2606:4700:4700::1111 \
-  --forwarder=2606:4700:4700::1001</code></div></pre>
-<p>首次使用宿主入口地址配置 DNS 时，安装器曾尝试修改容器只读 hosts 并失败。实际处理时先保持容器自身地址完成安装，再将权威记录改为客户端可访问的宿主内网地址。对于只读 resolv.conf，则通过专门文件挂载，使容器内部解析指向 <code>127.0.0.1</code>。已存在的容器需要正常停止并重建才能改变挂载，<code>/data</code> 目录保持不变。</p>
+<p>FreeIPA 是内部区域的权威 DNS。第一步确认容器确实使用本机 DNS，并取出公开 CA 证书，后面验证 HTTPS 与客户端入域要用到：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo podman exec ipa-server cat /etc/resolv.conf
+sudo podman exec ipa-server ipactl status
+sudo install -d -m 0755 /etc/example-ipa
+sudo podman cp ipa-server:/etc/ipa/ca.crt /etc/example-ipa/ca.crt
+sudo chmod 0644 /etc/example-ipa/ca.crt
+openssl x509 -in /etc/example-ipa/ca.crt -noout -subject -fingerprint -sha256</code></div></pre>
+<p><code>resolv.conf</code> 应包含 <code>nameserver 127.0.0.1</code>，并且 named 正常运行。如果容器运行时没有保留这一设置，先检查 Podman 版本、网络后端和启动参数，不要继续入域；本例不再要求安装后另行补 DNS 或重建网络。已有实例不能直接套用首次安装命令。</p>
 <p>取得管理员票据后，通过 IPA CLI 修改区域中的记录：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-bash"># 在容器内执行，交互输入管理员密码
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div></div><code class="language-bash"># 在容器内执行，交互输入管理员密码
 sudo podman exec -it ipa-server bash
 kinit admin
 
 # 修改已有记录；若记录不存在，使用 dnsrecord-add
 ipa dnsrecord-mod lab.example.com ipa --a-rec=192.168.50.10
-ipa dnsrecord-add lab.example.com ipa --aaaa-rec=fd12:3456:789a::10
+ipa dnsrecord-mod lab.example.com ipa --aaaa-rec=fd12:3456:789a::10
+ipa dnsrecord-mod lab.example.com ipa-ca --a-rec=192.168.50.10 --aaaa-rec=fd12:3456:789a::10
 
-# ipa-ca、宿主机和业务名称同样需要核对 A/AAAA
+# 以下记录在新区域中尚不存在；已有记录使用 dnsrecord-mod
+ipa dnsrecord-add lab.example.com host-a --a-rec=192.168.50.10 --aaaa-rec=fd12:3456:789a::10
+ipa dnsrecord-add lab.example.com host-b --a-rec=192.168.50.11 --aaaa-rec=fd12:3456:789a::11
+ipa dnsrecord-add lab.example.com host-c --a-rec=192.168.50.12 --aaaa-rec=fd12:3456:789a::12
+ipa dnsrecord-add lab.example.com git --a-rec=192.168.50.10 --aaaa-rec=fd12:3456:789a::10
+ipa dnsrecord-add lab.example.com files --a-rec=192.168.50.10 --aaaa-rec=fd12:3456:789a::10
+ipa dnsrecord-mod lab.example.com @ --a-rec=192.168.50.10 --aaaa-rec=fd12:3456:789a::10
+
+# 核对 A/AAAA，不应再向客户端返回 10.90.0.10 等容器地址
 ipa dnsrecord-show lab.example.com ipa --all
 ipa dnszone-mod lab.example.com --dynamic-update=FALSE
 exit</code></div></pre>
 <p>同时应防止容器启动时重新把 A 记录更新成容器地址，可按官方容器说明配置 <code>IPA_SERVER_IP=no-update</code>。本例使用固定记录，因此关闭了区域动态更新；需要自动注册客户端地址的环境不能直接照搬这一项。</p>
-<p>网关 DNS 为 <code>lab.example.com</code> 配置条件转发，其他区域继续使用原上游。例如 dnsmasq 的配置形式为：</p>
-<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-conf"># 仅为指定区域转发，自行替换地址
-server=/lab.example.com/192.168.50.10
-server=/lab.example.com/fd12:3456:789a::10</code></div></pre>
-<p>先查询 A/AAAA 与服务记录，再让其他客户端使用该解析路径：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">dig @192.168.50.10 ipa.lab.example.com A
-dig @192.168.50.10 ipa.lab.example.com AAAA
+<p>这里先让三台节点直接使用 IPA DNS，它通过前面配置的 forwarder 查询外部区域。在每台机器的原 Netplan 文件中，将 <code>nameservers.addresses</code> 改为 <code>[192.168.50.10, &quot;fd12:3456:789a::10&quot;]</code>，然后执行 <code>sudo netplan try</code>。NetworkManager 分支则执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo nmcli connection modify 'YOUR_CONNECTION' \
+  ipv4.ignore-auto-dns yes ipv4.dns 192.168.50.10 \
+  ipv6.ignore-auto-dns yes ipv6.dns fd12:3456:789a::10
+sudo nmcli connection up 'YOUR_CONNECTION'</code></div></pre>
+<p>使用 networkd 且 RA 同时下发了其他 DNS 时，在 <code>/etc/systemd/resolved.conf.d/ipa.conf</code> 写入以下配置，给内部区域指定解析路径：</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-ini">[Resolve]
+DNS=192.168.50.10 fd12:3456:789a::10
+Domains=~lab.example.com</code></div></pre>
+<p>先用 <code>sudo install -d /etc/systemd/resolved.conf.d</code> 创建目录，再保存配置并执行 <code>sudo systemctl restart systemd-resolved</code>。检查 <code>/etc/resolv.conf</code> 指向 systemd-resolved 管理的文件，使用 <code>resolvectl status</code> 确认生效。两种地址属于同一 IPA 实例，不构成 DNS 高可用。</p>
+<p>从三台机器分别检查 DNS，成功后删除 <code>/etc/hosts</code> 中安装前添加的 <code>ipa.lab.example.com ipa</code> 别名，保留各主机自身记录：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">dig @192.168.50.10 ipa.lab.example.com A
+dig @fd12:3456:789a::10 ipa.lab.example.com AAAA
 dig @192.168.50.10 _ldap._tcp.lab.example.com SRV
-dig @192.168.50.10 _kerberos._udp.lab.example.com SRV</code></div></pre>
-<h3 id="1-6-客户端入域与-sudo-权限">1.6 客户端入域与 sudo 权限</h3>
-<p>本文把客户端配置放在 FreeIPA 小节中说明。采用上述高位后端端口时，先完成第三节的 Traefik 入口，使客户端能通过标准 HTTPS 地址访问 IPA，再执行入域。</p>
+dig @192.168.50.10 _kerberos._udp.lab.example.com SRV
+resolvectl query ipa.lab.example.com
+getent ahosts git.lab.example.com</code></div></pre>
+<p>应得到宿主入口地址，SRV 应指向 <code>ipa.lab.example.com</code>。需要让其他电脑经网关解析时，再在现有网关 DNS 中添加条件转发。Linux dnsmasq 可将下面内容保存为 <code>/etc/dnsmasq.d/ipa.conf</code>，执行 <code>sudo dnsmasq --test</code> 后重启 dnsmasq，并由 DHCP 将该网关作为客户端 DNS；设备路由器应在其 DNS 转发配置页填写同样的区域与上游，不能把 Linux 文件路径直接搬过去。</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-conf">server=/lab.example.com/192.168.50.10
+server=/lab.example.com/fd12:3456:789a::10</code></div></pre>
+<p>尚未调整网关时，可以先让管理电脑直接使用 IPA DNS。</p>
+<h2 id="二、部署-K3s">二、部署 K3s</h2>
+<h3 id="2-1-安装控制节点">2.1 安装控制节点</h3>
+<p>K3s 是 Kubernetes 发行版，集成了 containerd、CoreDNS、Traefik 等组件。当前业务规模下，沿用 K3s 即可，应用仍通过 Kubernetes 资源和 Helm 管理。</p>
+<p>本次需要双栈，按照 <a target="_blank" rel="noopener" href="https://docs.k3s.io/networking/basic-network-options" title="K3s 双栈" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Fnetworking%2Fbasic-network-options">K3s 网络文档</a>，应在首次创建集群时设置 Pod 和 Service 的双栈网段。已有 IPv4-only 集群需先做备份和重建准备，不能只修改下面配置然后重启。</p>
+<p>在控制节点先执行 <code>sudo install -d -m 0755 /etc/rancher/k3s</code>，再创建 <code>/etc/rancher/k3s/config.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-yaml"># 全部为示例地址；Pod、Service、宿主和 Podman 网段不得重叠
+node-name: host-a
+node-ip: &quot;192.168.50.10,fd12:3456:789a::10&quot;
+flannel-iface: eno1 # 自行修改为内网网卡
+cluster-cidr: &quot;10.44.0.0/16,fd12:3456:789b:100::/56&quot;
+service-cidr: &quot;10.45.0.0/16,fd12:3456:789b:200::/112&quot;
+flannel-ipv6-masq: true
+write-kubeconfig-mode: &quot;0600&quot;</code></div></pre>
+<p>此处 Pod 使用 ULA IPv6，通过 <code>flannel-ipv6-masq</code> 处理 IPv6 出口转换。宿主固定 ULA 应先写入实际使用的 NetworkManager 或其他网络配置，不能只通过临时 <code>ip address add</code> 添加。</p>
+<p>按 <a target="_blank" rel="noopener" href="https://docs.k3s.io/quick-start" title="K3s 安装" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Fquick-start">K3s 安装说明</a>安装，下面固定到本文使用版本，后续部署应自行评估版本：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">curl -sfL https://get.k3s.io -o /tmp/install-k3s.sh
+# 检查安装脚本后执行
+sudo env INSTALL_K3S_VERSION=v1.34.5+k3s1 sh /tmp/install-k3s.sh server
+sudo k3s kubectl get nodes -o wide</code></div></pre>
+<p>如果默认 IPv6 路由通过 RA 获取，需要检查对应接口在启用 IPv6 转发后仍接受 RA。本次对实际接收 RA 的接口持久化配置 <code>accept_ra=2</code>，并确认默认路由持续存在，没有对所有接口盲目追加配置。</p>
+<h3 id="2-2-加入工作节点">2.2 加入工作节点</h3>
+<p>控制节点的加入凭据位于 <code>/var/lib/rancher/k3s/server/node-token</code>。先在控制节点用具有 sudo 权限的普通管理账号导出一份仅自己可读的临时文件，不把 token 输出到终端：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">umask 077
+sudo cat /var/lib/rancher/k3s/server/node-token &gt; ~/k3s-join-token
+chmod 0600 ~/k3s-join-token</code></div></pre>
+<p>再在每台工作节点执行，SSH 用户自行替换，确认 scp 成功后才安装凭据：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash">sudo install -d -m 0755 /etc/rancher/k3s
+token_dir=$(mktemp -d)
+scp your-admin@192.168.50.10:k3s-join-token &quot;$token_dir/join-token&quot;
+# 上一步失败时停止，不继续安装
+sudo install -m 0600 &quot;$token_dir/join-token&quot; /etc/rancher/k3s/join-token
+rm &quot;$token_dir/join-token&quot;
+rmdir &quot;$token_dir&quot;
+sudo test -s /etc/rancher/k3s/join-token</code></div></pre>
+<p>两台工作节点都完成复制后，在控制节点删除 <code>~/k3s-join-token</code>，保留工作节点所需的 root 专属凭据文件。这个流程不要求预先配置免密码 sudo，也不应将文件纳入公开配置仓库。</p>
+<p>在工作节点的 <code>/etc/rancher/k3s/config.yaml</code> 中配置。<code>host-c</code> 的 node-name、IPv4 和 ULA 分别改为 <code>host-c</code>、<code>.12</code> 和 <code>::12</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-yaml">node-name: host-b # 第二台工作节点改成 host-c
+server: &quot;https://192.168.50.10:6443&quot;
+token-file: /etc/rancher/k3s/join-token
+node-ip: &quot;192.168.50.11,fd12:3456:789a::11&quot; # 每台节点分别修改
+flannel-iface: eno1</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">curl -sfL https://get.k3s.io -o /tmp/install-k3s.sh
+sudo env INSTALL_K3S_VERSION=v1.34.5+k3s1 sh /tmp/install-k3s.sh agent</code></div></pre>
+<p>服务器之间需要允许所选 CNI、API Server 等集群内部流量，但不应把这些管理端口一起映射到公网。控制节点检查：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo k3s kubectl get nodes -o wide
+sudo k3s kubectl get pods -A -o wide
+sudo k3s kubectl get nodes \
+  -o custom-columns=NAME:.metadata.name,POD-CIDRS:.spec.podCIDRs</code></div></pre>
+<h3 id="2-3-集群内部解析-FreeIPA">2.3 集群内部解析 FreeIPA</h3>
+<p>K3s 默认通过 CoreDNS 提供 Pod DNS。内部 IPA 区域采用条件转发，避免 Pod 查询到公网泛解析。新集群将下面内容保存为 <code>ipa-coredns.yaml</code>；已有 <code>coredns-custom</code> 时使用 <code>sudo k3s kubectl -n kube-system edit configmap coredns-custom</code>，只增加 <code>ipa.server</code>，保留其他键：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  ipa.server: |
+    lab.example.com:53 &#123;
+      errors
+      cache 30
+      forward . 192.168.50.10 fd12:3456:789a::10
+    &#125;</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo k3s kubectl apply -f ipa-coredns.yaml
+sudo k3s kubectl -n kube-system get configmap coredns -o jsonpath='&#123;.data.Corefile&#125;'
+sudo k3s kubectl -n kube-system rollout restart deployment/coredns
+sudo k3s kubectl -n kube-system rollout status deployment/coredns --timeout=180s
+sudo k3s kubectl run ipa-dns-test --rm -i --restart=Never --image=busybox:1.37 -- \
+  sh -ec 'nslookup ipa.lab.example.com; nslookup -type=AAAA ipa.lab.example.com; nslookup -type=SRV _ldap._tcp.lab.example.com'</code></div></pre>
+<p>Corefile 应包含 <code>import /etc/coredns/custom/*.server</code>。从 Pod 内也应查询到正确 A、AAAA 和 SRV。若宿主成功而 Pod 超时，继续检查第三节转发规则后重试本测试；不能跳过后直接部署依赖 LDAP 的应用。</p>
+<h3 id="2-4-确认节点与存储">2.4 确认节点与存储</h3>
+<p>后续两篇使用静态 local PV，数据固定到 <code>host-a</code>，应用采用单副本和 <code>Recreate</code>。这里没有跨节点数据复制，三台机器不等于业务已经高可用。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo k3s kubectl get nodes -L kubernetes.io/hostname
+sudo k3s kubectl describe node host-a
+findmnt -T /srv/example</code></div></pre>
+<p>三台节点都应为 Ready，<code>host-a</code> 的 hostname 标签应为 <code>host-a</code>。本文新集群未设置 NoSchedule 污点；若自行增加污点，需要为后续业务和入口配置对应 tolerations。确认 <code>/srv/example</code> 是预期数据盘，容量充足，再创建各应用目录。</p>
+<h2 id="三、处理-Podman-与-K3s-的网络冲突">三、处理 Podman 与 K3s 的网络冲突</h2>
+<h3 id="3-1-网页端口由-Traefik-统一接入">3.1 网页端口由 Traefik 统一接入</h3>
+<p>K3s 默认部署的 Traefik 通过 ServiceLB 提供 80、443 入口。若 Podman 同时将 FreeIPA 的 80、443 发布到相同宿主地址，就会争用端口。可以先检查监听与 ServiceLB 工作负载：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo ss -lntup
+sudo podman port ipa-server
+sudo k3s kubectl -n kube-system get svc traefik
+sudo k3s kubectl -n kube-system get pods -o wide</code></div></pre>
+<p>本例已经把 Podman 网页端口改为 <code>18081</code> 和 <code>18444</code>，然后让 Traefik 将 <code>ipa.lab.example.com</code> 的 HTTPS 流量转发到后端。FreeIPA 原证书继续使用，因此配置 TCP TLS 透传，保留客户端到 IPA 的 TLS 会话。</p>
+<p>以下使用无 selector 的 Service 和 EndpointSlice 表示集群外后端，地址是宿主内网地址，不是 Podman 容器临时地址：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div></div><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: ipa-backend
+  namespace: default
+spec:
+  ports:
+    - name: https
+      port: 443
+      targetPort: 18444
+    - name: http
+      port: 80
+      targetPort: 18081
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: ipa-backend-v4
+  namespace: default
+  labels:
+    kubernetes.io/service-name: ipa-backend
+addressType: IPv4
+ports:
+  - name: https
+    protocol: TCP
+    port: 18444
+  - name: http
+    protocol: TCP
+    port: 18081
+endpoints:
+  - addresses:
+      - &quot;192.168.50.10&quot; # 自行修改为 Podman 宿主地址
+    conditions:
+      ready: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: ipa-https
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: HostSNI(`ipa.lab.example.com`)
+      services:
+        - name: ipa-backend
+          port: 443
+  tls:
+    passthrough: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ipa-http
+  namespace: default
+spec:
+  entryPoints: [web]
+  routes:
+    - match: Host(`ipa.lab.example.com`)
+      kind: Rule
+      services:
+        - name: ipa-backend
+          port: 80</code></div></pre>
+<p>保存为 <code>ipa-route.yaml</code> 后应用并验证：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo k3s kubectl wait --for=condition=Established crd/ingressroutetcps.traefik.io --timeout=180s
+sudo k3s kubectl apply -f ipa-route.yaml
+curl --cacert /etc/example-ipa/ca.crt https://ipa.lab.example.com/ipa/ui/</code></div></pre>
+<p>这里使用 <a target="_blank" rel="noopener" href="https://doc.traefik.io/traefik/reference/routing-configuration/kubernetes/crd/tcp/ingressroutetcp/" title="TCP 路由" class="external-link" data-redirect="https%3A%2F%2Fdoc.traefik.io%2Ftraefik%2Freference%2Frouting-configuration%2Fkubernetes%2Fcrd%2Ftcp%2Fingressroutetcp%2F">IngressRouteTCP 的 SNI 匹配与 TLS 透传</a>，不要配置捕获所有域名的 <code>HostSNI(*)</code>，否则会影响同一入口的其他 HTTPS 业务。这里也提供 HTTP 80 转发，保留 IPA 的 CA 获取接口和自身跳转行为。</p>
+<h3 id="3-2-检查-FORWARD-与容器转发规则">3.2 检查 FORWARD 与容器转发规则</h3>
+<p>修改端口后，如果宿主机能访问而其他节点仍然超时，需要继续检查转发链。本次环境中 FORWARD 默认策略为 DROP，不能只确认 Podman 已创建端口映射。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo iptables -S FORWARD
+sudo iptables -t nat -S
+sudo ip6tables -S FORWARD
+sudo podman inspect ipa-server</code></div></pre>
+<p>若确认是这里丢包，可建立专用规则。以下脚本只刷新自己的链，允许内网节点与 Pod 访问 IPA，按当前容器地址匹配转发后的目标，并放行对应返回流量。保存为 <code>example-ipa-forward</code>，网段与网络名称须与前文一致：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div></div><code class="language-bash">#!/bin/bash
+set -euo pipefail
+# K3s 可能先于 IPA 启动；IPA 自己启动后也会调用本脚本
+if ! /usr/bin/podman container exists ipa-server; then exit 0; fi
+if [ &quot;$(/usr/bin/podman inspect -f '&#123;&#123;.State.Running&#125;&#125;' ipa-server)&quot; != true ]; then exit 0; fi
+container_json=$(/usr/bin/podman inspect ipa-server)
+ipa4=$(jq -er '.[0].NetworkSettings.Networks[&quot;ipa-dualstack&quot;].IPAddress | select(length &gt; 0)' &lt;&lt;&lt;&quot;$container_json&quot;)
+ipa6=$(jq -er '.[0].NetworkSettings.Networks[&quot;ipa-dualstack&quot;].GlobalIPv6Address | select(length &gt; 0)' &lt;&lt;&lt;&quot;$container_json&quot;)
+
+allow_ipa() &#123;
+  local cmd=$1 dest=$2
+  shift 2
+  &quot;$cmd&quot; -w -N EXAMPLE_IPA 2&gt;/dev/null || &quot;$cmd&quot; -w -S EXAMPLE_IPA &gt;/dev/null
+  &quot;$cmd&quot; -w -F EXAMPLE_IPA
+  for source in &quot;$@&quot;; do
+    &quot;$cmd&quot; -w -A EXAMPLE_IPA -s &quot;$source&quot; -d &quot;$dest&quot; -p tcp \
+      -m multiport --dports 53,80,88,389,443,464,636 -j ACCEPT
+    &quot;$cmd&quot; -w -A EXAMPLE_IPA -s &quot;$source&quot; -d &quot;$dest&quot; -p udp \
+      -m multiport --dports 53,88,464 -j ACCEPT
+    &quot;$cmd&quot; -w -A EXAMPLE_IPA -s &quot;$dest&quot; -d &quot;$source&quot; \
+      -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  done
+  # 容器访问递归 DNS 和公共 HTTPS，回包仅允许已建立连接
+  &quot;$cmd&quot; -w -A EXAMPLE_IPA -s &quot;$dest&quot; -p tcp -m multiport --dports 53,80,443 -j ACCEPT
+  &quot;$cmd&quot; -w -A EXAMPLE_IPA -s &quot;$dest&quot; -p udp --dport 53 -j ACCEPT
+  &quot;$cmd&quot; -w -A EXAMPLE_IPA -d &quot;$dest&quot; -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  &quot;$cmd&quot; -w -A EXAMPLE_IPA -j RETURN
+  while &quot;$cmd&quot; -w -C FORWARD -j EXAMPLE_IPA 2&gt;/dev/null; do
+    &quot;$cmd&quot; -w -D FORWARD -j EXAMPLE_IPA
+  done
+  &quot;$cmd&quot; -w -I FORWARD 1 -j EXAMPLE_IPA
+&#125;
+allow_ipa iptables &quot;$ipa4&quot; 192.168.50.0/24 10.44.0.0/16
+allow_ipa ip6tables &quot;$ipa6&quot; fd12:3456:789a::/64 fd12:3456:789b:100::/56</code></div></pre>
+<p>这组规则适用于本文 rootful Podman 和 iptables 兼容后端；使用原生 nftables/firewalld 的独立丢弃链时，还需在原防火墙中允许相同流量，不能认为某一处 ACCEPT 能越过所有链。没有转发丢包的环境可跳过这组附加规则。</p>
+<p>安装并先执行一次：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo install -m 0755 example-ipa-forward /usr/local/sbin/example-ipa-forward
+sudo /usr/local/sbin/example-ipa-forward
+sudo iptables -nvL EXAMPLE_IPA
+sudo ip6tables -nvL EXAMPLE_IPA</code></div></pre>
+<p>为了在容器和 K3s 启动后恢复规则，分别创建 <code>/etc/systemd/system/example-ipa.service.d/forward.conf</code> 与 <code>/etc/systemd/system/k3s.service.d/ipa-forward.conf</code>，两者内容相同：</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-ini">[Service]
+ExecStartPost=/usr/local/sbin/example-ipa-forward</code></div></pre>
+<p>目录先用下面命令创建，保存上述文件后重新加载。当前规则已经手动应用，无需为写入 drop-in 立即重启集群：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">sudo install -d /etc/systemd/system/example-ipa.service.d /etc/systemd/system/k3s.service.d
+# 将上述内容分别保存到两个文件后执行
+sudo systemctl daemon-reload
+sudo systemctl cat example-ipa.service
+sudo systemctl cat k3s.service</code></div></pre>
+<p>不要保存整套动态 Kubernetes 规则到 iptables-persistent，也不要清空 FORWARD 或全局改成 ACCEPT。若手工重载防火墙导致专用链丢失，重新执行本脚本，并重新进行 DNS、LDAP 和 HTTPS 测试。</p>
+<h3 id="3-3-验证双栈入口">3.3 验证双栈入口</h3>
+<p>第一节已发布 LDAP、Kerberos 和 DNS 的 IPv6 端口，不需要重建容器。Traefik 初次安装的 Service 还需要启用双栈。在新集群上创建 <code>/var/lib/rancher/k3s/server/manifests/traefik-config.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-yaml">apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    service:
+      spec:
+        ipFamilyPolicy: PreferDualStack</code></div></pre>
+<p>在另外两台机器上验证 HTTPS 或执行入域前，从可信控制节点复制 CA，并核对上文输出的 SHA-256 指纹。下面在工作节点执行，SSH 用户与主机地址自行替换：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">scp your-admin@192.168.50.10:/etc/example-ipa/ca.crt /tmp/example-ipa-ca.crt
+openssl x509 -in /tmp/example-ipa-ca.crt -noout -fingerprint -sha256
+sudo install -D -m 0644 /tmp/example-ipa-ca.crt /etc/example-ipa/ca.crt</code></div></pre>
+<p>入域时再将下一小节命令的 hostname 分别改成 <code>host-b.lab.example.com</code>、<code>host-c.lab.example.com</code>。</p>
+<p>在控制节点检查 Service 与 Helm 安装任务：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl -n kube-system get svc traefik -o wide
+sudo k3s kubectl -n kube-system get jobs,pods</code></div></pre>
+<p>等 Service 具有两种地址族、相关 Pod 就绪后，在已复制 CA 的另一台节点测试：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">curl -4 --cacert /etc/example-ipa/ca.crt -I https://ipa.lab.example.com/ipa/ui/
+curl -6 --cacert /etc/example-ipa/ca.crt -I https://ipa.lab.example.com/ipa/ui/</code></div></pre>
+<p>两种协议都通过后再执行下一小节的客户端入域。第四节完整 HelmChartConfig 保留了这个双栈字段，后续直接替换本例文件。</p>
+<p>公网 IPv6 出站保留。网关应允许返回流量及必要 ICMPv6，主动入站仅开放实际业务。NDP 代理负责地址可达性，不能替代入站防火墙。</p>
+<h3 id="3-4-客户端入域与-sudo-权限">3.4 客户端入域与 sudo 权限</h3>
+<p>此时 IPA 的 DNS、HTTP 与 HTTPS 已可从内网访问，开始将三台宿主机作为客户端加入域。先在控制节点执行，再分别处理另外两台。</p>
 <p>Ubuntu 客户端安装 IPA 客户端工具，确认主机名唯一、解析和时间正常后执行入域。入域使用的管理员权限与日常登录用户分别配置。</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-bash">sudo apt install -y freeipa-client
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-bash">sudo apt install -y freeipa-client libsss-sudo ldap-utils sssd-tools
 
 # 主机名按每台机器分别修改；根据提示输入具有入域权限的账号
 sudo ipa-client-install \
-  --hostname=host-b.lab.example.com \
+  --hostname=host-a.lab.example.com \
   --server=ipa.lab.example.com \
   --domain=lab.example.com \
   --realm=LAB.EXAMPLE.COM \
+  --ca-cert-file=/etc/example-ipa/ca.crt \
   --mkhomedir
 
+hostname -f
+sudo sssctl config-check</code></div></pre>
+<p>在已入域的控制节点创建后两篇使用的测试成员，用户名、姓名与邮箱自行替换：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">kinit admin
+ipa user-add yourname --first=Your --last=Name --email=your-email@example.com --password
+kdestroy
+# 用新用户初始密码获取票据，按提示完成首次密码修改
+kinit yourname
+klist
 getent passwd yourname
-id yourname</code></div></pre>
+id yourname
+kdestroy</code></div></pre>
+<p>如果用户已经存在，改用 <code>ipa user-show yourname --all</code> 核对属性，不重复创建。若使用其他终端测试，应在那台终端同样完成 DNS、时间和 CA 配置。</p>
 <p>如果系统已有同名本地用户，应先检查 <code>/etc/passwd</code>、NSS 查询结果及文件所有者。<strong>仅把本地用户 UID 设置成与 IPA 用户一致，不会把两个身份自动合并。</strong> 本地账号仍可能优先匹配；本次没有通过批量删除本地用户来处理这个问题。</p>
 <p>免密码 sudo 在 IPA 的 Sudo Rules 中配置。示例规则的字段如下：</p>
 <table>
@@ -242,154 +642,60 @@ id yourname</code></div></pre>
 </table>
 <p><code>root</code> 是目标 Linux 系统上的用户，不要求在 IPA 中创建同名目录用户，所以填在 External 中。客户端还需启用 SSSD sudo 支持，检查 <code>/etc/nsswitch.conf</code> 中的来源：</p>
 <pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-conf">sudoers: files sss</code></div></pre>
-<p>Ubuntu 若缺少相应 NSS 模块，可安装 <code>libsss-sudo</code>。规则存在缓存，修改后先检查客户端读取的规则，再验证执行结果：</p>
+<p>编辑 <code>/etc/nsswitch.conf</code>，已有 <code>sudoers:</code> 行就增加 <code>sss</code>，没有则新增上面的行。在 <code>/etc/sssd/sssd.conf</code> 的对应 <code>[domain/lab.example.com]</code> 中确认 <code>sudo_provider = ipa</code>；<code>[sssd]</code> 若显式列出 <code>services</code>，在原列表中加入 <code>sudo</code>。保持文件权限 <code>0600</code>，执行 <code>sudo sssctl config-check</code> 与 <code>sudo systemctl restart sssd</code>。</p>
+<p>以下为等价 IPA 规则创建命令，在已入域控制节点上执行。规则授予指定组在这三台主机上的完整 root 权限，只把实际运维人员加入该组：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">kinit admin
+ipa group-add sysadmin --desc='Server administrators'
+ipa group-add-member sysadmin --users=yourname
+ipa sudorule-add sysadmin-nopasswd --cmdcat=all
+ipa sudorule-add-user sysadmin-nopasswd --groups=sysadmin
+ipa sudorule-add-host sysadmin-nopasswd \
+  --hosts=host-a.lab.example.com --hosts=host-b.lab.example.com --hosts=host-c.lab.example.com
+ipa sudorule-add-runasuser sysadmin-nopasswd --users=root
+ipa sudorule-add-option sysadmin-nopasswd --sudooption='!authenticate'</code></div></pre>
+<p>不存在于 IPA 的 <code>root</code> 会作为 external RunAs 用户处理，使用 <code>ipa sudorule-show sysadmin-nopasswd --all</code> 检查结果。规则存在缓存；使用 IPA 普通运维用户重新登录每台主机，再验证：</p>
 <pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo -l
 sudo -n -k -u root /usr/bin/id -u</code></div></pre>
 <p>第二条不使用已有 sudo 认证时间戳，返回 <code>0</code> 才说明此次允许免密码以 root 执行。但如果本机还保留 <code>NOPASSWD</code> sudoers 文件，该结果不能单独证明权限来自 IPA；排查时需要对照本地规则与 SSSD 日志。</p>
-<h2 id="二、部署-K3s">二、部署 K3s</h2>
-<h3 id="2-1-安装控制节点">2.1 安装控制节点</h3>
-<p>K3s 是 Kubernetes 发行版，集成了 containerd、CoreDNS、Traefik 等组件。当前业务规模下，沿用 K3s 即可，应用仍通过 Kubernetes 资源和 Helm 管理。</p>
-<p>本次需要双栈，按照 <a target="_blank" rel="noopener" href="https://docs.k3s.io/networking/basic-network-options" title="K3s 双栈" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Fnetworking%2Fbasic-network-options">K3s 网络文档</a>，应在首次创建集群时设置 Pod 和 Service 的双栈网段。已有 IPv4-only 集群需先做备份和重建准备，不能只修改下面配置然后重启。</p>
-<p>在控制节点创建 <code>/etc/rancher/k3s/config.yaml</code>：</p>
-<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-yaml"># 全部为示例地址；Pod、Service、宿主和 Podman 网段不得重叠
-node-ip: &quot;192.168.50.10,fd12:3456:789a::10&quot;
-flannel-iface: eno1 # 自行修改为内网网卡
-cluster-cidr: &quot;10.44.0.0/16,fd12:3456:789b:100::/56&quot;
-service-cidr: &quot;10.45.0.0/16,fd12:3456:789b:200::/112&quot;
-flannel-ipv6-masq: true
-write-kubeconfig-mode: &quot;0600&quot;</code></div></pre>
-<p>此处 Pod 使用 ULA IPv6，通过 <code>flannel-ipv6-masq</code> 处理 IPv6 出口转换。宿主固定 ULA 应先写入实际使用的 NetworkManager 或其他网络配置，不能只通过临时 <code>ip address add</code> 添加。</p>
-<p>按 <a target="_blank" rel="noopener" href="https://docs.k3s.io/quick-start" title="K3s 安装" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Fquick-start">K3s 安装说明</a>安装，下面固定到本文使用版本，后续部署应自行评估版本：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">curl -sfL https://get.k3s.io -o /tmp/install-k3s.sh
-# 检查安装脚本后执行
-sudo env INSTALL_K3S_VERSION=v1.34.5+k3s1 sh /tmp/install-k3s.sh server
-sudo k3s kubectl get nodes -o wide</code></div></pre>
-<p>如果默认 IPv6 路由通过 RA 获取，需要检查对应接口在启用 IPv6 转发后仍接受 RA。本次对实际接收 RA 的接口持久化配置 <code>accept_ra=2</code>，并确认默认路由持续存在，没有对所有接口盲目追加配置。</p>
-<h3 id="2-2-加入工作节点">2.2 加入工作节点</h3>
-<p>控制节点的加入凭据位于 <code>/var/lib/rancher/k3s/server/node-token</code>。通过受限渠道将其保存到工作节点的 root 专属文件，例如 <code>/etc/rancher/k3s/join-token</code>，权限设置为 <code>0600</code>，不要贴进日志或公开配置仓库。</p>
-<p>在工作节点的 <code>/etc/rancher/k3s/config.yaml</code> 中配置：</p>
-<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml">server: &quot;https://192.168.50.10:6443&quot;
-token-file: /etc/rancher/k3s/join-token
-node-ip: &quot;192.168.50.11,fd12:3456:789a::11&quot; # 每台节点分别修改
-flannel-iface: eno1</code></div></pre>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">curl -sfL https://get.k3s.io -o /tmp/install-k3s.sh
-sudo env INSTALL_K3S_VERSION=v1.34.5+k3s1 sh /tmp/install-k3s.sh agent</code></div></pre>
-<p>服务器之间需要允许所选 CNI、API Server 等集群内部流量，但不应把这些管理端口一起映射到公网。控制节点检查：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo k3s kubectl get nodes -o wide
-sudo k3s kubectl get pods -A -o wide
-sudo k3s kubectl get nodes \
-  -o custom-columns=NAME:.metadata.name,POD-CIDRS:.spec.podCIDRs</code></div></pre>
-<h3 id="2-3-集群内部解析-FreeIPA">2.3 集群内部解析 FreeIPA</h3>
-<p>K3s 默认通过 CoreDNS 提供 Pod DNS。内部 IPA 区域采用条件转发，避免 Pod 查询到公网泛解析。将以下配置合并进已有 <code>coredns-custom</code> ConfigMap，保留其他自定义键：</p>
-<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-yaml">apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: coredns-custom
-  namespace: kube-system
-data:
-  ipa.server: |
-    lab.example.com:53 &#123;
-      errors
-      cache 30
-      forward . 192.168.50.10 fd12:3456:789a::10
-    &#125;</code></div></pre>
-<p>应用配置后，确认当前 CoreDNS Corefile 已导入 <code>*.server</code>，并从 Pod 内测试 IPA 的 A、AAAA 和 SRV。两个转发地址属于同一个 IPA 实例时，只提供不同协议入口，不构成 DNS 高可用。</p>
-<h3 id="2-4-恢复业务与持久化">2.4 恢复业务与持久化</h3>
-<p>已有集群改成双栈时，需要提前保存 API 资源、CRD、Secret、Helm 配置与数据卷。此次重建后恢复了原业务和监控数据，原先为零副本的实验服务仍保持暂停。新集群 CA、token 已变化，外部 kubeconfig 重新获取。</p>
-<p>原 Swarm 中的 Gitea、Nextcloud 和 Portainer 也迁入 K3s。迁移时保留应用及数据库版本，先停止旧应用和数据库，冷备后复制到新目录，再启动新实例，避免新旧容器同时写同一份文件。</p>
-<p>数据使用静态 local PV，配置 <code>Retain</code> 与数据节点的 <code>nodeAffinity</code>，应用采用单副本和 <code>Recreate</code>。这样重建 Pod 会重新挂载原数据，但数据节点故障时仍需恢复该节点或迁移数据。PVC 的容量声明也不等于目录已设置磁盘配额。</p>
-<p>业务接入 FreeIPA 时，分别设置 LDAP 查询与 CA 信任。此次 Nextcloud 修正了从 Gitea 配置中沿用的过滤器占位符，登录模板使用 Nextcloud 的 <code>%uid</code>，稳定标识使用 <code>ipaUniqueID</code>。Gitea 关闭 <code>SkipVerify</code>，两者均在严格校验证书的条件下通过 LDAP 绑定和查询。</p>
-<h2 id="三、处理-Podman-与-K3s-的网络冲突">三、处理 Podman 与 K3s 的网络冲突</h2>
-<h3 id="3-1-网页端口由-Traefik-统一接入">3.1 网页端口由 Traefik 统一接入</h3>
-<p>K3s 默认部署的 Traefik 通过 ServiceLB 提供 80、443 入口。若 Podman 同时将 FreeIPA 的 80、443 发布到相同宿主地址，就会争用端口。可以先检查监听与 ServiceLB 工作负载：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo ss -lntup
-sudo podman port ipa-server
-sudo k3s kubectl -n kube-system get svc traefik
-sudo k3s kubectl -n kube-system get pods -o wide</code></div></pre>
-<p>本例已经把 Podman 网页端口改为 <code>18081</code> 和 <code>18444</code>，然后让 Traefik 将 <code>ipa.lab.example.com</code> 的 HTTPS 流量转发到后端。FreeIPA 原证书继续使用，因此配置 TCP TLS 透传，保留客户端到 IPA 的 TLS 会话。</p>
-<p>以下使用无 selector 的 Service 和 EndpointSlice 表示集群外后端，地址是宿主内网地址，不是 Podman 容器临时地址：</p>
-<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div></div><code class="language-yaml">apiVersion: v1
-kind: Service
-metadata:
-  name: ipa-backend
-  namespace: default
-spec:
-  ports:
-    - name: https
-      port: 443
-      targetPort: 18444
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: ipa-backend-v4
-  namespace: default
-  labels:
-    kubernetes.io/service-name: ipa-backend
-addressType: IPv4
-ports:
-  - name: https
-    protocol: TCP
-    port: 18444
-endpoints:
-  - addresses:
-      - &quot;192.168.50.10&quot; # 自行修改为 Podman 宿主地址
-    conditions:
-      ready: true
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRouteTCP
-metadata:
-  name: ipa-https
-  namespace: default
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: HostSNI(`ipa.lab.example.com`)
-      services:
-        - name: ipa-backend
-          port: 443
-  tls:
-    passthrough: true</code></div></pre>
-<p>保存为 <code>ipa-route.yaml</code> 后应用并验证：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl apply -f ipa-route.yaml
-curl --cacert /etc/ipa/ca.crt https://ipa.lab.example.com/ipa/ui/</code></div></pre>
-<p>这里使用 <a target="_blank" rel="noopener" href="https://doc.traefik.io/traefik/reference/routing-configuration/kubernetes/crd/tcp/ingressroutetcp/" title="TCP 路由" class="external-link" data-redirect="https%3A%2F%2Fdoc.traefik.io%2Ftraefik%2Freference%2Frouting-configuration%2Fkubernetes%2Fcrd%2Ftcp%2Fingressroutetcp%2F">IngressRouteTCP 的 SNI 匹配与 TLS 透传</a>，不要配置捕获所有域名的 <code>HostSNI(*)</code>，否则会影响同一入口的其他 HTTPS 业务。HTTP 80 则可用单独的 HTTP 路由转发或重定向到 HTTPS。</p>
-<h3 id="3-2-检查-FORWARD-与容器转发规则">3.2 检查 FORWARD 与容器转发规则</h3>
-<p>修改端口后，如果宿主机能访问而其他节点仍然超时，需要继续检查转发链。本次环境中 FORWARD 默认策略为 DROP，不能只确认 Podman 已创建端口映射。</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo iptables -S FORWARD
-sudo iptables -t nat -S
-sudo ip6tables -S FORWARD
-sudo podman inspect ipa-server</code></div></pre>
-<p>处理时保留 K3s、Podman 和宿主防火墙的原有链，在单独的 IPA 链中限定来源网段、目标容器地址及协议端口。双栈分别维护 IPv4/IPv6 规则，并允许相关返回流量。</p>
-<p><strong>不要通过 <code>iptables -F</code> 或把 FORWARD 全局改为 ACCEPT 来消除超时。</strong> 这会影响其他容器和原有访问限制。也不能在规则里永久写死容器临时 IP，本次将规则生成放入服务启动后的步骤，每次读取当前容器地址，再刷新专用链。容器重建、地址变化后已验证转发仍能恢复。</p>
-<h3 id="3-3-增加-IPv6-入口">3.3 增加 IPv6 入口</h3>
-<p>FreeIPA 的 Podman 网络需同时包含 IPv4 和 IPv6，容器端口再发布到宿主固定 ULA。以下是新建双栈网络与发布参数的示例；已有网络需要在备份后安排容器重建，不能创建同名网络覆盖它：</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo podman network create \
-  --subnet 10.90.0.0/24 \
-  --ipv6 --subnet fd12:3456:789c::/64 ipa-dualstack</code></div></pre>
-<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-text"># 补充到 podman run；固定 ULA 必须已经存在于宿主接口
--p [fd12:3456:789a::10]:389:389/tcp
--p [fd12:3456:789a::10]:636:636/tcp
--p [fd12:3456:789a::10]:88:88/tcp
--p [fd12:3456:789a::10]:88:88/udp
--p [fd12:3456:789a::10]:464:464/tcp
--p [fd12:3456:789a::10]:464:464/udp
--p [fd12:3456:789a::10]:53:53/tcp
--p [fd12:3456:789a::10]:53:53/udp</code></div></pre>
-<p>网页由双栈 Traefik 接入，后端仍可通过 IPv4 转发到 Podman；LDAP、Kerberos 和 DNS 的 IPv6 入口则单独发布。原 Realm 与 keytab 无需因此修改。</p>
-<p>公网 IPv6 出站保留，网关入站允许返回流量及必要 ICMPv6，其他主动入站按规则限制。NDP 代理负责地址可达性，访问控制仍由防火墙处理，不能把“地址能出网”当成“只允许出网”。</p>
 <h2 id="四、统一配置-HTTPS-证书">四、统一配置 HTTPS 证书</h2>
 <h3 id="4-1-公共证书与-IPA-CA-的用途">4.1 公共证书与 IPA CA 的用途</h3>
-<p>FreeIPA 页面与 LDAPS 可以使用 IPA CA。已入域客户端信任该 CA，浏览器则需要单独检查信任库。本次为服务器上的 Firefox 配置 CA 安装策略，未关闭证书验证。</p>
+<p>FreeIPA 页面与 LDAPS 可以使用 IPA CA。已入域客户端信任该 CA，浏览器则需要单独检查信任库。在 Firefox 的“设置 → 隐私与安全 → 证书 → 查看证书 → 证书颁发机构 → 导入”中导入可信来源的 <code>/etc/ipa/ca.crt</code>，核对指纹后勾选用于识别网站的信任。重新打开 IPA 页面，确认证书名称和签发链正确。不同浏览器的信任库分别处理，不关闭证书验证。</p>
 <p>Gitea、Nextcloud 需要被外部浏览器访问，因此使用 Let’s Encrypt 公共证书，由 Traefik 终止 TLS。这样业务无需分别维护一套证书申请脚本。</p>
 <p>示例申请 <code>lab.example.com</code> 和 <code>*.lab.example.com</code>，覆盖区域根与下一层业务名称。泛域名不覆盖多层名称，也不会自动替换 IPA 内部证书；第三节的 IPA 透传路由继续使用原 CA。</p>
 <h3 id="4-2-腾讯云-DNSPod-权限与凭据">4.2 腾讯云 DNSPod 权限与凭据</h3>
 <p><a target="_blank" rel="noopener" href="https://letsencrypt.org/docs/challenge-types/" title="DNS-01" class="external-link" data-redirect="https%3A%2F%2Fletsencrypt.org%2Fdocs%2Fchallenge-types%2F">DNS-01</a>通过 <code>_acme-challenge</code> TXT 验证域名控制权，可以申请泛域名证书，不要求业务暴露 80 或 443。这里使用腾讯云 DNSPod，通过专门子账户配置 API 权限。</p>
 <p>授权按 <a target="_blank" rel="noopener" href="https://cloud.tencent.com/document/product/302/105719" title="DNSPod 授权" class="external-link" data-redirect="https%3A%2F%2Fcloud.tencent.com%2Fdocument%2Fproduct%2F302%2F105719">DNSPod 可授权资源类型</a>限定到目标区域，所需操作为 <code>DescribeDomainList</code>、<code>DescribeRecordList</code>、<code>CreateRecord</code>、<code>DeleteRecord</code>。策略使用 <code>dnspod</code> 操作前缀。域名资源标识按控制台及 API 的资源格式填写，不能把不同产品的域名字符串 ID 混用。</p>
-<p>本次授权范围仍是整个指定 DNS 区域内的相关记录操作，没有限制到仅能修改 ACME TXT。若需进一步收紧，可另行设置验证区域及 CNAME 委派。</p>
-<p>将 SecretId、SecretKey 分别写入 root 受限文件，然后创建 Kubernetes Secret。下面只读取已有文件，不在命令行写密钥值：</p>
+<p>在 CAM 中新建自定义策略，使用下面的 JSON，再绑定到专用子用户。<code>DescribeDomainList</code> 是列举操作，单独允许；写入和删除限制到指定区域。将 <code>MAIN_ACCOUNT_UIN</code> 替换为资源所属主账号 ID，将 <code>DNSPOD_DOMAIN_ID</code> 替换为 DNSPod API 返回的数字 DomainId：</p>
+<pre><div class="code-header"><span class="code-header-type">json</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-json">&#123;
+  &quot;version&quot;: &quot;2.0&quot;,
+  &quot;statement&quot;: [
+    &#123;
+      &quot;effect&quot;: &quot;allow&quot;,
+      &quot;action&quot;: [&quot;dnspod:DescribeDomainList&quot;],
+      &quot;resource&quot;: [&quot;*&quot;]
+    &#125;,
+    &#123;
+      &quot;effect&quot;: &quot;allow&quot;,
+      &quot;action&quot;: [&quot;dnspod:DescribeRecordList&quot;, &quot;dnspod:CreateRecord&quot;, &quot;dnspod:DeleteRecord&quot;],
+      &quot;resource&quot;: [&quot;qcs::dnspod::uin/MAIN_ACCOUNT_UIN:domain/DNSPOD_DOMAIN_ID&quot;]
+    &#125;
+  ]
+&#125;</code></div></pre>
+<p>DomainId 可在腾讯云 API Explorer 选择 DNSPod <code>DescribeDomainList</code>，用资源所属账号查询 <code>example.com</code>，读取 <code>DomainList</code> 对应条目的 <code>DomainId</code>；不是 CAM 子用户 ID，也不是其他域名产品的字符串资源 ID。若实际托管区域为 <code>example.com</code>，申请 <code>*.lab.example.com</code> 也授权该父区域，除非已单独委派 <code>lab.example.com</code>。</p>
+<p>移除子用户原先的全域写权限策略，也检查用户组继承权限。此策略仍可修改目标区域中的其他记录，不是仅限 ACME TXT。先通过后面的 staging 签发确认列举、创建和清理都成功，再切正式 CA。</p>
+<p>为该子用户创建 API 密钥。在控制节点交互输入，以下命令不回显内容，也不把值写进 shell 历史：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash">sudo install -d -m 0700 /root/example-dns
+sudo bash -c '
+  umask 077
+  read -r -s -p &quot;SecretId: &quot; dns_id &lt;/dev/tty
+  printf &quot;\n&quot; &gt;/dev/tty
+  read -r -s -p &quot;SecretKey: &quot; dns_key &lt;/dev/tty
+  printf &quot;\n&quot; &gt;/dev/tty
+  test -n &quot;$dns_id&quot; &amp;&amp; test -n &quot;$dns_key&quot; || exit 1
+  printf &quot;%s&quot; &quot;$dns_id&quot; &gt; /root/example-dns/secret-id
+  printf &quot;%s&quot; &quot;$dns_key&quot; &gt; /root/example-dns/secret-key
+'</code></div></pre>
+<p>然后创建 Kubernetes Secret：</p>
 <pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 示例文件路径，自行修改；目录 0700，凭据文件 0600
 sudo k3s kubectl -n kube-system create secret generic traefik-dns \
   --from-file=secret-id=/root/example-dns/secret-id \
@@ -403,7 +709,7 @@ sudo k3s kubectl -n kube-system create secret generic traefik-dns \
 sudo touch /srv/example/traefik-acme/acme.json
 sudo chown 65532:65532 /srv/example/traefik-acme/acme.json
 sudo chmod 0600 /srv/example/traefik-acme/acme.json</code></div></pre>
-<p>创建专用 PV/PVC：</p>
+<p>将下面清单保存为 <code>traefik-acme-volume.yaml</code>，创建专用 PV/PVC：</p>
 <pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div></div><code class="language-yaml">apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -441,7 +747,7 @@ sudo k3s kubectl -n kube-system get pvc traefik-acme</code></div></pre>
 <p>文件放在 local PV 时，Traefik 同样固定到该节点，使用单副本与 Recreate，避免多实例共同写入同一个 ACME 文件。</p>
 <h3 id="4-4-配置-Traefik-DNS-01">4.4 配置 Traefik DNS-01</h3>
 <p>K3s 自带 Traefik 通过 HelmChart 管理。自定义参数写入同名 <code>HelmChartConfig</code>，不要直接修改会被 K3s 重建的内置清单。</p>
-<p>下面是新增参数示例，对应本文的 Traefik chart 39.0.2 字段；已有 <code>HelmChartConfig</code> 时合并到原文件，保留现有路由、容忍和 ServiceLB 配置。示例使用测试 CA，先确认 DNS 验证成功。</p>
+<p>下面是 Traefik 的配置参数，对应 Traefik chart 39.0.2。先保存为当前目录下的 <code>traefik-config.yaml</code>，替换邮箱和节点名。它包含第三节已有的双栈字段；自行增加过配置的集群需合并保留。示例使用测试 CA，先确认 DNS 验证成功。</p>
 <pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div></div><code class="language-yaml">apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:
@@ -498,7 +804,7 @@ spec:
 <p>同时，内网 IPA DNS 与公网区域采用不同答案，DNS-01 自检需查询公网解析器，不能依赖内部权威区域。本例指定了可从服务器访问的公共 IPv6 DNS，并保留传播等待时间。</p>
 <p>若后续改成专门的 CNAME 验证委派，需要重新评估 <code>LEGO_DISABLE_CNAME_SUPPORT</code>，不能一直保留。具体环境变量以 <a target="_blank" rel="noopener" href="https://go-acme.github.io/lego/dns/tencentcloud/" title="腾讯云 provider" class="external-link" data-redirect="https%3A%2F%2Fgo-acme.github.io%2Flego%2Fdns%2Ftencentcloud%2F">lego 腾讯云 provider</a>与 <a target="_blank" rel="noopener" href="https://doc.traefik.io/traefik/reference/install-configuration/tls/certificate-resolvers/acme/" title="ACME" class="external-link" data-redirect="https%3A%2F%2Fdoc.traefik.io%2Ftraefik%2Freference%2Finstall-configuration%2Ftls%2Fcertificate-resolvers%2Facme%2F">Traefik ACME 配置</a>为准。</p>
 <h3 id="4-6-申请泛域名并配置业务路由">4.6 申请泛域名并配置业务路由</h3>
-<p>配置默认 TLSStore，指定签发名称：</p>
+<p>保存为 <code>traefik-tlsstore.yaml</code>，配置默认 TLSStore 和签发名称：</p>
 <pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-yaml">apiVersion: traefik.io/v1alpha1
 kind: TLSStore
 metadata:
@@ -511,33 +817,27 @@ spec:
       main: lab.example.com
       sans:
         - &quot;*.lab.example.com&quot;</code></div></pre>
-<p>将合并后的 HelmChartConfig 保存到 K3s server 的 <code>/var/lib/rancher/k3s/server/manifests/traefik-config.yaml</code>，该目录由 K3s 自动加载，再应用 TLSStore。检查 Traefik 日志及测试证书；测试 CA 的证书不受普通浏览器信任，这是预期行为。</p>
-<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl apply -f traefik-tlsstore.yaml
+<p>执行下面命令安装完整 HelmChartConfig，该目录由 K3s 自动加载；等 Helm 安装任务成功、Deployment 更新后再检查 TLSStore。检查 Traefik 日志及测试证书；测试 CA 的证书不受普通浏览器信任，这是预期行为。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo install -m 0600 traefik-config.yaml /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
+sudo k3s kubectl -n kube-system get jobs,pods
+sudo k3s kubectl apply -f traefik-tlsstore.yaml
 sudo k3s kubectl -n kube-system logs deployment/traefik --tail=100</code></div></pre>
-<p>确认 DNS-01 流程成功后，将 <code>caserver</code> 改为 <code>https://acme-v02.api.letsencrypt.org/directory</code>，<code>storage</code> 改为 <code>/data/acme.json</code>，重新应用配置，测试与正式账户文件分别保留。</p>
-<p>普通业务通过 IngressRoute 使用默认公共证书。以下假设 <code>apps</code> 命名空间已存在名为 <code>web-app</code>、端口为 <code>80</code> 的 Service：</p>
-<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-yaml">apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: web-app-https
-  namespace: apps
-spec:
-  entryPoints: [business]
-  routes:
-    - match: Host(`files.lab.example.com`)
-      kind: Rule
-      services:
-        - name: web-app
-          port: 80
-  tls: &#123;&#125;</code></div></pre>
-<p>证书申请和后续续期由 Traefik 完成，K3s 负责运行工作负载，PVC 保存账户与私钥，无需再添加一套申请证书的定时脚本。本次已验证正式签发和 Traefik Pod 重建后的证书加载，尚未经过实际到期续签周期。</p>
+<p>检查 <code>sudo k3s kubectl -n kube-system get deployment traefik -o yaml</code> 中的 args 已变为 staging 配置，日志没有 DNS 权限、传播或清理失败。可以不部署业务，先检查入口返回的默认测试证书：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">openssl s_client -connect 192.168.50.10:8443 -servername git.lab.example.com &lt;/dev/null 2&gt;/dev/null |
+  openssl x509 -noout -issuer -dates -ext subjectAltName</code></div></pre>
+<p>签发者应为测试 CA，SAN 包含区域根与泛域名，不能是 Traefik 自动生成的默认自签证书。确认后，编辑当前目录的 <code>traefik-config.yaml</code>，将 <code>caserver</code> 改为 <code>https://acme-v02.api.letsencrypt.org/directory</code>、<code>storage</code> 改为 <code>/data/acme.json</code>，再次执行前面的 <code>sudo install</code>。等 Helm 更新完成，复查 Deployment args、日志与证书；测试与正式账户文件分别保留。</p>
+<p>此时尚未部署 Gitea、Nextcloud，HTTPS 返回 404 是正常的，但证书链必须能通过验证：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">curl --resolve git.lab.example.com:8443:192.168.50.10 -I https://git.lab.example.com:8443/</code></div></pre>
+<p>后续两篇分别提供业务 Service 与 IngressRoute，这里不创建指向不存在 Service 的示例路由。</p>
+<p>证书申请和后续续期由 Traefik 完成，K3s 负责运行工作负载，PVC 保存账户与私钥，无需再添加一套申请证书的定时脚本。Pod 重建后会从持久卷加载证书，日常维护时检查证书有效期和续期日志即可。</p>
 <h2 id="五、内外网访问与应用设置">五、内外网访问与应用设置</h2>
 <h3 id="5-1-公网解析与端口转发">5.1 公网解析与端口转发</h3>
 <p>公网业务可以保留区域根 A 记录与通配 CNAME，例如：</p>
 <pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">lab.example.com      A       203.0.113.10
 *.lab.example.com    CNAME   lab.example.com.</code></div></pre>
 <p>其中 <code>203.0.113.10</code> 是文档示例地址。仅用于内部认证的主机私网记录放在 IPA DNS，不需要公开到公网区域。删除旧记录前，先确认内部 DNS 已能提供所需名称和 SRV。</p>
-<p>路由器管理服务占用 443 时，可以像本例一样使用 <code>8443</code> 作为公共业务入口，将 TCP 8443 转发到 Traefik 的业务端口。不要把 IPA 的 LDAP、Kerberos 或集群管理端口一并转发。</p>
+<p>路由器管理服务占用 443 时，在路由器端口转发页新建一条 TCP 规则：外部端口 <code>8443</code>，内部目标 <code>192.168.50.10</code>，内部端口 <code>8443</code>，并允许这条转发流量通过边界防火墙。保存后从手机蜂窝网络等外网测试。IPv4 上游还存在 NAT 时，上游也需要同样转发，否则本层映射不足以使服务公开。不要把 IPA、数据库或集群管理端口一并映射。</p>
+<p>没有部署公网 IPv6 入口时，不为业务发布公网 AAAA；内网 ULA AAAA 可以继续保留。证书可通过 DNS-01 申请，完全不依赖公网业务端口开放。</p>
 <p>内网 DNS 为业务名称返回内部地址，外网返回公开入口。内外统一使用 <code>https://files.lab.example.com:8443/</code>，协议、域名和端口保持一致。已有客户端可能缓存旧 A/AAAA 或不存在记录的答案，可先通过 <code>dig</code> 比较，再按需刷新缓存。</p>
 <h3 id="5-2-Gitea-与-Nextcloud-的反向代理设置">5.2 Gitea 与 Nextcloud 的反向代理设置</h3>
 <p>Gitea 需要设置对外 URL，否则生成链接或跳转仍可能使用旧 HTTP 地址。容器环境变量示例：</p>
@@ -554,7 +854,7 @@ GITEA__server__SSH_DOMAIN: git.lab.example.com</code></div></pre>
 'trusted_proxies' =&gt; ['10.44.0.0/16'],</code></div></pre>
 <p>受信任代理应限定到 Traefik 实际来源地址范围，不能为了消除提示直接配置任意来源。如果容器入口脚本从环境变量生成配置，还要修改对应 Deployment 的环境变量，否则手工修改可能在重建后被旧值覆盖。</p>
 <h3 id="5-3-验证服务与证书">5.3 验证服务与证书</h3>
-<p>分别验证 IPv4 和 IPv6，保持证书校验开启：</p>
+<p>以下业务测试在完成 Nextcloud 篇部署后执行；仅完成本文时还没有 files 路由。分别验证内网 IPv4 和 IPv6，保持证书校验开启：</p>
 <pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash">curl -4 -IL https://files.lab.example.com:8443/
 curl -6 -IL https://files.lab.example.com:8443/
 
@@ -567,7 +867,7 @@ openssl s_client \
 <pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">curl -4 --cacert /etc/ipa/ca.crt -I https://ipa.lab.example.com/ipa/ui/
 curl -6 --cacert /etc/ipa/ca.crt -I https://ipa.lab.example.com/ipa/ui/
 sudo podman exec ipa-server ipactl status</code></div></pre>
-<p>此次已经验证客户端域名访问、LDAP 查询、双栈 Kerberos 取票，以及应用和 Traefik Pod 重建后的持久化。整机重启恢复、最终用户上传和 Git 推送没有在本次执行；FreeIPA 健康检查仍有容器时间服务及权限相关遗留项，不能只根据网页打开就认为全部检查通过。</p>
+<p>FreeIPA 健康检查中的容器时间服务及权限问题仍需分别处理。时间同步由宿主机维护，其他错误根据健康检查输出逐项排查。</p>
 <h2 id="参考">参考</h2>
 <ul>
 <li><a target="_blank" rel="noopener" href="https://github.com/freeipa/freeipa-container" title="FreeIPA 容器" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ffreeipa%2Ffreeipa-container">FreeIPA 容器部署说明</a></li>
@@ -581,7 +881,7 @@ sudo podman exec ipa-server ipactl status</code></div></pre>
 <li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/document/product/302/105719" title="DNSPod 授权" class="external-link" data-redirect="https%3A%2F%2Fcloud.tencent.com%2Fdocument%2Fproduct%2F302%2F105719">腾讯云 DNSPod 可授权资源类型</a></li>
 </ul>
 <!-- url -->
-</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/61942/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/61942/">https://www.doratiger.top/2026/09/61942/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/61943/"><span>服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/31179/"><span>Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/61942/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/61942/">https://www.doratiger.top/2026/09/61942/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/61943/"><span>服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/2072836977/"><span>服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
   var api = 'https://api.superheaoz.top/counter/count';
 
   // Visitor ID: 从 cookie 读取或生成 UUID
