@@ -1,0 +1,723 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置【DoraTiger 的异次元】</title><meta name="description" content="服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置"><meta name="keywords" content="k3s,freeipa,ldap,gitea,postgresql,ssh"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置【DoraTiger 的异次元】"><meta property="og:description" content="服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/61943/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/61943/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-19T14:00:00.000Z","dateModified":"2026-09-19T15:30:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/61943/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%83%A8%E7%BD%B2%E5%87%86%E5%A4%87"><span class="toc-text">一、部署准备</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E7%A1%AE%E8%AE%A4%E6%9C%8D%E5%8A%A1%E4%B8%8E%E8%AE%BF%E9%97%AE%E6%96%B9%E5%BC%8F"><span class="toc-text">1.1 确认服务与访问方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%88%9B%E5%BB%BA%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95"><span class="toc-text">1.2 创建命名空间与数据目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%88%9B%E5%BB%BA-PV-%E4%B8%8E-PVC"><span class="toc-text">1.3 创建 PV 与 PVC</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%83%A8%E7%BD%B2-PostgreSQL-%E4%B8%8E-Gitea"><span class="toc-text">二、部署 PostgreSQL 与 Gitea</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AF%86%E7%A0%81"><span class="toc-text">2.1 创建数据库密码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%83%A8%E7%BD%B2%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="toc-text">2.2 部署数据库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%AF%BC%E5%85%A5-IPA-CA"><span class="toc-text">2.3 导入 IPA CA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E9%83%A8%E7%BD%B2-Gitea"><span class="toc-text">2.4 部署 Gitea</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-%E9%A6%96%E6%AC%A1%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">2.5 首次初始化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%85%8D%E7%BD%AE-HTTPS-%E5%92%8C-SSH-%E5%85%A5%E5%8F%A3"><span class="toc-text">三、配置 HTTPS 和 SSH 入口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-HTTPS-%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86"><span class="toc-text">3.1 HTTPS 反向代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-SSH-%E4%BD%BF%E7%94%A8%E7%8B%AC%E7%AB%8B%E7%AB%AF%E5%8F%A3"><span class="toc-text">3.2 SSH 使用独立端口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%8E%A5%E5%85%A5-FreeIPA"><span class="toc-text">四、接入 FreeIPA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E9%85%8D%E7%BD%AE%E5%BA%94%E7%94%A8%E6%9F%A5%E8%AF%A2%E8%B4%A6%E6%88%B7%E4%B8%8E%E7%94%A8%E6%88%B7%E7%BB%84"><span class="toc-text">4.1 配置应用查询账户与用户组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%85%88%E9%AA%8C%E8%AF%81-LDAP-%E6%9F%A5%E8%AF%A2"><span class="toc-text">4.2 先验证 LDAP 查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%B7%BB%E5%8A%A0-Gitea-%E8%AE%A4%E8%AF%81%E6%BA%90"><span class="toc-text">4.3 添加 Gitea 认证源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E7%94%A8%E6%88%B7%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BB%93%E5%BA%93%E6%9D%83%E9%99%90"><span class="toc-text">4.4 用户同步与仓库权限</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%85%8D%E7%BD%AE-Git-%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="toc-text">五、配置 Git 客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E4%BD%BF%E7%94%A8-SSH-%E5%85%8B%E9%9A%86"><span class="toc-text">5.1 使用 SSH 克隆</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E4%BD%BF%E7%94%A8-HTTPS-%E5%85%8B%E9%9A%86"><span class="toc-text">5.2 使用 HTTPS 克隆</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E4%B8%8E%E5%A4%87%E4%BB%BD"><span class="toc-text">六、常见问题与备份</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-LDAP-%E6%8A%A5%E8%AF%81%E4%B9%A6%E9%94%99%E8%AF%AF"><span class="toc-text">6.1 LDAP 报证书错误</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E7%BD%91%E9%A1%B5%E8%83%BD%E6%89%93%E5%BC%80%EF%BC%8CSSH-%E8%BF%9E%E6%8E%A5%E5%A4%B1%E8%B4%A5"><span class="toc-text">6.2 网页能打开，SSH 连接失败</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%A4%87%E4%BB%BD%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E5%BA%94%E7%94%A8%E6%96%87%E4%BB%B6"><span class="toc-text">6.3 备份数据库与应用文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color5"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color7"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">58</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">109</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（9）Gitea 部署与 FreeIPA 认证配置</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/k3s/">k3s</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/freeipa/">freeipa</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ldap/">ldap</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/gitea/">gitea</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/postgresql/">postgresql</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ssh/">ssh</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">13824 字 · 约 47 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>由于实验室需要集中管理项目代码、实验脚本及环境配置，故而在 K3s 中部署 Gitea，并接入 FreeIPA 统一用户认证。仓库通过组织和团队分配权限，使用 Issue 和 Pull Request 进行项目协作，共享文档另由 Nextcloud 管理。</p>
+<p>之前在<a href="/2023/04/12983/" title="服务器操作指北（4）GitLab 私有化部署">服务器操作指北（4）GitLab 私有化部署</a>中记录过 GitLab 的安装，本篇记录 Gitea 的部署方式。</p>
+<a href="/2026/09/61942/" title="服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置">服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置</a>已经配置了 FreeIPA、K3s 和 Traefik，本篇继续记录 Gitea 的部署、LDAP 认证及 HTTPS、SSH 访问设置。下面从空数据目录开始，通过独立的 Kubernetes 清单安装 PostgreSQL 和 Gitea，再配置 FreeIPA 认证源。
+<p>本文使用版本为 <code>Gitea 1.27.3</code>、<code>PostgreSQL 15.19</code>。文中的域名、节点名称、目录和外部端口均为示例，使用时自行修改。示例清单经过语法检查，未另外创建一套测试集群执行全新安装。</p>
+<span id="more"></span>
+<h2 id="一、部署准备">一、部署准备</h2>
+<h3 id="1-1-确认服务与访问方式">1.1 确认服务与访问方式</h3>
+<p>Gitea 使用 PostgreSQL 保存用户、仓库元数据和认证源配置，仓库文件、附件及应用配置保存在 <code>/data</code>。两部分都需要持久化，不能只备份数据库。</p>
+<p>本篇沿用上一文的 <code>lab.example.com</code> 示例区域，配置如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">项目</th>
+<th style="text-align:left">示例配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Gitea 域名</td>
+<td style="text-align:left"><code>git.lab.example.com</code></td>
+</tr>
+<tr>
+<td style="text-align:left">FreeIPA 域名</td>
+<td style="text-align:left"><code>ipa.lab.example.com</code></td>
+</tr>
+<tr>
+<td style="text-align:left">HTTPS 地址</td>
+<td style="text-align:left"><code>https://git.lab.example.com:8443/</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Git SSH 对外端口</td>
+<td style="text-align:left"><code>22222/TCP</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Gitea 容器网页端口</td>
+<td style="text-align:left"><code>3000/TCP</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Gitea 容器 SSH 端口</td>
+<td style="text-align:left"><code>22/TCP</code></td>
+</tr>
+<tr>
+<td style="text-align:left">PostgreSQL</td>
+<td style="text-align:left">集群内 <code>5432/TCP</code></td>
+</tr>
+<tr>
+<td style="text-align:left">数据节点</td>
+<td style="text-align:left"><code>host-a</code></td>
+</tr>
+</tbody>
+</table>
+<p>此处使用带 OpenSSH 的普通 Gitea 镜像，不使用 rootless 标签，也不启动 Gitea 内置 SSH 服务。不同镜像的目录、运行用户和 SSH 监听端口不能混用，镜像部署方式参考 <a target="_blank" rel="noopener" href="https://docs.gitea.com/installation/install-with-docker/" title="Gitea 容器部署" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Finstallation%2Finstall-with-docker%2F">Gitea Docker 文档</a>。</p>
+<p>FreeIPA 的 LDAPS 使用 <code>636/TCP</code>，容器需要能够解析并访问 IPA 内网地址。网页前面的公共 HTTPS 证书与 LDAP 后端的 IPA CA 分别配置。</p>
+<h3 id="1-2-创建命名空间与数据目录">1.2 创建命名空间与数据目录</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-bash">sudo k3s kubectl create namespace gitea
+
+# 在数据所在节点执行，自行修改目录
+sudo install -d -m 0750 /srv/example/gitea
+sudo install -d -m 0750 /srv/example/gitea-db
+
+# 普通 Gitea 镜像的 git 用户使用本文指定的 UID/GID
+sudo chown 1000:1000 /srv/example/gitea
+
+# 确认目录实际落在数据盘，而不是未挂载时的根目录
+findmnt -T /srv/example/gitea
+findmnt -T /srv/example/gitea-db</code></div></pre>
+<p>本例将应用与数据库固定到同一数据节点，采用单副本。其他节点不会自动拥有这些目录中的数据；本地持久卷适合目前的部署方式，但不提供跨节点数据复制。</p>
+<h3 id="1-3-创建-PV-与-PVC">1.3 创建 PV 与 PVC</h3>
+<p>保存为 <code>gitea-storage.yaml</code>，其中 <code>host-a</code> 替换为 <code>kubectl get nodes</code> 中的数据节点名称：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div></div><code class="language-yaml">apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: example-gitea-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: &quot;&quot;
+  local:
+    path: /srv/example/gitea
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [host-a]
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: example-gitea-db
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: &quot;&quot;
+  local:
+    path: /srv/example/gitea-db
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [host-a]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitea-data
+  namespace: gitea
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: &quot;&quot;
+  volumeName: example-gitea-data
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitea-db
+  namespace: gitea
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: &quot;&quot;
+  volumeName: example-gitea-db
+  resources:
+    requests:
+      storage: 10Gi</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl apply -f gitea-storage.yaml
+sudo k3s kubectl -n gitea get pvc</code></div></pre>
+<p>两个 PVC 应为 Bound。<code>Retain</code> 防止删除 PVC 后直接回收数据，但不会自动制作备份；容量声明也不是宿主目录的磁盘配额。</p>
+<h2 id="二、部署-PostgreSQL-与-Gitea">二、部署 PostgreSQL 与 Gitea</h2>
+<h3 id="2-1-创建数据库密码">2.1 创建数据库密码</h3>
+<p>应用和数据库引用同一个 Secret，避免分别填写密码造成不一致。首次部署可生成随机密码并保存在 root 受限文件中：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">sudo install -d -m 0700 /root/example-gitea
+sudo sh -c 'umask 077; openssl rand -hex 32 | tr -d &quot;\n&quot; &gt; /root/example-gitea/db-password'
+
+sudo k3s kubectl -n gitea create secret generic gitea-db-auth \
+  --from-file=password=/root/example-gitea/db-password</code></div></pre>
+<p>PostgreSQL 镜像中的初始化环境变量只在空数据目录时创建数据库和用户。安装完成后如需更换密码，需要同时修改数据库用户密码和 Secret，不能只重新生成凭据文件。</p>
+<h3 id="2-2-部署数据库">2.2 部署数据库</h3>
+<p>保存为 <code>gitea-postgres.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div></div><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea-db
+  namespace: gitea
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gitea-db
+  template:
+    metadata:
+      labels:
+        app: gitea-db
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: host-a
+      containers:
+        - name: postgres
+          image: postgres:15.19
+          env:
+            - name: POSTGRES_DB
+              value: gitea
+            - name: POSTGRES_USER
+              value: gitea
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gitea-db-auth
+                  key: password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - name: postgres
+              containerPort: 5432
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, gitea, -d, gitea]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: database
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: database
+          persistentVolumeClaim:
+            claimName: gitea-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-db
+  namespace: gitea
+spec:
+  type: ClusterIP
+  selector:
+    app: gitea-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl apply -f gitea-postgres.yaml
+sudo k3s kubectl -n gitea rollout status deployment/gitea-db</code></div></pre>
+<p>数据库 Service 只在集群内部使用，不配置公网端口转发。示例使用单实例 Deployment 和 Recreate，升级会中断服务，应安排维护窗口。若数据节点带有 NoSchedule 污点，数据库和后面的 Gitea Pod 都需补充对应 tolerations。</p>
+<h3 id="2-3-导入-IPA-CA">2.3 导入 IPA CA</h3>
+<p>从已正确入域的客户端取得 <code>/etc/ipa/ca.crt</code>，核对它与 IPA 服务端的 CA 指纹一致。这里导入的是公共证书，不是 CA 私钥。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">openssl x509 -in /etc/ipa/ca.crt -noout -subject -fingerprint -sha256
+
+sudo k3s kubectl -n gitea create configmap ipa-ca \
+  --from-file=ipa-ca.crt=/etc/ipa/ca.crt</code></div></pre>
+<p>后面的 initContainer 会把镜像原有公共 CA 与 IPA CA 合并，再挂载到 Gitea 中。这样既能校验 FreeIPA 的 LDAPS，也保留访问公共 HTTPS 服务所需的 CA。</p>
+<p>不能只把宿主机加入 IPA 就认为容器也信任 IPA CA，容器有自己的文件系统与证书库。也不要用勾选 Skip TLS Verify 来代替证书安装。</p>
+<h3 id="2-4-部署-Gitea">2.4 部署 Gitea</h3>
+<p>保存为 <code>gitea.yaml</code>。环境变量采用 Gitea 的 <code>GITEA__配置节__配置项</code> 格式，镜像启动时会据此生成或更新配置。</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div></div><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  namespace: gitea
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gitea
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: host-a
+      initContainers:
+        - name: prepare-ca
+          image: docker.io/gitea/gitea:1.27.3
+          command: [/bin/sh, -ec]
+          args:
+            - |
+              cat /etc/ssl/certs/ca-certificates.crt /ipa/ipa-ca.crt &gt; /trust/ca-certificates.crt
+              chmod 0644 /trust/ca-certificates.crt
+          volumeMounts:
+            - name: ipa-ca
+              mountPath: /ipa
+              readOnly: true
+            - name: trust
+              mountPath: /trust
+      containers:
+        - name: gitea
+          image: docker.io/gitea/gitea:1.27.3
+          env:
+            - name: USER_UID
+              value: &quot;1000&quot;
+            - name: USER_GID
+              value: &quot;1000&quot;
+            - name: GITEA__database__DB_TYPE
+              value: postgres
+            - name: GITEA__database__HOST
+              value: gitea-db:5432
+            - name: GITEA__database__NAME
+              value: gitea
+            - name: GITEA__database__USER
+              value: gitea
+            - name: GITEA__database__PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: gitea-db-auth
+                  key: password
+            - name: GITEA__database__SSL_MODE
+              value: disable
+            - name: GITEA__server__PROTOCOL
+              value: http
+            - name: GITEA__server__HTTP_PORT
+              value: &quot;3000&quot;
+            - name: GITEA__server__DOMAIN
+              value: git.lab.example.com
+            - name: GITEA__server__ROOT_URL
+              value: https://git.lab.example.com:8443/
+            - name: GITEA__server__SSH_DOMAIN
+              value: git.lab.example.com
+            - name: GITEA__server__SSH_PORT
+              value: &quot;22222&quot;
+            - name: GITEA__server__START_SSH_SERVER
+              value: &quot;false&quot;
+            - name: GITEA__service__DISABLE_REGISTRATION
+              value: &quot;true&quot;
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/ca-certificates.crt
+          ports:
+            - name: http
+              containerPort: 3000
+            - name: ssh
+              containerPort: 22
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: trust
+              mountPath: /etc/ssl/certs/ca-certificates.crt
+              subPath: ca-certificates.crt
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gitea-data
+        - name: ipa-ca
+          configMap:
+            name: ipa-ca
+        - name: trust
+          emptyDir: &#123;&#125;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-http
+  namespace: gitea
+spec:
+  selector:
+    app: gitea
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http</code></div></pre>
+<p>这里的 <code>emptyDir</code> 只保存每次启动重新生成的 CA 合集，业务数据仍在 PVC。IPA CA 发生更新后，需要重建 Pod 重新合并证书。</p>
+<p>示例数据库连接采用集群内部明文传输；ClusterIP 不等于流量加密，其他不受信任工作负载能否访问还取决于网络策略。如需跨不受信任网络连接数据库，应另行配置 PostgreSQL TLS。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo k3s kubectl apply -f gitea.yaml
+sudo k3s kubectl -n gitea get pods
+sudo k3s kubectl -n gitea logs deployment/gitea --tail=100</code></div></pre>
+<h3 id="2-5-首次初始化">2.5 首次初始化</h3>
+<p>先完成初始化和管理员创建，再公开入口。可以在有 kubeconfig 的管理工作站上临时转发 Pod 端口：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 在管理工作站执行，默认只监听本机回环地址
+# 使用 Pod 转发，避免首次安装期间 readiness 尚未通过而选不到后端
+kubectl -n gitea get pods -l app=gitea
+kubectl -n gitea port-forward pod/替换为上一步的Pod名称 3000:3000</code></div></pre>
+<p>浏览器访问 <code>http://127.0.0.1:3000/</code>。安装页面中的数据库类型为 PostgreSQL，地址 <code>gitea-db:5432</code>，数据库与用户均为 <code>gitea</code>，密码使用前面生成的值。站点 URL 填写正式的 <code>https://git.lab.example.com:8443/</code>，并创建一个独立的本地管理员，例如 <code>site-admin</code>。</p>
+<p>完成安装后应锁定安装界面。确认 <code>/data/gitea/conf/app.ini</code> 中 <code>INSTALL_LOCK=true</code>，并将对应环境变量 <code>GITEA__security__INSTALL_LOCK=true</code> 纳入最终 Deployment 配置。此时再检查：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo k3s kubectl -n gitea rollout status deployment/gitea</code></div></pre>
+<p>本地管理员保留作认证源维护用途，不需要与 IPA 管理员同名。</p>
+<h2 id="三、配置-HTTPS-和-SSH-入口">三、配置 HTTPS 和 SSH 入口</h2>
+<h3 id="3-1-HTTPS-反向代理">3.1 HTTPS 反向代理</h3>
+<p>沿用上一篇已经配置的 Traefik <code>business</code> 入口与默认泛域名证书，创建 <code>gitea-ingress.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-yaml">apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gitea-https
+  namespace: gitea
+spec:
+  entryPoints: [business]
+  routes:
+    - match: Host(`git.lab.example.com`)
+      kind: Rule
+      services:
+        - name: gitea-http
+          port: 3000
+  tls: &#123;&#125;</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl apply -f gitea-ingress.yaml
+curl -IL https://git.lab.example.com:8443/</code></div></pre>
+<p>Traefik 终止 HTTPS 后，通过集群内 HTTP 访问 Gitea，所以 Gitea 的 <code>PROTOCOL=http</code> 与 <code>ROOT_URL=https://...</code> 并不冲突。前者是应用监听协议，后者用于生成外部链接，具体参数可参考 <a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/config-cheat-sheet/" title="Gitea 配置" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fconfig-cheat-sheet%2F">Gitea 配置说明</a>。</p>
+<p>内网 DNS 将业务域名解析到内部入口，公网 DNS 指向公开入口，域名、协议和端口保持一致。若页面能打开但登录跳回旧地址，优先检查 ROOT_URL 与 Deployment 环境变量，不只修改容器里的 app.ini。</p>
+<h3 id="3-2-SSH-使用独立端口">3.2 SSH 使用独立端口</h3>
+<p>HTTPS 与 Git SSH 是两种协议。本文网页使用 <code>8443</code>，SSH 使用 <code>22222</code>，不能把 SSH 克隆地址也填成 HTTPS 端口。</p>
+<p>创建 <code>gitea-ssh.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-ssh
+  namespace: gitea
+spec:
+  type: LoadBalancer
+  ipFamilyPolicy: PreferDualStack
+  externalTrafficPolicy: Local
+  selector:
+    app: gitea
+  ports:
+    - name: ssh
+      port: 22222
+      targetPort: ssh
+      protocol: TCP</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl apply -f gitea-ssh.yaml
+sudo k3s kubectl -n gitea get svc gitea-ssh -o wide</code></div></pre>
+<p>K3s 使用 ServiceLB 时，应确认数据节点上有可运行的 ServiceLB Pod，且没有端口冲突或污点阻止调度。<code>externalTrafficPolicy: Local</code> 要求访问有本地 Gitea 后端的节点；路由器转发目标应选实际承载 Gitea 的节点，不能任意选择一个工作节点。</p>
+<p>端口关系为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-text">客户端 TCP 22222
+  → 路由器 TCP 22222 端口转发
+  → 数据节点的 Gitea SSH Service 22222
+  → Gitea 容器 OpenSSH 22</code></div></pre>
+<p><code>SSH_PORT=22222</code> 用于生成给用户看的克隆地址，不会把容器 OpenSSH 的监听端口改成 22222。<code>SSH_LISTEN_PORT</code> 属于 Gitea 内置 SSH 服务的配置，本例没有启用该服务，不需要设置。</p>
+<p>路由器需要单独建立 SSH 转发规则。内网能握手、网页能访问，都不能证明公网 SSH 转发已经存在。实际环境中已检查公网映射并收到 SSH 协议响应，确认此路径可达。</p>
+<h2 id="四、接入-FreeIPA">四、接入 FreeIPA</h2>
+<h3 id="4-1-配置应用查询账户与用户组">4.1 配置应用查询账户与用户组</h3>
+<p>这里采用 <code>LDAP via BindDN</code>。Gitea 先使用查询账户查找用户 DN，再使用用户提交的密码认证。查询账户无需加入 IPA 管理员组，也不要直接把 Directory Manager 密码保存到 Gitea。</p>
+<p>FreeIPA 可以为应用创建位于 <code>cn=sysaccounts,cn=etc</code> 下的系统绑定账户，参考 <a target="_blank" rel="noopener" href="https://www.freeipa.org/page/HowTo/LDAP" title="FreeIPA LDAP" class="external-link" data-redirect="https%3A%2F%2Fwww.freeipa.org%2Fpage%2FHowTo%2FLDAP">FreeIPA LDAP 说明</a>。以下是 LDIF 模板，保存为受限文件 <code>gitea-bind.ldif</code>，替换 DN 与密码；不要提交到配置仓库：</p>
+<pre><div class="code-header"><span class="code-header-type">ldif</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-ldif">dn: uid=gitea-bind,cn=sysaccounts,cn=etc,dc=lab,dc=example,dc=com
+changetype: add
+objectClass: account
+objectClass: simpleSecurityObject
+uid: gitea-bind
+userPassword: REPLACE_WITH_A_UNIQUE_PASSWORD
+passwordExpirationTime: 20380119031407Z
+nsIdleTimeout: 0</code></div></pre>
+<p>有效期是需要维护的配置，应按自己的凭据轮换计划设置，不能把模板日期当成永不过期。文件只允许管理员读取，通过可信客户端的 LDAPS 导入：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">chmod 0600 gitea-bind.ldif
+
+# -W 交互输入 Directory Manager 密码；不是普通 IPA admin 密码
+LDAPTLS_CACERT=/etc/ipa/ca.crt ldapmodify \
+  -H ldaps://ipa.lab.example.com:636 \
+  -x -D 'cn=Directory Manager' -W -f gitea-bind.ldif</code></div></pre>
+<p>导入后妥善保存应用凭据，移除不再需要的明文 LDIF。Directory Manager 仅用于这一步管理操作；后续 Gitea 绑定使用 <code>gitea-bind</code>。该账户应只拥有所需查询权限，若环境定制过 LDAP ACI，需实际验证它能读取所用的用户和组属性。</p>
+<p>再建立允许使用 Gitea 的用户组。以下在已安装 IPA CLI 的可信管理环境中执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">kinit admin
+ipa group-add gitea-users --desc='Users allowed to access Gitea'
+ipa group-add-member gitea-users --users=yourname</code></div></pre>
+<p>用户应有有效的 <code>uid</code>、<code>givenName</code>、<code>sn</code> 与 <code>mail</code>。新用户如果仍处于首次修改密码状态，应先在 FreeIPA 中完成密码修改，再尝试 Gitea 登录。</p>
+<h3 id="4-2-先验证-LDAP-查询">4.2 先验证 LDAP 查询</h3>
+<p>在能访问 IPA 的客户端安装 <code>ldap-utils</code>，使用应用查询账户测试。下面的 <code>-W</code> 输入绑定账户密码，不是登录用户密码：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">LDAPTLS_CACERT=/etc/ipa/ca.crt ldapsearch \
+  -H ldaps://ipa.lab.example.com:636 \
+  -x -D 'uid=gitea-bind,cn=sysaccounts,cn=etc,dc=lab,dc=example,dc=com' -W \
+  -b 'cn=users,cn=accounts,dc=lab,dc=example,dc=com' \
+  '(&amp;(objectClass=posixAccount)(uid=yourname)(memberOf=cn=gitea-users,cn=groups,cn=accounts,dc=lab,dc=example,dc=com)(!(nsAccountLock=TRUE)))' \
+  dn uid givenName sn mail memberOf</code></div></pre>
+<p>这里应返回指定用户的 DN 与相关属性。若能连接但没有结果，检查搜索基准、组成员关系、账户锁定状态及过滤器，不必先去修改 TLS。</p>
+<p>客户端查询成功后，还要确认 Gitea Pod 的 DNS 与网络能到达同一 IPA 地址。宿主机的 CA、hosts 和路由不会全部自动传入容器，最终应以 Gitea 认证源测试或实际登录时的日志为准。</p>
+<h3 id="4-3-添加-Gitea-认证源">4.3 添加 Gitea 认证源</h3>
+<p>使用本地管理员进入“站点管理 → 认证源 → 添加认证源”。按 <a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/authentication/" title="LDAP 认证" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fauthentication%2F">Gitea LDAP 认证文档</a>选择 <code>LDAP via BindDN</code>，填写以下示例：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">认证名称</td>
+<td style="text-align:left"><code>FreeIPA</code></td>
+</tr>
+<tr>
+<td style="text-align:left">安全协议</td>
+<td style="text-align:left"><code>LDAPS</code></td>
+</tr>
+<tr>
+<td style="text-align:left">主机</td>
+<td style="text-align:left"><code>ipa.lab.example.com</code>，不加 URL scheme</td>
+</tr>
+<tr>
+<td style="text-align:left">端口</td>
+<td style="text-align:left"><code>636</code></td>
+</tr>
+<tr>
+<td style="text-align:left">跳过 TLS 验证</td>
+<td style="text-align:left">不勾选</td>
+</tr>
+<tr>
+<td style="text-align:left">Bind DN</td>
+<td style="text-align:left"><code>uid=gitea-bind,cn=sysaccounts,cn=etc,dc=lab,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Bind Password</td>
+<td style="text-align:left">前面创建的查询账户密码</td>
+</tr>
+<tr>
+<td style="text-align:left">User Search Base</td>
+<td style="text-align:left"><code>cn=users,cn=accounts,dc=lab,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Username Attribute</td>
+<td style="text-align:left"><code>uid</code></td>
+</tr>
+<tr>
+<td style="text-align:left">First Name Attribute</td>
+<td style="text-align:left"><code>givenName</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Surname Attribute</td>
+<td style="text-align:left"><code>sn</code></td>
+</tr>
+<tr>
+<td style="text-align:left">E-mail Attribute</td>
+<td style="text-align:left"><code>mail</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Admin Filter</td>
+<td style="text-align:left">初次配置留空，不自动授予站点管理员</td>
+</tr>
+<tr>
+<td style="text-align:left">认证源启用</td>
+<td style="text-align:left">勾选</td>
+</tr>
+</tbody>
+</table>
+<p>User Filter 填写：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">(&amp;(objectClass=posixAccount)(uid=%[1]s)(memberOf=cn=gitea-users,cn=groups,cn=accounts,dc=lab,dc=example,dc=com)(!(nsAccountLock=TRUE)))</code></div></pre>
+<p><code>%[1]s</code> 是 Gitea 替换登录名的占位符，不能照搬 Nextcloud 的 <code>%uid</code>。<code>memberOf</code> 限制可登录用户范围，<code>nsAccountLock</code> 排除锁定用户。示例从直接加入 <code>gitea-users</code> 的用户开始验证，嵌套组行为要结合自己的目录实际查询结果确认。</p>
+<p>如果允许用户名或邮箱登录，可将 <code>(uid=%[1]s)</code> 换成：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">(|(uid=%[1]s)(mail=%[1]s))</code></div></pre>
+<p>Username Attribute 仍使用 <code>uid</code>，避免以邮箱登录时生成另一套 Gitea 用户名。此 LDAP 配置提供账号密码认证，没有配置浏览器 Kerberos 单点登录。</p>
+<h3 id="4-4-用户同步与仓库权限">4.4 用户同步与仓库权限</h3>
+<p>可以在认证源中启用用户同步。首次启用前先用 ldapsearch 确认过滤器范围，避免把整个目录中的用户全部导入。保存认证源不会保证用户列表立即刷新，定时同步的实际执行情况可在 Gitea 管理任务与日志中查看。</p>
+<p>IPA 用户组在这里用于限制谁能够认证。Gitea 的组织、团队、仓库读写权限仍需配置；如果需要组到团队的同步映射，应另外配置并验证，不能只创建一个同名 IPA 组就认为权限已经对应。</p>
+<p>实验室项目仓库放在组织下，按项目建立团队并分配读写权限。成员加入或退出项目时修改团队成员；重要分支按需配置保护规则，通过 Pull Request 合并修改。</p>
+<p>本地管理员使用单独的用户名，普通用户通过 FreeIPA 认证创建 Gitea 账户，避免预先注册同名本地账号造成认证源混淆。</p>
+<h2 id="五、配置-Git-客户端">五、配置 Git 客户端</h2>
+<h3 id="5-1-使用-SSH-克隆">5.1 使用 SSH 克隆</h3>
+<p>用户先通过 FreeIPA 认证登录 Gitea，再在“用户设置 → SSH / GPG 密钥”中添加自己的 SSH 公钥。已有密钥可直接使用，无需重复生成；没有密钥时可创建：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">ssh-keygen -t ed25519 -C 'your-email@example.com'</code></div></pre>
+<p>仅将 <code>.pub</code> 文件内容添加到 Gitea。然后测试 SSH 认证：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">ssh -T -p 22222 git@git.lab.example.com</code></div></pre>
+<p>首次连接先核对服务端 SSH 主机密钥指纹。Gitea 成功识别用户后会返回认证成功、不提供交互式 shell 的提示；这与普通服务器 SSH 登录不同。</p>
+<p>克隆地址为：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">git clone ssh://git@git.lab.example.com:22222/yourname/example-repo.git</code></div></pre>
+<p>连接用户名使用 <code>git</code>，Gitea 根据公钥识别实际账户。FreeIPA 网页登录成功，不会自动把 IPA 中的 SSH 公钥导入 Gitea；本文没有配置这类同步。</p>
+<h3 id="5-2-使用-HTTPS-克隆">5.2 使用 HTTPS 克隆</h3>
+<p>不想单独开放 SSH 时，也可以使用已有 HTTPS 入口：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">git clone https://git.lab.example.com:8443/yourname/example-repo.git</code></div></pre>
+<p>需要鉴权时，按站点设置使用账号凭据或个人访问令牌。启用双因素认证等场景应使用令牌，并按需要授予仓库权限。不要将密码或令牌嵌入 URL，以免进入 shell 历史和 Git remote 配置。</p>
+<p>HTTPS 访问依赖公共 CA 证书；Git SSH 使用 SSH 主机密钥。浏览器证书续期不会替换 SSH 主机密钥，两者分别维护。</p>
+<h2 id="六、常见问题与备份">六、常见问题与备份</h2>
+<h3 id="6-1-LDAP-报证书错误">6.1 LDAP 报证书错误</h3>
+<p>遇到 <code>certificate signed by unknown authority</code>，检查 IPA CA 是否进入 Gitea 使用的证书库、initContainer 是否成功，以及 CA 更新后是否重建了 Pod。</p>
+<p>如果错误是名称不匹配，检查认证源 Host 是否为证书包含的 IPA 域名。直接用内网 IP 连接，不一定满足证书名称校验。公共泛域名证书只配置在 Traefik 上时，也不会改变 FreeIPA LDAPS 返回的证书。</p>
+<h3 id="6-2-网页能打开，SSH-连接失败">6.2 网页能打开，SSH 连接失败</h3>
+<p>按客户端、路由器、Service、Pod 的顺序检查端口：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">ssh -vv -T -p 22222 git@git.lab.example.com
+sudo k3s kubectl -n gitea get svc gitea-ssh -o yaml
+sudo k3s kubectl -n gitea get endpointslice \
+  -l kubernetes.io/service-name=gitea-ssh</code></div></pre>
+<p>连接超时优先检查 DNS、路由器映射、防火墙及 ServiceLB；收到 <code>Permission denied (publickey)</code> 则说明已经进入 SSH 认证阶段，应检查客户端实际提供的公钥及 Gitea 账户关联。</p>
+<p>若网页展示的克隆端口仍不正确，修改 <code>GITEA__server__SSH_PORT</code> 并重建 Pod。修改该变量只改变展示地址，路由器和 Service 映射需要单独一致。</p>
+<h3 id="6-3-备份数据库与应用文件">6.3 备份数据库与应用文件</h3>
+<p>安装完成后，应同时备份 PostgreSQL 数据库和 Gitea 的完整 <code>/data</code>，具体方式可参考 <a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/backup-and-restore/" title="备份恢复" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fbackup-and-restore%2F">Gitea 备份恢复文档</a>。数据库保存用户、权限和认证源，文件目录保存仓库、附件、应用配置及 SSH 主机密钥，两部分应在一致的停写窗口内取得。</p>
+<p>认证源绑定密码由 Gitea 加密保存，备份还需要包含 <code>SECRET_KEY</code> 及其可能引用的文件。缺少该密钥时，数据库中的认证配置可能无法解密。包含密钥和凭据的备份应存放在受限目录，并定期验证能否恢复。</p>
+<p>完成部署后，使用测试用户验证 FreeIPA 登录、新建仓库、HTTPS 与 SSH 克隆及推送，再检查 Pod 重建后数据是否保留。仅看到首页或收到 SSH 握手响应，还不能替代这些操作测试。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.gitea.com/installation/install-with-docker/" title="Gitea 容器部署" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Finstallation%2Finstall-with-docker%2F">Gitea Docker 部署</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/config-cheat-sheet/" title="Gitea 配置" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fconfig-cheat-sheet%2F">Gitea 配置说明</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/authentication/" title="LDAP 认证" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fauthentication%2F">Gitea LDAP 与 FreeIPA 认证</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.freeipa.org/page/HowTo/LDAP" title="FreeIPA LDAP" class="external-link" data-redirect="https%3A%2F%2Fwww.freeipa.org%2Fpage%2FHowTo%2FLDAP">FreeIPA LDAP 应用接入</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/backup-and-restore/" title="备份恢复" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fbackup-and-restore%2F">Gitea 备份与恢复</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/61943/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/61943/">https://www.doratiger.top/2026/09/61943/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/61944/"><span>服务器操作指北（10）K3s 部署 Nextcloud 与 FreeIPA 认证配置</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/61942/"><span>服务器操作指北（8）FreeIPA、K3s 部署与 HTTPS 证书配置</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
