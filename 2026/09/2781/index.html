@@ -1,0 +1,448 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>NAS 折腾日记（8）qBittorrent 部署与 NAS 数据挂载【DoraTiger 的异次元】</title><meta name="description" content="NAS 折腾日记（8）qBittorrent 部署与 NAS 数据挂载"><meta name="keywords" content="nas,docker,qbittorrent,vuetorrent,nfs"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="NAS 折腾日记（8）qBittorrent 部署与 NAS 数据挂载【DoraTiger 的异次元】"><meta property="og:description" content="NAS 折腾日记（8）qBittorrent 部署与 NAS 数据挂载"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/2781/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/2781/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"NAS 折腾日记（8）qBittorrent 部署与 NAS 数据挂载","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-15T08:08:00.000Z","dateModified":"2026-09-19T12:33:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/2781/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%8E%AF%E5%A2%83%E4%B8%8E%E7%9B%AE%E5%BD%95%E8%A7%84%E5%88%92"><span class="toc-text">一、环境与目录规划</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%87%86%E5%A4%87%E7%9B%AE%E5%BD%95%E4%B8%8E%E6%9D%83%E9%99%90"><span class="toc-text">二、准备目录与权限</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%80%9A%E8%BF%87-Portainer-%E5%88%9B%E5%BB%BA%E5%AE%B9%E5%99%A8"><span class="toc-text">三、通过 Portainer 创建容器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="toc-text">3.1 环境变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%AB%AF%E5%8F%A3%E4%B8%8E%E6%8C%82%E8%BD%BD"><span class="toc-text">3.2 端口与挂载</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%BA%94%E7%94%A8%E8%AE%BE%E7%BD%AE%E4%B8%8E%E9%AA%8C%E8%AF%81"><span class="toc-text">四、应用设置与验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-IPv6-%E4%B8%8E%E9%93%BE%E8%B7%AF%E8%81%9A%E5%90%88"><span class="toc-text">4.1 IPv6 与链路聚合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%9B%B4%E6%8D%A2%E4%B8%BA-VueTorrent"><span class="toc-text">4.2 更换为 VueTorrent</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%B7%B2%E6%9C%89%E9%85%8D%E7%BD%AE%E4%B8%8E%E4%BB%BB%E5%8A%A1%E8%BF%81%E7%A7%BB"><span class="toc-text">五、已有配置与任务迁移</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%BC%80%E6%9C%BA%E6%8C%82%E8%BD%BD%E4%B8%8E%E6%95%85%E9%9A%9C%E6%81%A2%E5%A4%8D"><span class="toc-text">六、开机挂载与故障恢复</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%8E%A5%E5%85%A5-Homepage"><span class="toc-text">七、接入 Homepage</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E6%9B%B4%E6%96%B0%E4%B8%8E%E5%A4%87%E4%BB%BD"><span class="toc-text">八、更新与备份</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color2"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color1"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">67</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">132</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">NAS 折腾日记（8）qBittorrent 部署与 NAS 数据挂载</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nas/">nas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/qbittorrent/">qbittorrent</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/vuetorrent/">vuetorrent</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nfs/">nfs</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">6971 字 · 约 24 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>qBittorrent 部署在 Alpine LXC 的 Docker 中，下载文件保存到 QNAP，共享通过 NFS 挂载到 LXC。应用配置和任务记录保存在小主机本地。本文记录通过 Portainer 创建容器、设置权限和端口、验证下载、更换 VueTorrent 界面，以及已有任务的导入。</p>
+<span id="more"></span>
+<h2 id="一、环境与目录规划">一、环境与目录规划</h2>
+<p>基础环境见 <a href="/2026/09/46627/" title="NAS 折腾日记（2）PVE 与 Docker 基础环境部署">NAS 折腾日记（2）PVE 与 Docker 基础环境部署</a>，Portainer 操作见 <a href="/2026/09/26827/" title="NAS 折腾日记（3）Portainer 部署与容器管理">NAS 折腾日记（3）Portainer 部署与容器管理</a>。以下使用 Docker LXC 地址 <code>192.168.20.30</code>，目录均为脱敏示例。</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>LXC 路径</th>
+<th>容器内路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>配置与任务记录</td>
+<td><code>/srv/appdata/qbittorrent/config</code></td>
+<td><code>/config</code></td>
+</tr>
+<tr>
+<td>NAS 下载目录</td>
+<td><code>/mnt/nas/downloads</code></td>
+<td><code>/downloads</code></td>
+</tr>
+</tbody>
+</table>
+<p>实际使用的是 LinuxServer 的 qBittorrent 镜像。新部署将整个 <code>/config</code> 绑定到一个本地目录，下载文件单独映射到 NAS。</p>
+<h2 id="二、准备目录与权限">二、准备目录与权限</h2>
+<p>在 Docker LXC 中执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">mkdir -p /srv/appdata/qbittorrent/config
+chown -R 1000:1000 /srv/appdata/qbittorrent
+chmod -R u+rwX,g+rX,o-rwx /srv/appdata/qbittorrent
+mount | grep ' /mnt/nas/downloads '
+ls -ldn /mnt/nas/downloads</code></div></pre>
+<p>挂载输出应为 QNAP 的 NFS 共享。NAS 上的下载目录需要允许 UID/GID <code>1000:1000</code> 写入；按 QNAP 共享权限和用户映射设置，对已有文件保留其使用者需要的权限。</p>
+<p>通过临时容器按应用身份验证读写：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">docker run --rm --user 1000:1000 \
+  --mount type=bind,src=/mnt/nas/downloads,dst=/downloads \
+  alpine:3.22 sh -c \
+  'probe=$(mktemp /downloads/.qbit-write-test.XXXXXX) &amp;&amp; echo ok &gt; &quot;$probe&quot; &amp;&amp; cat &quot;$probe&quot; &amp;&amp; rm &quot;$probe&quot;'</code></div></pre>
+<p>应输出 <code>ok</code>。若报权限错误，先处理 NAS 共享权限，再启动应用。测试文件使用随机名称，完成后删除。</p>
+<h2 id="三、通过-Portainer-创建容器">三、通过 Portainer 创建容器</h2>
+<p>在 Containers → Add container 填写：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>qbittorrent</code></td>
+</tr>
+<tr>
+<td>Image</td>
+<td><code>lscr.io/linuxserver/qbittorrent:latest</code></td>
+</tr>
+<tr>
+<td>Network</td>
+<td><code>bridge</code></td>
+</tr>
+<tr>
+<td>Restart policy</td>
+<td><code>Unless stopped</code></td>
+</tr>
+</tbody>
+</table>
+<p>实际镜像使用 Docker Hub 的 <code>linuxserver/qbittorrent</code> 名称；这里采用 LinuxServer 官方文档给出的仓库入口。表中的 <code>latest</code> 是更新通道，会随发布变化。需要固定版本时，在部署前将它换为选定的版本标签或镜像 digest，并保留同一组运行参数。</p>
+<h3 id="3-1-环境变量">3.1 环境变量</h3>
+<p>在 Env 中逐项增加：</p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PUID</code></td>
+<td><code>1000</code></td>
+</tr>
+<tr>
+<td><code>PGID</code></td>
+<td><code>1000</code></td>
+</tr>
+<tr>
+<td><code>TZ</code></td>
+<td><code>Asia/Shanghai</code></td>
+</tr>
+<tr>
+<td><code>WEBUI_PORT</code></td>
+<td><code>8080</code></td>
+</tr>
+<tr>
+<td><code>TORRENTING_PORT</code></td>
+<td><code>6881</code></td>
+</tr>
+</tbody>
+</table>
+<p>这个镜像通过 PUID/PGID 设置应用用户，User 字段保持镜像默认。变量和端口定义见 <a target="_blank" rel="noopener" href="https://docs.linuxserver.io/images/docker-qbittorrent/" class="external-link" data-redirect="https%3A%2F%2Fdocs.linuxserver.io%2Fimages%2Fdocker-qbittorrent%2F">LinuxServer 镜像文档</a>。</p>
+<h3 id="3-2-端口与挂载">3.2 端口与挂载</h3>
+<p>添加以下端口发布：</p>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Container</th>
+<th>协议</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>8080</code></td>
+<td><code>8080</code></td>
+<td>TCP</td>
+<td>WebUI</td>
+</tr>
+<tr>
+<td><code>6881</code></td>
+<td><code>6881</code></td>
+<td>TCP</td>
+<td>Peer 连接</td>
+</tr>
+<tr>
+<td><code>6881</code></td>
+<td><code>6881</code></td>
+<td>UDP</td>
+<td>Peer 连接</td>
+</tr>
+</tbody>
+</table>
+<p>将环境变量和对应容器端口一起调整。例如 WebUI 改成 8082 时，<code>WEBUI_PORT</code>、容器端口和映射按该端口保持一致。</p>
+<p>Volumes 中添加两个 Bind：</p>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Container</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/srv/appdata/qbittorrent/config</code></td>
+<td><code>/config</code></td>
+</tr>
+<tr>
+<td><code>/mnt/nas/downloads</code></td>
+<td><code>/downloads</code></td>
+</tr>
+</tbody>
+</table>
+<p>点击 Deploy the container，等待启动后打开 Logs。初次运行在日志中读取临时管理员密码，用户名为 <code>admin</code>。访问 <code>http://192.168.20.30:8080</code> 登录，在 WebUI 设置中修改管理员密码并保存。</p>
+<h2 id="四、应用设置与验证">四、应用设置与验证</h2>
+<p>在设置中将默认保存路径设为 <code>/downloads</code>，Peer 监听端口与 <code>TORRENTING_PORT</code> 保持一致。需要未完成目录时，在同一共享内创建子目录，例如 <code>/downloads/incomplete</code>，并配置完成后的保存位置。</p>
+<p>先添加一个公开 Linux 发行版种子，确认任务能够开始、下载目录有文件、日志没有写入错误。完成后执行校验，确认任务与磁盘文件对应。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 在 Docker LXC 检查
+docker logs --tail 80 qbittorrent
+docker inspect --format '&#123;&#123;range .Mounts&#125;&#125;&#123;&#123;println .Type .Source "->" .Destination&#125;&#125;&#123;&#123;end&#125;&#125;' qbittorrent
+ls -ln /mnt/nas/downloads</code></div></pre>
+<p>需要外部 Peer 主动连接时，在路由器将选定的 TCP/UDP Peer 端口转发到 Docker LXC 的同名发布端口，并检查对应防火墙规则。WebUI 使用内网访问；域名访问可以按 <a href="/2026/09/61054/" title="NAS 折腾日记（7）Lucky 部署与反向代理">NAS 折腾日记（7）Lucky 部署与反向代理</a> 配置。</p>
+<h3 id="4-1-IPv6-与链路聚合">4.1 IPv6 与链路聚合</h3>
+<p>历史部署时讨论过通过 Portainer 配置 IPv6。LXC 获得 IPv6 地址后，容器能否使用 IPv6还取决于 Docker 网络设置、地址规划、路由和防火墙。本篇使用 bridge 网络完成基础部署，扩展 IPv6 时先查看目标 Docker 网络的 EnableIPv6 和 IPAM 配置，再在容器中确认地址与路由。</p>
+<p>J4125 与 QNAP 使用双千兆 XOR 聚合。下载目录的 NFS 访问经过这段网络，应用并发量与链路利用率取决于连接和哈希分流，具体连接关系见基础篇。</p>
+<h3 id="4-2-更换为-VueTorrent">4.2 更换为 VueTorrent</h3>
+<p>种子积累到三五千个后，我这里原版 WebUI 已经出现明显卡顿，打开列表、筛选和操作任务都受影响，因此改用 VueTorrent。原版界面首次同步会取得全量任务状态，浏览器需要维护整个任务列表；后续则通过 <code>rid</code> 增量同步变化，并非每次刷新都重新传输全部数据，相关实现见 <a target="_blank" rel="noopener" href="https://github.com/qbittorrent/qBittorrent/blob/master/src/webui/www/private/scripts/client.js" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fqbittorrent%2FqBittorrent%2Fblob%2Fmaster%2Fsrc%2Fwebui%2Fwww%2Fprivate%2Fscripts%2Fclient.js">qBittorrent WebUI 源码</a>。</p>
+<p>VueTorrent 提供分页显示，可以减少同时展示的任务条目，降低大列表的渲染负担。这里主要改善浏览器端的操作体验，全量状态同步和前端排序仍有开销，下载引擎及 NAS 读写性能也不会因为换 UI 自动提高。分页实现见 <a target="_blank" rel="noopener" href="https://github.com/VueTorrent/VueTorrent/blob/master/src/pages/Dashboard.vue" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FVueTorrent%2FVueTorrent%2Fblob%2Fmaster%2Fsrc%2Fpages%2FDashboard.vue">VueTorrent 的列表页面</a>。</p>
+<h4 id="安装并启用">安装并启用</h4>
+<p>本文使用 LinuxServer 镜像，直接按 <a target="_blank" rel="noopener" href="https://github.com/VueTorrent/VueTorrent/wiki/Installation" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FVueTorrent%2FVueTorrent%2Fwiki%2FInstallation">VueTorrent 安装文档</a> 加入 Docker Mod：</p>
+<ol>
+<li>
+<p>在 Portainer 打开 <code>qbittorrent</code>，点击 <strong>Duplicate/Edit</strong>。</p>
+</li>
+<li>
+<p>在 Env 添加下列变量；如果已有其他 Mod，在原值后用 <code>|</code> 拼接，不要覆盖原配置。</p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DOCKER_MODS</code></td>
+<td><code>ghcr.io/vuetorrent/vuetorrent-lsio-mod:latest</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>保留原来的 <code>/config</code>、<code>/downloads</code>、PUID/PGID 和端口，重新部署同名容器。重建期间下载与做种会短暂中断。</p>
+</li>
+<li>
+<p>查看日志，确认 Mod 下载、安装完成，再检查容器内文件：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash"># 在 Docker LXC 执行
+docker logs --tail 100 qbittorrent
+docker exec qbittorrent ls -ld /vuetorrent /vuetorrent/public</code></div></pre>
+</li>
+<li>
+<p>打开原 WebUI，在 <strong>设置 → Web UI → 使用备用 Web UI（Use alternative WebUI）</strong> 中勾选启用，文件位置填写 <code>/vuetorrent</code>，保存后刷新页面。</p>
+</li>
+</ol>
+<p>这里填写的是容器内目录 <code>/vuetorrent</code>，其下应包含 <code>public</code>；不要填写宿主机目录，也不要填成 <code>/vuetorrent/public</code>。登录仍使用原 qBittorrent 账号，访问端口仍为 <code>8080</code>，已有任务和下载目录继续沿用。</p>
+<p>Mod 由容器启动流程安装，后续重建要保留 <code>DOCKER_MODS</code>，并确保能访问镜像与发布资源。<code>latest</code> 会随版本更新，需要固定或回退时，从该 Mod 的包页面选择已发布标签，替换变量中的 <code>latest</code>。它与 qBittorrent 镜像是两项独立版本，更新前一起记录。</p>
+<h4 id="调整列表与检查效果">调整列表与检查效果</h4>
+<p>进入 VueTorrent 设置，找到 <strong>Pagination Size</strong>，先选有限的每页条数，例如界面提供的 50 或 100 条。大量任务时先用分页检查列表响应，再按需要切换无限滚动。刷新页面后核对任务总数、分类、标签与保存路径，并尝试筛选、翻页以及暂停、恢复一个测试任务。</p>
+<p>换 UI 后，第七节 Homepage 的组件仍使用 <code>type: qbittorrent</code>，API 地址和凭据保持原值。VueTorrent 通过同一个 qBittorrent Web API 管理任务，无需另开一个服务端口或重接监控，见 <a target="_blank" rel="noopener" href="https://github.com/VueTorrent/VueTorrent" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FVueTorrent%2FVueTorrent">项目说明</a>。</p>
+<h4 id="恢复原版界面">恢复原版界面</h4>
+<p>界面仍可操作时，在设置中取消“使用备用 Web UI”，保存并刷新即可。若填错路径后出现空白页或 <code>Unacceptable file type</code>，在 Docker LXC 停止容器，再编辑持久化配置，避免运行中的进程覆盖修改：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">docker stop qbittorrent
+cp -p /srv/appdata/qbittorrent/config/qBittorrent/qBittorrent.conf \
+  /srv/appdata/qbittorrent/config/qBittorrent/qBittorrent.conf.before-ui-recovery
+vi /srv/appdata/qbittorrent/config/qBittorrent/qBittorrent.conf</code></div></pre>
+<p>在配置文件中搜索 <code>AlternativeUIEnabled</code>，把已有项改为 <code>false</code>，保留它所在的段落。采用旧配置结构的版本（如 5.1.2）位于 <code>[Preferences]</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-ini">[Preferences]
+WebUI\AlternativeUIEnabled=false</code></div></pre>
+<p>若当前版本已将 WebUI 设置独立保存为 <code>[WebUI]</code> 段，则修改该段的 <code>AlternativeUIEnabled=false</code>。只修改现有项，不要在另一段重复添加。随后启动容器，并强制刷新浏览器：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">docker start qbittorrent</code></div></pre>
+<p>确认原版界面恢复后，如果不再使用 VueTorrent，再从 Portainer 删除对应的 Mod 配置并重建；只删除 Mod 而保留“备用 Web UI”开关，会使 qBittorrent 继续寻找原来的页面目录。</p>
+<h2 id="五、已有配置与任务迁移">五、已有配置与任务迁移</h2>
+<p>已有实例迁入时，保留原应用版本和容器内保存路径。下载文件留在 NAS，复制本地配置及任务记录。</p>
+<ol>
+<li>在原实例暂停任务并停止容器，让配置落盘。</li>
+<li>查看原容器 Mounts，记录 <code>/config</code> 及其子目录是否存在独立挂载。</li>
+<li>在旧 Docker 主机保存配置。以下示例适用于整个配置可从容器 <code>/config</code> 读取的实例：</li>
+</ol>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">mkdir -p ./qbittorrent-backup/config
+docker stop qbittorrent
+docker cp qbittorrent:/config/. ./qbittorrent-backup/config/
+tar -czf qbittorrent-config.tar.gz -C qbittorrent-backup config</code></div></pre>
+<p>如果原实例像当前机器一样，<code>/config</code> 为匿名 volume、<code>/config/qBittorrent</code> 又绑定本地目录，分别保存两处挂载源，并将子目录内容合并到导出的 <code>config/qBittorrent</code>。可先通过下列命令取得 volume 名和 bind 来源：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">docker inspect --format '&#123;&#123;range .Mounts&#125;&#125;&#123;&#123;println .Type .Name .Source "->" .Destination&#125;&#125;&#123;&#123;end&#125;&#125;' qbittorrent</code></div></pre>
+<ol start="4">
+<li>将备份文件传到新 Docker LXC。停止新容器，将导出的 config 内容放入 <code>/srv/appdata/qbittorrent/config</code>，再设置属主 <code>1000:1000</code>。</li>
+<li>在 Portainer 中保持原容器内数据路径。例如原任务使用 <code>/data/downloads</code>，就将新 LXC 的 <code>/mnt/nas/downloads</code> 映射到 <code>/data/downloads</code>。</li>
+<li>启动新实例，检查任务数量、保存路径、分类和 Tracker 配置。先校验一项任务，确认识别已有文件后再恢复其余任务。</li>
+</ol>
+<p>复制配置时保存整个目录，包括任务元数据。原有 <code>BT_backup</code> 中的种子与 fastresume 文件属于任务状态的一部分。</p>
+<h2 id="六、开机挂载与故障恢复">六、开机挂载与故障恢复</h2>
+<p>NAS 启动慢时，Docker 可能先把本地空目录挂入容器，表现为 qBittorrent 正常运行但找不到文件。恢复时先停止下载容器，待 NAS 就绪后确认 NFS 挂载，再启动应用：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">docker stop qbittorrent
+mount -a
+mount | grep ' /mnt/nas/downloads '
+ls /mnt/nas/downloads</code></div></pre>
+<p>确认输出中的来源是 QNAP 的 NFS 共享，且原有文件已经出现，再执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">docker start qbittorrent</code></div></pre>
+<p>基础篇已将 Docker 从 <code>boot</code> 移到 <code>default</code>，并在 <code>/etc/conf.d/docker</code> 中通过 <code>rc_need=&quot;netmount&quot;</code> 等待 NFS 挂载。按那一节配置开机顺序；NAS 在运行中掉线、或容器已经绑定了空目录时，仍按本节恢复。挂载命令报错时先处理 NFS，不要继续恢复下载，以免数据写入 LXC 本地盘。</p>
+<h2 id="七、接入-Homepage">七、接入 Homepage</h2>
+<p>沿用 <a href="/2026/09/59567/" title="NAS 折腾日记（5）Homepage 部署与服务导航">NAS 折腾日记（5）Homepage 部署与服务导航</a> 的 Docker 状态代理。在 Homepage 容器的 Env 中设置 <code>HOMEPAGE_VAR_QBIT_USER</code> 和 <code>HOMEPAGE_VAR_QBIT_PASSWORD</code>，使用已经修改并保存的 WebUI 凭据，再重新部署 Homepage。</p>
+<p>向 <code>services.yaml</code> 加入下载服务：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-yaml">- 下载服务:
+    - qBittorrent:
+        href: http://192.168.20.30:8080
+        siteMonitor: http://192.168.20.30:8080
+        server: local-docker
+        container: qbittorrent
+        showStats: true
+        widget:
+          type: qbittorrent
+          url: http://192.168.20.30:8080
+          username: &quot;&#123;&#123;HOMEPAGE_VAR_QBIT_USER&#125;&#125;&quot;
+          password: &quot;&#123;&#123;HOMEPAGE_VAR_QBIT_PASSWORD&#125;&#125;&quot;
+          fields: [&quot;leech&quot;, &quot;download&quot;, &quot;seed&quot;, &quot;upload&quot;]</code></div></pre>
+<p>容器状态来自 Docker，下载与做种任务数、上下行速度来自 qBittorrent Web API。发起前面用于验证的下载任务，再对照 WebUI 与卡片数值。如果返回认证或 Host 错误，检查固定密码、地址和 WebUI 的允许域名设置，保留认证与 Host 校验，只加入实际访问使用的名称。</p>
+<p>容器运行和下载速率正常都不能代替 NFS 挂载检查；NAS 空间在 QNAP 卡片查看，任务路径与写入状态仍按第四、六节确认。</p>
+<h2 id="八、更新与备份">八、更新与备份</h2>
+<p>更新前停止容器并备份本地 config。Portainer 中通过 Duplicate/Edit 设置新镜像，保留环境变量、端口和挂载，重新部署后检查 WebUI、任务列表与文件访问。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">mkdir -p /srv/backups
+docker stop qbittorrent
+tar -czf /srv/backups/qbittorrent-config.tar.gz -C /srv/appdata/qbittorrent config
+docker start qbittorrent</code></div></pre>
+<p>NAS 上的下载文件按原有存储方案保存，本地配置备份用于恢复应用设置和任务状态。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.linuxserver.io/images/docker-qbittorrent/" class="external-link" data-redirect="https%3A%2F%2Fdocs.linuxserver.io%2Fimages%2Fdocker-qbittorrent%2F">LinuxServer qBittorrent 镜像文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/VueTorrent/VueTorrent/wiki/Installation" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FVueTorrent%2FVueTorrent%2Fwiki%2FInstallation">VueTorrent 安装文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/VueTorrent/VueTorrent" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FVueTorrent%2FVueTorrent">VueTorrent 项目说明</a></li>
+<li><a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/qbittorrent/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fqbittorrent%2F">Homepage 的 qBittorrent 组件</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/2781/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/2781/">https://www.doratiger.top/2026/09/2781/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/2072836977/"><span>服务器操作指北（11）EdgeRouter IPv6 排障：从默认路由到 NDP 代理</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/61054/"><span>NAS 折腾日记（7）Lucky 部署与反向代理</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

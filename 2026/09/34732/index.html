@@ -1,0 +1,309 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>NAS 折腾日记（4）FileBrowser 部署与配置文件权限【DoraTiger 的异次元】</title><meta name="description" content="NAS 折腾日记（4）FileBrowser 部署与配置文件权限"><meta name="keywords" content="nas,docker,filebrowser,linux"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="NAS 折腾日记（4）FileBrowser 部署与配置文件权限【DoraTiger 的异次元】"><meta property="og:description" content="NAS 折腾日记（4）FileBrowser 部署与配置文件权限"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/34732/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/34732/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"NAS 折腾日记（4）FileBrowser 部署与配置文件权限","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-15T08:04:00.000Z","dateModified":"2026-09-19T12:16:43.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/34732/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%8E%AF%E5%A2%83%E4%B8%8E%E7%9B%AE%E5%BD%95%E8%A7%84%E5%88%92"><span class="toc-text">一、环境与目录规划</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%88%9B%E5%BB%BA%E5%AE%B9%E5%99%A8"><span class="toc-text">二、创建容器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%AA%8C%E8%AF%81%E9%85%8D%E7%BD%AE%E7%BC%96%E8%BE%91"><span class="toc-text">三、验证配置编辑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90"><span class="toc-text">四、处理文件权限</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%9B%B4%E6%96%B0%E4%B8%8E%E5%A4%87%E4%BB%BD"><span class="toc-text">五、更新与备份</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color3"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color3"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">67</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">132</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">NAS 折腾日记（4）FileBrowser 部署与配置文件权限</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nas/">nas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/filebrowser/">filebrowser</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/linux/">linux</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">3291 字 · 约 11 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>Portainer 负责容器参数，应用挂载出来的配置文件使用 FileBrowser 编辑。本文记录目录映射、网页编辑和实际遇到的文件权限问题。</p>
+<span id="more"></span>
+<p>截至 2026 年 9 月，原 FileBrowser 项目已归档，停止提供后续修复。这里保留现有部署与权限处理的记录，入口限于管理内网，保持命令执行功能关闭；新建环境选择文件管理工具时需要考虑这个维护状态，见 <a target="_blank" rel="noopener" href="https://github.com/filebrowser/filebrowser" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ffilebrowser%2Ffilebrowser">项目说明</a>。</p>
+<h2 id="一、环境与目录规划">一、环境与目录规划</h2>
+<p>基础环境见 <a href="/2026/09/46627/" title="NAS 折腾日记（2）PVE 与 Docker 基础环境部署">NAS 折腾日记（2）PVE 与 Docker 基础环境部署</a>，管理入口见 <a href="/2026/09/26827/" title="NAS 折腾日记（3）Portainer 部署与容器管理">NAS 折腾日记（3）Portainer 部署与容器管理</a>。以下目录和 IP 为统一示例，命令在 Docker LXC 中执行。</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>LXC 目录</th>
+<th>容器目录</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>可编辑的应用配置</td>
+<td><code>/srv/appdata</code></td>
+<td><code>/srv</code></td>
+</tr>
+<tr>
+<td>FileBrowser 设置</td>
+<td><code>/srv/appdata/filebrowser/config</code></td>
+<td><code>/config</code></td>
+</tr>
+<tr>
+<td>FileBrowser 数据库</td>
+<td><code>/srv/appdata/filebrowser/database</code></td>
+<td><code>/database</code></td>
+</tr>
+</tbody>
+</table>
+<p>FileBrowser 使用 UID/GID <code>1000:1000</code>。先准备本篇的新目录：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">mkdir -p /srv/appdata/filebrowser/config /srv/appdata/filebrowser/database
+mkdir -p /srv/appdata/homepage/config
+chown 1000:1000 /srv/appdata
+chown -R 1000:1000 /srv/appdata/filebrowser /srv/appdata/homepage
+chmod 750 /srv/appdata
+chmod -R u+rwX,g+rX,o-rwx /srv/appdata/filebrowser /srv/appdata/homepage</code></div></pre>
+<h2 id="二、创建容器">二、创建容器</h2>
+<p>先在 Docker LXC 创建 <code>/srv/appdata/filebrowser/config/settings.json</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">json</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-json">&#123;
+  &quot;port&quot;: 80,
+  &quot;baseURL&quot;: &quot;&quot;,
+  &quot;address&quot;: &quot;0.0.0.0&quot;,
+  &quot;log&quot;: &quot;stdout&quot;,
+  &quot;database&quot;: &quot;/database/filebrowser.db&quot;,
+  &quot;root&quot;: &quot;/srv&quot;
+&#125;</code></div></pre>
+<p>设置文件属主：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">chown 1000:1000 /srv/appdata/filebrowser/config/settings.json
+chmod 640 /srv/appdata/filebrowser/config/settings.json</code></div></pre>
+<p>Portainer 中点击 Add container，填写：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置</th>
+<th style="text-align:left">参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Name</td>
+<td style="text-align:left"><code>filebrowser</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Image</td>
+<td style="text-align:left"><code>filebrowser/filebrowser:latest</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Manual network port publishing</td>
+<td style="text-align:left">Host <code>8081</code> → Container <code>80</code>，TCP</td>
+</tr>
+<tr>
+<td style="text-align:left">Advanced container settings → Command &amp; logging</td>
+<td style="text-align:left">User 填 <code>1000:1000</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Restart policy</td>
+<td style="text-align:left"><code>Unless stopped</code></td>
+</tr>
+</tbody>
+</table>
+<p>在 <strong>Volumes</strong> 添加三个 Bind：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Host</th>
+<th style="text-align:left">Container</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>/srv/appdata/filebrowser/config</code></td>
+<td style="text-align:left"><code>/config</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>/srv/appdata/filebrowser/database</code></td>
+<td style="text-align:left"><code>/database</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>/srv/appdata</code></td>
+<td style="text-align:left"><code>/srv</code></td>
+</tr>
+</tbody>
+</table>
+<p>点击 Deploy the container，进入 Logs 查看初始化结果。新版本会在首次初始化日志中给出随机管理员密码，按日志提示登录 <code>http://192.168.20.30:8081</code>，随后设置自己的密码。</p>
+<p>本例把整棵 <code>/srv/appdata</code> 交给维护者编辑，其中可能包含应用凭据；FileBrowser 管理员应由同一位服务维护者担任。普通文件共享账号应单独设置 scope，不能沿用这个管理范围。</p>
+<p>登录后能看到 homepage、filebrowser 等目录。打开一个测试配置文件并保存，确认读写权限正常。若出现 <code>Permission denied</code>，在 LXC 中执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">ls -ldn /srv/appdata /srv/appdata/homepage/config
+ls -ln /srv/appdata/filebrowser/config/settings.json
+docker top filebrowser</code></div></pre>
+<p>本例进程使用 <code>1000:1000</code>，目录和文件也应给这个身份相应权限。之前遇到的 <code>775</code> 仍无法写入，就是还需要对照属主、所属组和进程身份。</p>
+<h2 id="三、验证配置编辑">三、验证配置编辑</h2>
+<p>登录后进入 <code>homepage/config</code>，新建 <code>test.txt</code>，填写一行文字并保存。在 LXC 中确认文件存在及数字属主：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">cat /srv/appdata/homepage/config/test.txt
+ls -ln /srv/appdata/homepage/config/test.txt</code></div></pre>
+<p>网页内的 <code>/</code> 对应容器 <code>/srv</code>，也就是 LXC 的 <code>/srv/appdata</code>。看到的相对目录为 <code>homepage/config</code>，应用配置中引用的宿主目录仍是 <code>/srv/appdata/homepage/config</code>。</p>
+<h2 id="四、处理文件权限">四、处理文件权限</h2>
+<p>此前遇到的问题是 <code>/config/settings.json</code> 写入失败。目录模式调整为 775 后仍然报错，原因涉及 root 属主与 FileBrowser 进程身份。目录的写权限、已有文件的写权限以及祖先目录的执行权限都需要对应。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash"># 针对报错文件逐级查看
+ls -ldn /srv /srv/appdata /srv/appdata/filebrowser /srv/appdata/filebrowser/config
+ls -ln /srv/appdata/filebrowser/config/settings.json</code></div></pre>
+<p>对于本篇由 FileBrowser 管理的设置文件，修正为：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">chown 1000:1000 /srv/appdata/filebrowser/config/settings.json
+chmod 640 /srv/appdata/filebrowser/config/settings.json</code></div></pre>
+<p>其他应用有自己的运行身份，先查该镜像对 PUID/PGID 或 User 的支持，再决定属主。将整棵应用目录递归改成同一用户，可能影响原服务数据库等文件，因此权限调整按具体目录进行。</p>
+<p>Alpine 可以用以下命令创建对应的本地账号；若数字 ID 已存在，使用已有账号即可：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash"># 新建环境中的可选命名，数字 ID 与容器保持一致
+addgroup -g 1000 appfiles
+adduser -D -H -u 1000 -G appfiles appfiles</code></div></pre>
+<h2 id="五、更新与备份">五、更新与备份</h2>
+<p>在 Portainer 停止 FileBrowser 后，备份配置与数据库：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">mkdir -p /srv/backups
+docker stop filebrowser
+tar -czf /srv/backups/filebrowser-backup.tar.gz -C /srv/appdata filebrowser
+docker start filebrowser</code></div></pre>
+<p>更新时保留 <code>/config</code>、<code>/database</code>、<code>/srv</code> 三个映射和 User，使用 Duplicate/Edit 调整镜像后部署。重新登录，检查原账号、文件列表和文件编辑。应用配置目录中的其他内容属于各自服务的备份范围。</p>
+<p>Homepage 篇会给 Homepage 设置相同的 <code>PUID/PGID=1000:1000</code>，使它生成的配置也能继续由 FileBrowser 编辑，并补充 FileBrowser 的空间用量组件。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/filebrowser/filebrowser" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ffilebrowser%2Ffilebrowser">FileBrowser 项目与维护状态</a></li>
+<li><a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/filebrowser/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Ffilebrowser%2F">Homepage 的 FileBrowser 组件</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/34732/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/34732/">https://www.doratiger.top/2026/09/34732/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/59567/"><span>NAS 折腾日记（5）Homepage 部署与服务导航</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/26827/"><span>NAS 折腾日记（3）Portainer 部署与容器管理</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

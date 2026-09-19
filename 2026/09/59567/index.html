@@ -1,0 +1,464 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>NAS 折腾日记（5）Homepage 部署与服务导航【DoraTiger 的异次元】</title><meta name="description" content="NAS 折腾日记（5）Homepage 部署与服务导航"><meta name="keywords" content="nas,docker,homepage"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="NAS 折腾日记（5）Homepage 部署与服务导航【DoraTiger 的异次元】"><meta property="og:description" content="NAS 折腾日记（5）Homepage 部署与服务导航"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/59567/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/59567/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"NAS 折腾日记（5）Homepage 部署与服务导航","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-15T08:05:00.000Z","dateModified":"2026-09-19T12:16:43.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/59567/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%87%86%E5%A4%87%E7%8E%AF%E5%A2%83"><span class="toc-text">一、准备环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%83%A8%E7%BD%B2%E5%AF%BC%E8%88%AA%E9%A1%B5%E9%9D%A2"><span class="toc-text">二、部署导航页面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%85%8D%E7%BD%AE%E5%88%86%E7%BB%84%E3%80%81%E4%B9%A6%E7%AD%BE%E4%B8%8E%E5%9B%BE%E6%A0%87"><span class="toc-text">三、配置分组、书签与图标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%8E%A5%E5%85%A5-Docker-%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81"><span class="toc-text">四、接入 Docker 容器状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%8E%A5%E5%85%A5%E5%89%8D%E9%9D%A2%E5%90%84%E9%A1%B9%E6%9C%8D%E5%8A%A1"><span class="toc-text">五、接入前面各项服务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E4%BF%9D%E5%AD%98%E6%8E%A5%E5%85%A5%E5%87%AD%E6%8D%AE"><span class="toc-text">5.1 保存接入凭据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-PVE-%E4%B8%BB%E6%9C%BA%E4%B8%8E-LXC"><span class="toc-text">5.2 PVE 主机与 LXC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-Portainer"><span class="toc-text">5.3 Portainer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-FileBrowser"><span class="toc-text">5.4 FileBrowser</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-QNAP"><span class="toc-text">5.5 QNAP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-6-%E5%B7%B2%E6%9C%89-Nextcloud"><span class="toc-text">5.6 已有 Nextcloud</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%BB%A7%E7%BB%AD%E5%8A%A0%E5%85%A5%E5%90%8E%E7%BB%AD%E6%9C%8D%E5%8A%A1"><span class="toc-text">六、继续加入后续服务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%9F%9F%E5%90%8D%E8%AE%BF%E9%97%AE%E4%B8%8E%E7%BB%B4%E6%8A%A4"><span class="toc-text">七、域名访问与维护</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color5"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">67</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">132</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">NAS 折腾日记（5）Homepage 部署与服务导航</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nas/">nas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/homepage/">homepage</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">8222 字 · 约 28 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>使用 Homepage 汇总家庭服务入口，配置文件保存在 Docker LXC 的本地目录。本文从基本导航开始，再补充分组、图标、容器状态和域名访问。</p>
+<span id="more"></span>
+<h2 id="一、准备环境">一、准备环境</h2>
+<p>在 <a href="/2026/09/46627/" title="NAS 折腾日记（2）PVE 与 Docker 基础环境部署">NAS 折腾日记（2）PVE 与 Docker 基础环境部署</a> 的 Docker LXC 中部署，通过 <a href="/2026/09/26827/" title="NAS 折腾日记（3）Portainer 部署与容器管理">NAS 折腾日记（3）Portainer 部署与容器管理</a> 管理。示例主机为 <code>192.168.20.30</code>，导航服务使用端口 <code>3000</code>。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">mkdir -p /srv/appdata/homepage/config /srv/appdata/homepage/icons
+chown -R 1000:1000 /srv/appdata/homepage
+chmod -R u+rwX,g+rX,o-rwx /srv/appdata/homepage</code></div></pre>
+<p>配置文件可以直接在 LXC 中编辑，也可以使用 <a href="/2026/09/34732/" title="NAS 折腾日记（4）FileBrowser 部署与配置文件权限">NAS 折腾日记（4）FileBrowser 部署与配置文件权限</a>。服务地址都使用示例值，按自己的实际入口替换。</p>
+<h2 id="二、部署导航页面">二、部署导航页面</h2>
+<p>先用 FileBrowser 在 <code>homepage/config</code> 目录创建 <code>services.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-yaml">- 管理工具:
+    - PVE:
+        href: https://192.168.20.10:8006
+        description: 虚拟机与 LXC 管理
+    - Portainer:
+        href: https://192.168.20.30:9443
+        description: Docker 容器管理
+    - FileBrowser:
+        href: http://192.168.20.30:8081
+        description: 应用配置编辑</code></div></pre>
+<p>这是纯链接导航配置。Portainer 的 Add container 页面填写：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置</th>
+<th style="text-align:left">参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Name</td>
+<td style="text-align:left"><code>homepage</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Image</td>
+<td style="text-align:left"><code>ghcr.io/gethomepage/homepage:latest</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Port publishing</td>
+<td style="text-align:left">Host <code>3000</code> → Container <code>3000</code>，TCP</td>
+</tr>
+<tr>
+<td style="text-align:left">Env</td>
+<td style="text-align:left"><code>HOMEPAGE_ALLOWED_HOSTS=192.168.20.30:3000,home.example.com</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Env</td>
+<td style="text-align:left"><code>PUID=1000</code>、<code>PGID=1000</code></td>
+</tr>
+<tr>
+<td style="text-align:left">Restart policy</td>
+<td style="text-align:left"><code>Unless stopped</code></td>
+</tr>
+</tbody>
+</table>
+<p>保持 User 字段默认，由镜像通过 PUID/PGID 启动应用。这个身份与 FileBrowser 篇一致，避免 Homepage 新生成的文件又变成 root 属主。若在终端以 root 创建 YAML，保存后对新文件设置 <code>1000:1000</code> 属主；通过 FileBrowser 编辑时沿用它的运行身份。</p>
+<p>添加 Bind：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Host</th>
+<th style="text-align:left">Container</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>/srv/appdata/homepage/config</code></td>
+<td style="text-align:left"><code>/app/config</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><code>/srv/appdata/homepage/icons</code></td>
+<td style="text-align:left"><code>/app/public/icons</code></td>
+</tr>
+</tbody>
+</table>
+<p>部署后访问 <code>http://192.168.20.30:3000</code>，页面应显示三个管理入口。若日志出现 Host 校验错误，检查环境变量是否包含浏览器访问时的域名或 IP 与端口。当前官方镜像与变量说明见 <a target="_blank" rel="noopener" href="https://gethomepage.dev/installation/docker/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Finstallation%2Fdocker%2F">Homepage Docker 部署文档</a>。</p>
+<p>后续修改 <code>services.yaml</code> 即可添加应用链接。容器页面的 Duplicate/Edit 可调整端口、环境变量和挂载，再重新部署；挂载目录中的配置随重建保留。</p>
+<h2 id="三、配置分组、书签与图标">三、配置分组、书签与图标</h2>
+<p><code>services.yaml</code> 按组列出应用。每个应用的 <code>href</code> 是点击后访问的地址，<code>description</code> 为说明。另建 <code>settings.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-yaml">title: 家庭服务导航
+language: zh-CN
+layout:
+  管理工具:
+    style: row
+    columns: 3</code></div></pre>
+<p>在 <code>bookmarks.yaml</code> 保存常用外部链接：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml">- 文档:
+    - Docker:
+        - abbr: DK
+          href: https://docs.docker.com/</code></div></pre>
+<p>自定义图标放入本地 <code>icons</code> 目录，例如 <code>nas.png</code>，对应的服务条目增加：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-yaml">icon: /icons/nas.png</code></div></pre>
+<p>保存文件后刷新页面检查 YAML 缩进、分组和链接。具体字段见 <a target="_blank" rel="noopener" href="https://gethomepage.dev/configs/services/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fconfigs%2Fservices%2F">Homepage 服务配置文档</a>。</p>
+<h2 id="四、接入-Docker-容器状态">四、接入 Docker 容器状态</h2>
+<p>前面部署的 Portainer、FileBrowser 和 Homepage 都运行在同一个 Docker LXC。这里先增加容器状态，再接应用自己的指标。</p>
+<p>直接挂载 Docker socket 即使带 <code>:ro</code>，也不能限制通过 socket 发出的管理请求。按照 <a target="_blank" rel="noopener" href="https://gethomepage.dev/configs/docker/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fconfigs%2Fdocker%2F">Homepage 的 Docker 接入说明</a>，增加一个只允许查询的 socket proxy，并让它与 Homepage 处于同一个 Docker 网络。在 Docker LXC 中执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">docker network create homepage-monitor
+docker run -d \
+  --name homepage-dockerproxy \
+  --restart unless-stopped \
+  --network homepage-monitor \
+  -e CONTAINERS=1 \
+  -e POST=0 \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  ghcr.io/tecnativa/docker-socket-proxy:latest</code></div></pre>
+<p>代理没有发布宿主端口。它能查询这个 Docker daemon 下的容器信息，因此该网络只接维护所需的容器。在 Portainer 对 Homepage 使用 Duplicate/Edit，将 Network 改为 <code>homepage-monitor</code>，保留原端口和目录后重新部署。Homepage 本身不挂载 Docker socket。普通 bridge 网络仍允许它访问局域网中的 PVE、QNAP 等 API。</p>
+<p>在 <code>/srv/appdata/homepage/config/docker.yaml</code> 写入：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-yaml">local-docker:
+  host: homepage-dockerproxy
+  port: 2375</code></div></pre>
+<p>修改原有 Portainer 条目，补上容器关联：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-yaml">- 管理工具:
+    - Portainer:
+        href: https://192.168.20.30:9443
+        server: local-docker
+        container: portainer
+        showStats: true</code></div></pre>
+<p>FileBrowser 的 <code>container</code> 填 <code>filebrowser</code>；若增加 Homepage 自身的卡片，填 <code>homepage</code>。这些名称可在 Portainer 容器列表核对。<code>showStats</code> 展示容器资源使用，不能说明应用数据库、NFS 或登录接口是否正常，下一节继续接应用 API。</p>
+<h2 id="五、接入前面各项服务">五、接入前面各项服务</h2>
+<p><code>href</code> 由浏览器打开，<code>widget.url</code> 和 <code>siteMonitor</code> 则由 Homepage 容器请求。这里让 API 直接走内网 IP，网页链接以后可以改成 Lucky 提供的域名；不要把 API 地址写成 Homepage 容器自己的 <code>localhost</code>。</p>
+<h3 id="5-1-保存接入凭据">5.1 保存接入凭据</h3>
+<p>在 Portainer 的 Homepage → Duplicate/Edit → Env 中添加以下各小节需要的变量。YAML 通过 Homepage 的 <code>HOMEPAGE_VAR_</code> 替换功能引用它们，例如 <code>&quot;&#123;&#123;HOMEPAGE_VAR_PORTAINER_KEY&#125;&#125;&quot;</code>。变量值填真实凭据，不要把外层双引号也填进 Env；新增或修改环境变量后需要重新部署容器。</p>
+<p>这种方式把凭据与服务列表分开，Docker 管理员仍能读取环境变量。备份运行参数时也要保存这些值，并按凭据保管。以下配置均合并到同一份 <code>services.yaml</code>，已有同名分组或卡片时修改原条目。</p>
+<h3 id="5-2-PVE-主机与-LXC">5.2 PVE 主机与 LXC</h3>
+<p>在 PVE 的 Datacenter → Permissions → Users 新建 <code>homepage@pve</code>，Realm 选择 PVE。随后创建权限分离的 API Token，Token ID 使用 <code>monitor</code>，记录仅显示一次的 Secret。</p>
+<p>权限分离模式下，用户权限与 Token 权限取交集，需要在 Datacenter → Permissions 分别添加两项，Path 均为 <code>/</code>，Role 均为 <code>PVEAuditor</code>，勾选 Propagate：</p>
+<table>
+<thead>
+<tr>
+<th>ACL 类型</th>
+<th>对象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User Permission</td>
+<td><code>homepage@pve</code></td>
+</tr>
+<tr>
+<td>API Token Permission</td>
+<td><code>homepage@pve!monitor</code></td>
+</tr>
+</tbody>
+</table>
+<p>给 Homepage 增加 <code>HOMEPAGE_VAR_PVE_TOKEN_ID=homepage@pve!monitor</code> 和 <code>HOMEPAGE_VAR_PVE_TOKEN_SECRET</code>。PVE 卡片配置如下：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-yaml">- 管理工具:
+    - PVE:
+        href: https://192.168.20.10:8006
+        widget:
+          type: proxmox
+          url: https://192.168.20.10:8006
+          username: &quot;&#123;&#123;HOMEPAGE_VAR_PVE_TOKEN_ID&#125;&#125;&quot;
+          password: &quot;&#123;&#123;HOMEPAGE_VAR_PVE_TOKEN_SECRET&#125;&#125;&quot;
+          node: pve
+          fields: [&quot;vms&quot;, &quot;lxc&quot;, &quot;resources.cpu&quot;, &quot;resources.mem&quot;]</code></div></pre>
+<p><code>node: pve</code> 改为 PVE 左侧树中实际的节点名。此组件查看虚拟机、LXC 数量和节点 CPU、内存使用；给其他服务显示所属 LXC 状态，还需要另建 <code>proxmox.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-yaml">pve:
+  url: https://192.168.20.10:8006
+  token: &quot;&#123;&#123;HOMEPAGE_VAR_PVE_TOKEN_ID&#125;&#125;&quot;
+  secret: &quot;&#123;&#123;HOMEPAGE_VAR_PVE_TOKEN_SECRET&#125;&#125;&quot;</code></div></pre>
+<p>这里顶层的 <code>pve</code> 也必须是实际节点名。随后可以在“管理工具”组内加一个 Docker LXC 条目：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-yaml">- Docker LXC:
+    href: https://192.168.20.10:8006
+    proxmoxNode: pve
+    proxmoxVMID: 200
+    proxmoxType: lxc</code></div></pre>
+<p>这段是组内条目，需要按原组的缩进加入。后面的 Lucky、AdGuard Home 篇分别关联 CT 201、202。API 组件与 LXC 状态使用同一只读 Token，配置格式见 <a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/proxmox/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fproxmox%2F">PVE 应用组件</a> 和 <a target="_blank" rel="noopener" href="https://gethomepage.dev/configs/proxmox/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fconfigs%2Fproxmox%2F">PVE 状态接入</a>。</p>
+<h3 id="5-3-Portainer">5.3 Portainer</h3>
+<p>在 Portainer 的 My account → Access tokens 创建 Token，保存到 Homepage 的 <code>HOMEPAGE_VAR_PORTAINER_KEY</code>。进入当前 Docker 环境，从浏览器 URL 中取得环境 ID，例如 <code>#!/endpoints/1</code> 对应 <code>env: 1</code>。这个数字按实际值填写。</p>
+<p>将第四节的 Portainer 卡片扩展为：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-yaml">- 管理工具:
+    - Portainer:
+        href: https://192.168.20.30:9443
+        server: local-docker
+        container: portainer
+        showStats: true
+        widget:
+          type: portainer
+          url: https://192.168.20.30:9443
+          env: 1
+          key: &quot;&#123;&#123;HOMEPAGE_VAR_PORTAINER_KEY&#125;&#125;&quot;
+          fields: [&quot;running&quot;, &quot;stopped&quot;, &quot;total&quot;]</code></div></pre>
+<p>卡片上的容器资源对应 Portainer 自己，组件中的数量对应选定环境内的全部容器。API Token 继承创建者权限；使用管理员生成时就具有管理员访问范围，不能将它称为只读凭据。若只需要每个容器是否运行，第四节的 Docker 状态已经足够，可以不配置这一项 Token。</p>
+<h3 id="5-4-FileBrowser">5.4 FileBrowser</h3>
+<p>在 FileBrowser 用户管理中新增 <code>homepage-reader</code>，Scope 限定为 <code>/homepage</code>，关闭管理员权限，以及创建、修改、删除、重命名、分享和执行命令等权限。Homepage 仅需登录后读取用量接口。在 Homepage Env 中保存 <code>HOMEPAGE_VAR_FILEBROWSER_USER</code> 和 <code>HOMEPAGE_VAR_FILEBROWSER_PASSWORD</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-yaml">- 管理工具:
+    - FileBrowser:
+        href: http://192.168.20.30:8081
+        server: local-docker
+        container: filebrowser
+        showStats: true
+        widget:
+          type: filebrowser
+          url: http://192.168.20.30:8081
+          username: &quot;&#123;&#123;HOMEPAGE_VAR_FILEBROWSER_USER&#125;&#125;&quot;
+          password: &quot;&#123;&#123;HOMEPAGE_VAR_FILEBROWSER_PASSWORD&#125;&#125;&quot;
+          fields: [&quot;available&quot;, &quot;used&quot;, &quot;total&quot;]</code></div></pre>
+<p>用量来自 FileBrowser 所访问目录所在的文件系统。本系列挂载的是 Docker LXC 的 <code>/srv/appdata</code>，因此这里显示本地应用盘空间，QNAP 的存储空间用下一项查看。</p>
+<h3 id="5-5-QNAP">5.5 QNAP</h3>
+<p>给 QNAP 建立专用监控账号，在 Homepage Env 中保存 <code>HOMEPAGE_VAR_QNAP_USER</code> 和 <code>HOMEPAGE_VAR_QNAP_PASSWORD</code>。确认 QTS 的 HTTPS 管理地址与端口，下例使用 <code>https://192.168.20.20:443</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">- 存储服务:
+    - QNAP:
+        href: https://192.168.20.20:443
+        widget:
+          type: qnap
+          url: https://192.168.20.20:443
+          username: &quot;&#123;&#123;HOMEPAGE_VAR_QNAP_USER&#125;&#125;&quot;
+          password: &quot;&#123;&#123;HOMEPAGE_VAR_QNAP_PASSWORD&#125;&#125;&quot;
+          fields: [&quot;cpuUsage&quot;, &quot;memUsage&quot;, &quot;systemTempC&quot;, &quot;poolUsage&quot;]</code></div></pre>
+<p>该组件调用 QTS 管理 API，专用账号是否能读取这些指标取决于 QTS 版本和权限配置。先以受限账号接入，出现权限错误时核对 QTS 授权；若当前版本无法提供合适的只读权限，可以只保留导航链接，通过 QTS 查看资源。多个卷时按 <a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/qnap/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fqnap%2F">QNAP 组件说明</a> 在 widget 下设置 <code>volume</code> 为实际卷名，并把 fields 中的 <code>poolUsage</code> 改为 <code>volumeUsage</code>，明确卡片显示哪个卷。</p>
+<h3 id="5-6-已有-Nextcloud">5.6 已有 Nextcloud</h3>
+<p>如果沿用 NAS 系列前面部署的 Nextcloud，可以一并放进“存储服务”。在 Nextcloud 应用页面启用 Monitoring（<code>serverinfo</code>），到管理员设置的系统信息页取得监控用的 <code>NC-Token</code>，保存为 Homepage 的 <code>HOMEPAGE_VAR_NEXTCLOUD_TOKEN</code>。该组件支持用监控 Token 读取统计；界面没有创建入口时，也可以通过 <code>occ</code> 设置。沿用 <a href="/2023/07/23398/" title="NAS 折腾日记（1）容器化部署 nextcloud">NAS 折腾日记（1）容器化部署 nextcloud</a> 中名为 <code>nextcloud</code> 的官方镜像容器，在 <strong>运行该容器的 QNAP Docker 主机</strong>执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">docker exec -u www-data nextcloud php /var/www/html/occ app:enable serverinfo
+docker exec -u www-data nextcloud php /var/www/html/occ config:app:set serverinfo token \
+  --value='REPLACE_WITH_A_LONG_RANDOM_TOKEN'</code></div></pre>
+<p>将占位符换成密码管理器生成的长随机值，并将同一个值填入 <code>HOMEPAGE_VAR_NEXTCLOUD_TOKEN</code>。这条命令会替换已有监控 Token；若已有其他监控使用它，应沿用原值或同步更新。<code>serverinfo token</code> 的设置方式也可见 <a target="_blank" rel="noopener" href="https://github.com/nextcloud/all-in-one/blob/main/Containers/nextcloud/entrypoint.sh" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fnextcloud%2Fall-in-one%2Fblob%2Fmain%2FContainers%2Fnextcloud%2Fentrypoint.sh">Nextcloud 官方 AIO 启动配置</a>。</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">- 存储服务:
+    - Nextcloud:
+        href: https://cloud.example.com
+        siteMonitor: https://cloud.example.com/status.php
+        widget:
+          type: nextcloud
+          url: https://cloud.example.com
+          key: &quot;&#123;&#123;HOMEPAGE_VAR_NEXTCLOUD_TOKEN&#125;&#125;&quot;
+          fields: [&quot;numfiles&quot;, &quot;numshares&quot;, &quot;activeusers&quot;, &quot;freespace&quot;]</code></div></pre>
+<p>地址改成已有实例，确保 Homepage 容器可以解析并访问。文件数、共享数等统计由 Nextcloud 后台任务更新，不要求与一次网页操作立即同步。未部署 Nextcloud 时跳过这项，不必为了导航新增一个实例。认证方式与可显示指标见 <a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/nextcloud/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fnextcloud%2F">Nextcloud 组件文档</a>。</p>
+<h2 id="六、继续加入后续服务">六、继续加入后续服务</h2>
+<p>后续三篇各自补充接入参数，沿用本篇的凭据替换、Docker 代理和 PVE Token：</p>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>状态来源</th>
+<th>应用检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AdGuard Home</td>
+<td>PVE LXC 202</td>
+<td>DNS 查询、拦截量、响应时间</td>
+</tr>
+<tr>
+<td>Lucky</td>
+<td>PVE LXC 201</td>
+<td>检查一个经反向代理访问的 HTTPS 地址</td>
+</tr>
+<tr>
+<td>qBittorrent</td>
+<td>Docker 容器</td>
+<td>下载、做种任务数与上下行速度</td>
+</tr>
+</tbody>
+</table>
+<p>Homepage 用来集中查看当前状态，历史趋势和主动告警需要另外的监控系统。HTTP 检查正常也不能代表 DNS 的 53 端口、NFS 的读写或证书自动续期均正常，具体服务仍保留各篇中的验证方式。</p>
+<h2 id="七、域名访问与维护">七、域名访问与维护</h2>
+<p>先使用 IP 和端口验证页面，再按 <a href="/2026/09/2845/" title="NAS 折腾日记（6）AdGuard Home 部署与内网 DNS">NAS 折腾日记（6）AdGuard Home 部署与内网 DNS</a> 配置 DNS，按 <a href="/2026/09/61054/" title="NAS 折腾日记（7）Lucky 部署与反向代理">NAS 折腾日记（7）Lucky 部署与反向代理</a> 配置反代。<code>HOMEPAGE_ALLOWED_HOSTS</code> 中保留实际访问的 Host，包括使用非默认端口时的端口号。该变量用于 Host 校验，不能代替访问认证；本系列先放在管理内网使用。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">docker logs --tail 80 homepage
+docker logs --tail 80 homepage-dockerproxy
+curl -I http://192.168.20.30:3000</code></div></pre>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>检查位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>页面提示 Host 不允许</td>
+<td>实际域名、端口与 <code>HOMEPAGE_ALLOWED_HOSTS</code></td>
+</tr>
+<tr>
+<td>Docker 状态不显示</td>
+<td>两个容器是否同在 <code>homepage-monitor</code>，容器名是否一致</td>
+</tr>
+<tr>
+<td>应用组件 401/403</td>
+<td>凭据是否更新进容器、Token 权限与 API 地址</td>
+</tr>
+<tr>
+<td>PVE 能显示主机指标，LXC 不显示</td>
+<td><code>proxmox.yaml</code>、实际节点名、CT ID 与 <code>proxmoxType</code></td>
+</tr>
+<tr>
+<td>浏览器能打开，组件或检查失败</td>
+<td>Homepage 容器的 DNS、路由和 API 访问权限</td>
+</tr>
+</tbody>
+</table>
+<p>备份 <code>config</code>、<code>icons</code> 和容器运行参数，特别是环境变量中的凭据。更新镜像时保留这些内容以及 Docker 网络，再复查链接、容器状态和应用指标。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://gethomepage.dev/installation/docker/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Finstallation%2Fdocker%2F">Homepage Docker 部署文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://gethomepage.dev/configs/services/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fconfigs%2Fservices%2F">Homepage 服务配置文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/portainer/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fportainer%2F">Portainer 组件</a></li>
+<li><a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/filebrowser/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Ffilebrowser%2F">FileBrowser 组件</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/59567/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/59567/">https://www.doratiger.top/2026/09/59567/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/2845/"><span>NAS 折腾日记（6）AdGuard Home 部署与内网 DNS</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/34732/"><span>NAS 折腾日记（4）FileBrowser 部署与配置文件权限</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

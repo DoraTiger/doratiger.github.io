@@ -1,0 +1,306 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>NAS 折腾日记（7）Lucky 部署与反向代理【DoraTiger 的异次元】</title><meta name="description" content="NAS 折腾日记（7）Lucky 部署与反向代理"><meta name="keywords" content="nas,lxc,lucky,反向代理"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="NAS 折腾日记（7）Lucky 部署与反向代理【DoraTiger 的异次元】"><meta property="og:description" content="NAS 折腾日记（7）Lucky 部署与反向代理"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/61054/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/61054/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"NAS 折腾日记（7）Lucky 部署与反向代理","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-15T08:07:00.000Z","dateModified":"2026-09-19T12:16:43.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/61054/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%83%A8%E7%BD%B2%E7%8E%AF%E5%A2%83"><span class="toc-text">一、部署环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AE%89%E8%A3%85%E4%B8%8E%E6%9C%8D%E5%8A%A1%E7%AE%A1%E7%90%86"><span class="toc-text">二、安装与服务管理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%80%90%E9%A1%B9%E9%85%8D%E7%BD%AE-Web-%E6%9C%8D%E5%8A%A1"><span class="toc-text">三、逐项配置 Web 服务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%AA%8C%E8%AF%81%E8%AE%BF%E9%97%AE%E9%93%BE%E8%B7%AF"><span class="toc-text">四、验证访问链路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%8E%A5%E5%85%A5-Homepage"><span class="toc-text">五、接入 Homepage</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E9%85%8D%E7%BD%AE%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%9B%B4%E6%96%B0"><span class="toc-text">六、配置备份与更新</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color9"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color9"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">67</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">132</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">NAS 折腾日记（7）Lucky 部署与反向代理</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-19</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nas/">nas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/lxc/">lxc</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/lucky/">lucky</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/">反向代理</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">3455 字 · 约 12 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>家庭 Web 服务使用 Lucky 汇总反向代理入口。本文记录在 Alpine LXC 中安装、注册服务、配置域名转发与 HTTPS，以及按访问链路排查问题。</p>
+<span id="more"></span>
+<h2 id="一、部署环境">一、部署环境</h2>
+<p>按照 <a href="/2026/09/46627/" title="NAS 折腾日记（2）PVE 与 Docker 基础环境部署">NAS 折腾日记（2）PVE 与 Docker 基础环境部署</a> 创建非特权 Alpine LXC，示例 CT ID 为 <code>201</code>、主机名为 <code>lucky</code>，不启用 Docker nesting 或 NFS 挂载。示例地址 <code>192.168.20.31/24</code>，网关 <code>192.168.20.1</code>。程序直接运行在该 LXC 中，PVE 设置开机启动。以下命令在 Lucky LXC 执行。</p>
+<p>反向代理以 <a href="/2026/09/59567/" title="NAS 折腾日记（5）Homepage 部署与服务导航">NAS 折腾日记（5）Homepage 部署与服务导航</a> 的 Homepage 为例，其上游为 <code>http://192.168.20.30:3000</code>。先确认从 Lucky LXC 可以访问上游。</p>
+<h2 id="二、安装与服务管理">二、安装与服务管理</h2>
+<p>在 <strong>Lucky LXC</strong> 内安装下载工具：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">apk update
+apk add curl ca-certificates tar</code></div></pre>
+<p>从 <a target="_blank" rel="noopener" href="https://github.com/gdy666/lucky/releases" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fgdy666%2Flucky%2Freleases">Lucky 发布页</a>选择 Linux amd64 安装包，复制对应 release asset 的下载链接。在 Lucky LXC 中下载，下面的地址占位符须替换为完整链接：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">curl -fL 'REPLACE_WITH_RELEASE_ASSET_URL' -o /tmp/lucky.tar.gz</code></div></pre>
+<p>解压后把 <code>lucky</code> 可执行文件放到 <code>/usr/local/bin/lucky</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">mkdir -p /tmp/lucky-package /etc/lucky
+tar -xzf /tmp/lucky.tar.gz -C /tmp/lucky-package
+find /tmp/lucky-package -type f -name lucky</code></div></pre>
+<p>按上一条输出找到二进制路径，复制到目标位置：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 将示例来源路径改为 find 实际显示的文件
+cp /tmp/lucky-package/lucky /usr/local/bin/lucky
+chmod 755 /usr/local/bin/lucky
+/usr/local/bin/lucky -c /etc/lucky/lucky.conf</code></div></pre>
+<p>先以前台方式启动，默认管理入口为 <code>http://192.168.20.31:16601</code>，初始账号和密码均为 <code>666</code>。登录后立即修改账号、密码和安全入口，再启用功能模块。管理端口 16601 与后面代理业务使用的 80/443 分开。Lucky 支持指定配置文件或目录，参数见 <a target="_blank" rel="noopener" href="https://www.lucky666.cn/docs/install/" class="external-link" data-redirect="https%3A%2F%2Fwww.lucky666.cn%2Fdocs%2Finstall%2F">官方安装说明</a>。下面将相同启动命令整理为 OpenRC 服务，供新建 Alpine 环境使用；实际机器使用安装脚本生成的启动方式。</p>
+<p>结束前台进程后，创建 <code>/etc/init.d/lucky</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">#!/sbin/openrc-run
+name=&quot;Lucky&quot;
+supervisor=&quot;supervise-daemon&quot;
+command=&quot;/usr/local/bin/lucky&quot;
+command_args=&quot;-c /etc/lucky/lucky.conf&quot;
+
+depend() &#123;
+    need net
+&#125;</code></div></pre>
+<p>启用服务：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">chmod 755 /etc/init.d/lucky
+rc-update add lucky default
+rc-service lucky start
+rc-service lucky status</code></div></pre>
+<p>在 Lucky 的 Web 服务中添加规则，将 <code>home.example.com</code> 转发至 <code>http://192.168.20.30:3000</code>。先使用 HTTP 监听端口 <code>80</code>，确认代理链路：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash"># 从能访问 Lucky 的客户端执行
+curl -I -H 'Host: home.example.com' http://192.168.20.31/</code></div></pre>
+<p>再通过浏览器访问 <code>http://home.example.com</code>。AdGuard Home 负责将域名解析到 Lucky，Lucky 根据域名转发到 Homepage。</p>
+<p>需要 HTTPS 时，在 Lucky 的证书管理中为自己的域名申请证书。使用 DNS 验证时，选择域名对应的 DNS 服务商，填写该服务商要求的凭据，申请成功后在 Web 服务规则中启用 TLS、监听 <code>443</code> 并选择对应证书。Homepage 的 <code>HOMEPAGE_ALLOWED_HOSTS</code> 已包含导航域名，可继续用 <code>https://home.example.com</code> 访问。</p>
+<h2 id="三、逐项配置-Web-服务">三、逐项配置 Web 服务</h2>
+<p>将配置分为监听、匹配、转发三部分。以导航为例：</p>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>监听端口</td>
+<td>HTTP <code>80</code>，HTTPS <code>443</code></td>
+</tr>
+<tr>
+<td>匹配域名</td>
+<td><code>home.example.com</code></td>
+</tr>
+<tr>
+<td>上游协议</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>上游主机</td>
+<td><code>192.168.20.30</code></td>
+</tr>
+<tr>
+<td>上游端口</td>
+<td><code>3000</code></td>
+</tr>
+<tr>
+<td>TLS 证书</td>
+<td>覆盖 <code>home.example.com</code> 的证书</td>
+</tr>
+</tbody>
+</table>
+<p>上游填写 Homepage 所在的 LXC 地址和发布端口。客户端访问的域名由 DNS 指向 Lucky，反代再按域名选择上游。多个服务可以使用同一监听端口、不同域名，各自填写上游。</p>
+<p>申请证书后检查证书覆盖的名称、有效期和 Web 服务中选用的证书。DNS 验证的凭据保存在 Lucky 配置中，备份目录按管理数据保存。</p>
+<h2 id="四、验证访问链路">四、验证访问链路</h2>
+<p>在 Lucky LXC 中验证上游：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">curl -I http://192.168.20.30:3000</code></div></pre>
+<p>在客户端绕过 DNS，指定解析测试 HTTPS：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">curl --resolve home.example.com:443:192.168.20.31 -I https://home.example.com/</code></div></pre>
+<p>最后使用正常 DNS 访问 <code>https://home.example.com</code>。这样可分别检查应用、代理与域名解析。内网 DNS 配置见 <a href="/2026/09/2845/" title="NAS 折腾日记（6）AdGuard Home 部署与内网 DNS">NAS 折腾日记（6）AdGuard Home 部署与内网 DNS</a>。</p>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>检查项</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>上游直连失败</td>
+<td>Homepage 是否运行、端口发布、LXC 防火墙</td>
+</tr>
+<tr>
+<td>返回 502</td>
+<td>Lucky 到上游的地址、端口与协议</td>
+</tr>
+<tr>
+<td>页面提示 Host 不允许</td>
+<td>Homepage 的 allowed hosts</td>
+</tr>
+<tr>
+<td>浏览器证书错误</td>
+<td>访问域名、证书名称、所选证书与有效期</td>
+</tr>
+<tr>
+<td>IP 指定访问正常，域名访问失败</td>
+<td>A/AAAA 记录及客户端实际 DNS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="五、接入-Homepage">五、接入 Homepage</h2>
+<p>Lucky 使用独立 LXC，本篇通过 PVE 状态与一个实际代理入口检查它。沿用 <a href="/2026/09/59567/" title="NAS 折腾日记（5）Homepage 部署与服务导航">NAS 折腾日记（5）Homepage 部署与服务导航</a> 的 <code>proxmox.yaml</code>，将以下条目合并进 <code>services.yaml</code> 的“网络服务”分组：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-yaml">- 网络服务:
+    - Lucky:
+        href: http://192.168.20.31:16601/YOUR_SAFE_ENTRY
+        description: 反向代理与证书管理
+        siteMonitor: https://home.example.com
+        proxmoxNode: pve
+        proxmoxVMID: 201
+        proxmoxType: lxc</code></div></pre>
+<p><code>YOUR_SAFE_ENTRY</code> 替换为设置后的安全入口，<code>pve</code> 和 <code>201</code> 替换为实际节点名与 CT ID。这里通过 Homepage 的通用 HTTP 检查观察代理入口是否可用。</p>
+<p><code>siteMonitor</code> 请求由 Homepage 容器发出。部署 AdGuard Home 后，在 Portainer 的 Homepage 网络配置中将 DNS 设为 <code>192.168.20.32</code>，重新部署，让容器也能把 <code>home.example.com</code> 解析到 Lucky。客户端浏览器能访问这个名称，并不能证明容器采用了相同 DNS。</p>
+<p>卡片中的 LXC 状态表示 Lucky 所在系统是否运行，HTTPS 检查则经过 DNS、Lucky 和 Homepage 上游。若代理检查异常，按上一节拆开排查；不能仅凭这一项判断一定是 Lucky 进程故障。证书续期状态仍在 Lucky 的证书管理与日志中确认。</p>
+<h2 id="六、配置备份与更新">六、配置备份与更新</h2>
+<p>本例配置目录为 <code>/etc/lucky</code>，包含服务规则与证书等数据。实际环境的安装目录由安装脚本决定；备份时按进程的配置参数找到完整目录。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">mkdir -p /srv/backups
+rc-service lucky stop
+tar -czf /srv/backups/lucky-backup.tar.gz -C /etc lucky
+rc-service lucky start</code></div></pre>
+<p>更新前保存备份，停止服务后替换 <code>/usr/local/bin/lucky</code>，保留配置目录，启动服务并复查一个 HTTP 和一个 HTTPS 入口。本文使用 Web 反代处理 HTTP 服务；其他协议的端口转发按对应协议单独配置。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.lucky666.cn/docs/install/" class="external-link" data-redirect="https%3A%2F%2Fwww.lucky666.cn%2Fdocs%2Finstall%2F">lucky-install</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/gdy666/lucky/releases" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fgdy666%2Flucky%2Freleases">lucky-release</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/61054/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/61054/">https://www.doratiger.top/2026/09/61054/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/2781/"><span>NAS 折腾日记（8）qBittorrent 部署与 NAS 数据挂载</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/2845/"><span>NAS 折腾日记（6）AdGuard Home 部署与内网 DNS</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

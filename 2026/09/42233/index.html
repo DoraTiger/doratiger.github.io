@@ -1,0 +1,344 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/favicon_default.png"><title>Homelab 搭建手记（11）Kitty 与 Zellij：远程终端配置与中文输入排障【DoraTiger 的异次元】</title><meta name="description" content="Homelab 搭建手记（11）Kitty 与 Zellij：远程终端配置与中文输入排障"><meta name="keywords" content="homelab,kitty,zellij,xfce,fcitx5,xrdp"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="Homelab 搭建手记（11）Kitty 与 Zellij：远程终端配置与中文输入排障【DoraTiger 的异次元】"><meta property="og:description" content="Homelab 搭建手记（11）Kitty 与 Zellij：远程终端配置与中文输入排障"><meta property="og:image" content="/images/avatar_default.png"><meta property="og:url" content="https://www.doratiger.top/2026/09/42233/"><link rel="canonical" href="https://www.superheaoz.top/2026/09/42233/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Homelab 搭建手记（11）Kitty 与 Zellij：远程终端配置与中文输入排障","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-09-14T04:00:00.000Z","dateModified":"2026-09-14T04:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/09/42233/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81Kitty-%E5%92%8C-Zellij-%E5%90%84%E8%B4%9F%E8%B4%A3%E4%BB%80%E4%B9%88"><span class="toc-text">一、Kitty 和 Zellij 各负责什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AD%97%E4%BD%93%E4%B8%8E%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE"><span class="toc-text">二、字体与基础配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%89%E8%A3%85%E5%B9%B6%E7%A1%AE%E8%AE%A4%E7%BB%88%E7%AB%AF%E7%B1%BB%E5%9E%8B"><span class="toc-text">2.1 安装并确认终端类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%80%89%E6%8B%A9%E5%AD%97%E4%BD%93"><span class="toc-text">2.2 选择字体</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E6%8A%8A%E6%97%A5%E5%B8%B8%E8%AE%BE%E7%BD%AE%E6%94%BE%E8%BF%9B-local-conf"><span class="toc-text">2.3 把日常设置放进 local.conf</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%A4%8D%E5%88%B6%E7%B2%98%E8%B4%B4%E4%B8%8E-Zellij-%E7%9A%84%E9%94%AE%E7%9B%98%E5%88%86%E5%B7%A5"><span class="toc-text">三、复制粘贴与 Zellij 的键盘分工</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%85%88%E5%9C%A8%E7%BA%AF-Kitty-%E4%B8%AD%E6%A3%80%E6%9F%A5%E5%89%AA%E8%B4%B4%E6%9D%BF"><span class="toc-text">3.1 先在纯 Kitty 中检查剪贴板</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E4%BC%9A%E8%AF%9D%E4%BA%A4%E7%BB%99-Zellij"><span class="toc-text">3.2 会话交给 Zellij</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%AD%E6%96%87%E8%83%BD%E6%98%BE%E7%A4%BA%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BE%93%E5%85%A5%E4%B8%8D%E4%BA%86"><span class="toc-text">四、中文能显示，为什么输入不了</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%B0%91%E7%9A%84%E6%98%AF-GLFW-IM-MODULE"><span class="toc-text">4.1 少的是 GLFW_IM_MODULE</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%86%99%E8%BF%9B%E6%A1%8C%E9%9D%A2%E5%90%AF%E5%8A%A8%E7%8E%AF%E5%A2%83"><span class="toc-text">4.2 写进桌面启动环境</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81RDP-%E9%87%8D%E8%BF%9E%E5%90%8E%E5%86%8D%E6%AC%A1%E5%87%BA%E7%8E%B0%E4%B8%AD%E6%96%87%E8%BE%93%E5%85%A5%E9%97%AE%E9%A2%98"><span class="toc-text">五、RDP 重连后再次出现中文输入问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%96%87%E4%BB%B6%E5%B7%B2%E7%BB%8F%E6%94%B9%E4%BA%86%EF%BC%8C%E4%BC%9A%E8%AF%9D%E5%8D%B4%E8%BF%98%E6%98%AF%E6%97%A7%E7%9A%84"><span class="toc-text">5.1 文件已经改了，会话却还是旧的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%A6%82%E4%BD%95%E6%A3%80%E6%9F%A5%E5%AE%9E%E9%99%85%E8%BF%9B%E7%A8%8B%E7%8E%AF%E5%A2%83"><span class="toc-text">5.2 如何检查实际进程环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5%E4%B8%8E%E6%B3%A8%E9%94%80%E6%A1%8C%E9%9D%A2"><span class="toc-text">5.3 断开连接与注销桌面</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%97%A5%E5%B8%B8%E4%BD%BF%E7%94%A8%E6%97%B6%E4%BF%9D%E7%95%99%E7%9A%84%E5%88%86%E5%B7%A5"><span class="toc-text">六、日常使用时保留的分工</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><img class="author-info-avatar-img" src="/images/avatar_default.png"></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color3"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color2"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">67</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">132</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">Homelab 搭建手记（11）Kitty 与 Zellij：远程终端配置与中文输入排障</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-09-14</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-14</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/homelab/">homelab</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/kitty/">kitty</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/zellij/">zellij</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/xfce/">xfce</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/fcitx5/">fcitx5</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/xrdp/">xrdp</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">5219 字 · 约 18 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>开发环境集中到实验室的迷你主机之后，我既通过 SSH 工作，也会从 Windows 远程桌面连接 Debian 的 XFCE。编辑器之外，终端里还会同时开着编程助手、构建命令和日志，逐渐需要把终端的字体、分屏、复制粘贴和中文输入整理一下。</p>
+<a href="/2026/06/35524/" title="Homelab 搭建手记（4）开发工具配置">Homelab 搭建手记（4）开发工具配置</a> 已经介绍过 Zellij 的会话管理。这次在图形桌面中换用 Kitty，由它负责终端显示和桌面交互，Zellij 继续负责工作会话。配置过程中，字体和输入法各遇到了一些问题；尤其是中文输入，第一次补好环境变量后，后来从 Windows 重连远程桌面又出现了相同症状。
+<p>下面记录这套配置，以及顺着启动环境找到问题的过程。文中的桌面输入法部分对应 Debian + XFCE + X11，Kitty 排查时的版本为 0.41.1。</p>
+<span id="more"></span>
+<h2 id="一、Kitty-和-Zellij-各负责什么">一、Kitty 和 Zellij 各负责什么</h2>
+<p>Kitty 本身也能分屏、开标签页，但我已经在使用 Zellij，没有必要再维护两套窗口组织习惯。实际分工如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">层次</th>
+<th style="text-align:left">负责的事情</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Kitty</td>
+<td style="text-align:left">字体、终端显示、窗口大小、鼠标与剪贴板、连接桌面输入法</td>
+</tr>
+<tr>
+<td style="text-align:left">Zellij</td>
+<td style="text-align:left">会话、标签页、分屏、焦点切换</td>
+</tr>
+<tr>
+<td style="text-align:left">Shell 和 TUI 程序</td>
+<td style="text-align:left">命令执行、编辑、编程助手和日志查看</td>
+</tr>
+</tbody>
+</table>
+<p>因此，我隐藏了 Kitty 标签栏，把分屏操作留给 Zellij。SSH 连接时则可以直接附加到服务器上的 Zellij 会话，不要求另一台电脑也安装 Kitty。</p>
+<p>从 Windows 通过 RDP 使用 Kitty 时，Kitty 运行在 Debian 桌面里，走的是远程 XFCE 会话的显示和输入法环境。这与 Windows 本地终端通过 SSH 连接服务器是两种入口，排查中文输入时要先分清。</p>
+<h2 id="二、字体与基础配置">二、字体与基础配置</h2>
+<h3 id="2-1-安装并确认终端类型">2.1 安装并确认终端类型</h3>
+<p>在 Debian 中安装 Kitty：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo apt install kitty
+kitty --version</code></div></pre>
+<p>从桌面打开 Kitty 后，在里面检查终端类型：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">echo &quot;$TERM&quot;
+infocmp xterm-kitty &gt;/dev/null &amp;&amp; echo 'kitty terminfo OK'</code></div></pre>
+<p>纯 Kitty 中的终端类型通常是 <code>xterm-kitty</code>。进入 Zellij 后，里面的终端类型可能不同，不需要为了统一显示而强行覆盖 <code>TERM</code>。</p>
+<h3 id="2-2-选择字体">2.2 选择字体</h3>
+<p>当时系统的 monospace 字体匹配到了 Noto Sans Mono CJK SC。它能承担中文显示，但我还想让 Shell 提示符和开发工具中的图标显示完整，于是选择了 JetBrainsMono Nerd Font Mono 作为主字体。</p>
+<p>已安装相应字体后，可以在 Kitty 窗口里运行字体选择器：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">kitten choose-fonts</code></div></pre>
+<p>这里有一个实际遇到的小问题：在 XFCE Terminal 中启动字体选择界面时，Enter 的识别出现异常，换到 Kitty 内运行就正常了。因此 Kitty 自己的交互式工具，我直接放在 Kitty 中操作。</p>
+<p>当前 <code>~/.config/kitty/kitty.conf</code> 开头保留了字体选择器生成的配置：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-conf">font_family family='JetBrainsMono Nerd Font Mono' postscript_name=JetBrainsMonoNFM-Regular
+bold_font auto
+italic_font auto</code></div></pre>
+<p>字体名称取决于实际安装版本，使用选择器生成的结果即可。中文则先沿用字体回退机制，没有额外写一长串字符范围映射。</p>
+<p>可以用简单的输出区分字体问题与输入法问题：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">printf '%s\n' 'English 0123456789' '中文显示：你好世界' '框线：┌──┬──┐'</code></div></pre>
+<p>如果已有中文能正常显示，而按拼音没有候选词，接下来应查输入法；反过来，出现方框或缺字才需要继续看字体。</p>
+<h3 id="2-3-把日常设置放进-local-conf">2.3 把日常设置放进 local.conf</h3>
+<p>我的 <code>kitty.conf</code> 保留了较完整的配置注释，末尾通过这一行加载个人设置：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-conf">include local.conf</code></div></pre>
+<p>日常调整放在同目录的 <code>~/.config/kitty/local.conf</code>，避免每次都在长配置文件中寻找修改位置。下面是当前设置中的主要部分：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div></div><code class="language-conf">font_size 12.0
+cursor_shape block
+cursor_blink_interval 0.5
+
+scrollback_lines 10000
+wheel_scroll_multiplier 3.0
+
+window_padding_width 6
+remember_window_size yes
+initial_window_width 1200
+initial_window_height 800
+
+tab_bar_style hidden
+enable_audio_bell no
+visual_bell_duration 0.0
+shell_integration enabled
+term xterm-kitty</code></div></pre>
+<p>这部分主要是让窗口和滚动行为符合自己的习惯。已有配置时只合并需要的项，不必用整份示例替换；修改前可以给配置目录留一份副本。<a target="_blank" rel="noopener" href="https://sw.kovidgoyal.net/kitty/conf/" title="Kitty 配置文档" class="external-link" data-redirect="https%3A%2F%2Fsw.kovidgoyal.net%2Fkitty%2Fconf%2F">Kitty 配置文档</a></p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">cp -a ~/.config/kitty ~/.config/kitty.bak-$(date +%Y%m%d-%H%M%S)</code></div></pre>
+<h2 id="三、复制粘贴与-Zellij-的键盘分工">三、复制粘贴与 Zellij 的键盘分工</h2>
+<h3 id="3-1-先在纯-Kitty-中检查剪贴板">3.1 先在纯 Kitty 中检查剪贴板</h3>
+<p>我的鼠标和剪贴板设置如下：</p>
+<pre><div class="code-header"><span class="code-header-type">conf</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-conf">copy_on_select clipboard
+mouse_map right press ungrabbed paste_from_clipboard
+clipboard_control write-clipboard write-primary read-clipboard-ask read-primary-ask</code></div></pre>
+<p>选中文字后复制到剪贴板；没有被内部程序抓取的右键事件用于粘贴。<code>read-clipboard-ask</code> 则保留程序读取剪贴板时的询问。<a target="_blank" rel="noopener" href="https://sw.kovidgoyal.net/kitty/conf/" title="Kitty 配置文档" class="external-link" data-redirect="https%3A%2F%2Fsw.kovidgoyal.net%2Fkitty%2Fconf%2F">Kitty 配置文档</a></p>
+<p>需要注意，进入 Zellij 或其他启用了鼠标处理的 TUI 后，鼠标事件可能先交给内部程序。遇到右键不再粘贴，先退回纯 Kitty 比较，再用 <code>Ctrl+Shift+V</code> 检查键盘粘贴，避免把事件被截获误判成整个剪贴板失效。</p>
+<p>我当时也遇到过粘贴测试命令识别异常的情况。排查时用一小段普通文本更直接，不必上来就粘贴包含大量转义字符和框线的长命令。普通文本正常后，再看具体 TUI 的行为。</p>
+<h3 id="3-2-会话交给-Zellij">3.2 会话交给 Zellij</h3>
+<p>沿用之前已经安装的 Zellij，常用入口只有几个：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash"># 新建有名称的工作会话
+zellij -s development
+
+# 查看已有会话
+zellij list-sessions
+
+# 重新附加
+zellij attach development</code></div></pre>
+<p>会话名称按项目或工作用途区分，切换设备后更容易找到。暂时离开时使用 Detach，不要把退出会话当成断开连接。会话能否保留还取决于服务器上的进程是否继续运行，主机关机不会把运行中的任务原样保存下来。<a target="_blank" rel="noopener" href="https://zellij.dev/documentation/commands.html" title="Zellij 命令文档" class="external-link" data-redirect="https%3A%2F%2Fzellij.dev%2Fdocumentation%2Fcommands.html">Zellij 命令文档</a></p>
+<p>当前 Zellij 配置还启用了：</p>
+<pre><div class="code-header"><span class="code-header-type">kdl</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-kdl">support_kitty_keyboard_protocol true
+support_kitty_graphics_protocol true</code></div></pre>
+<p>这些项保存在 <code>~/.config/zellij/config.kdl</code> 中。使用其他版本时，先核对该版本是否识别这些选项；键盘协议与图形协议也各有用途，开启图形支持不等于修复键盘输入。</p>
+<p>我没有在 Kitty 中再大量绑定 <code>Ctrl</code> 组合键，以免同一个按键同时落到 Kitty、Zellij 和内部编辑器的操作上。碰到快捷键冲突时，按照“纯 Kitty → Zellij → 具体程序”的顺序比较，比同时修改三层映射更容易定位。</p>
+<h2 id="四、中文能显示，为什么输入不了">四、中文能显示，为什么输入不了</h2>
+<h3 id="4-1-少的是-GLFW-IM-MODULE">4.1 少的是 GLFW_IM_MODULE</h3>
+<p>第一次遇到 Kitty 无法输入中文时，桌面的 Fcitx5 环境已经配置好了。检查结果中，GTK、Qt 和 XIM 相关变量都有值，但 Kitty 使用的变量为空：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">XMODIFIERS=@im=fcitx
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+GLFW_IM_MODULE=
+XDG_SESSION_TYPE=x11</code></div></pre>
+<p>在同一个桌面会话中，用下面的命令打开新 Kitty 窗口后，中文输入恢复：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">env GLFW_IM_MODULE=ibus kitty</code></div></pre>
+<p>这里的 <code>ibus</code> 指 Kitty 接入的输入法接口，实际提供输入法的仍然是 Fcitx5 的 IBus 兼容前端，不需要因为这个变量值就换掉 Fcitx5 或再启动一个 ibus-daemon。<a target="_blank" rel="noopener" href="https://github.com/fcitx/fcitx5/discussions/628" title="Fcitx5 的 IBus 兼容接口" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ffcitx%2Ffcitx5%2Fdiscussions%2F628">Fcitx5 项目中的说明</a></p>
+<h3 id="4-2-写进桌面启动环境">4.2 写进桌面启动环境</h3>
+<a href="/2026/09/34889/" title="Homelab 搭建手记（6）Debian Xfce 与 XRDP 同用户并发会话配置">Homelab 搭建手记（6）Debian Xfce 与 XRDP 同用户并发会话配置</a> 中已经整理过输入法配置。当前 `~/.profile` 保留以下内容：
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=@im=fcitx
+export GLFW_IM_MODULE=ibus</code></div></pre>
+<p>本机的 <code>/etc/xrdp/startwm.sh</code> 会读取 <code>~/.profile</code>，再启动远程 XFCE 会话。Fcitx5 则由桌面自动启动项运行，不在 <code>.profile</code> 中反复启动 daemon。</p>
+<p>这个变量需要在 Kitty 启动前进入环境。仅在 Kitty 已经启动的 Shell 中执行 <code>export</code>，改变的是 Shell 及之后启动的子进程，无法倒过来修改外层 Kitty 的启动环境。类似地，也不要把 Kitty 配置中的子进程 <code>env</code> 设置当成它自身输入法初始化的替代入口。</p>
+<p>如果暂时不想退出桌面，用前面的 <code>env GLFW_IM_MODULE=ibus kitty</code> 打开一个新窗口即可。这样只影响这次启动，不打断其他窗口中的工作。</p>
+<h2 id="五、RDP-重连后再次出现中文输入问题">五、RDP 重连后再次出现中文输入问题</h2>
+<h3 id="5-1-文件已经改了，会话却还是旧的">5.1 文件已经改了，会话却还是旧的</h3>
+<p>后来从 Windows 远程桌面连接时，Kitty 又出现了无法输入中文的情况。检查 <code>.profile</code>，那行 <code>GLFW_IM_MODULE=ibus</code> 明明还在；博客里也有相同配置。</p>
+<p>这次我继续检查正在运行的 XFCE 进程，而不只看配置文件。当时的结果是：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">检查项</th>
+<th style="text-align:left">结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">远程 XFCE 会话启动时间</td>
+<td style="text-align:left">9 月 1 日</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>.profile</code> 修改时间</td>
+<td style="text-align:left">9 月 3 日</td>
+</tr>
+<tr>
+<td style="text-align:left">远程 XFCE 进程中的 <code>GLFW_IM_MODULE</code></td>
+<td style="text-align:left">缺失</td>
+</tr>
+<tr>
+<td style="text-align:left">Fcitx5 进程</td>
+<td style="text-align:left">正在运行</td>
+</tr>
+<tr>
+<td style="text-align:left">该会话 D-Bus 上的 IBus 接口</td>
+<td style="text-align:left">存在</td>
+</tr>
+</tbody>
+</table>
+<p>因此，问题落在了远程会话的环境继承上：配置文件在会话启动之后才修改，重连又回到了原来的桌面，从菜单启动的应用仍然继承旧环境。</p>
+<h3 id="5-2-如何检查实际进程环境">5.2 如何检查实际进程环境</h3>
+<p>先找 XFCE 会话的 PID 和启动时间：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">pgrep -a xfce4-session
+ps -C xfce4-session -o pid,lstart,comm</code></div></pre>
+<p>同一用户有多个桌面时，要通过 <code>DISPLAY</code> 区分。选中实际的远程会话 PID 后，只读取相关变量：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash"># 将 12345 替换为待检查的 XFCE 会话 PID
+tr '\0' '\n' &lt; /proc/12345/environ \
+  | grep -E '^(DISPLAY|GLFW_IM_MODULE|GTK_IM_MODULE|QT_IM_MODULE|XMODIFIERS)='</code></div></pre>
+<p>检查 Kitty 本身时，也可以对实际的 Kitty PID 做同样的读取。在一个已经加载过配置的终端里执行 <code>echo &quot;$GLFW_IM_MODULE&quot;</code>，只说明该 Shell 的值，不足以代表桌面启动器和外层 Kitty 的环境。</p>
+<h3 id="5-3-断开连接与注销桌面">5.3 断开连接与注销桌面</h3>
+<p>关闭 Windows 远程桌面窗口通常只是断开 RDP 连接。为了保留正在工作的桌面，这台机器会复用原来的 XFCE 会话，因此重新连接不会自动重新读取 <code>.profile</code>。</p>
+<p>让新环境用于整个桌面，需要先保存工作，从 XFCE 的退出菜单中选择注销，再重新连接。注销会结束当前桌面中的应用，不能当成普通断线操作。若手头还有任务，就先使用显式带变量的新 Kitty 窗口，等合适的时候再注销。</p>
+<p>这与上一篇 <a href="/2026/09/40338/" title="Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置">Homelab 搭建手记（9）全局代理下的内网访问与桌面应用配置</a> 中的桌面代理问题有相似之处：文件里的配置最终要进入实际启动的进程，菜单入口、终端入口和旧会话不一定拥有同一份环境。</p>
+<h2 id="六、日常使用时保留的分工">六、日常使用时保留的分工</h2>
+<p>整理完这些配置，我把字体、剪贴板和窗口习惯留在 Kitty 中，把会话与分屏交给 Zellij。中文输入则由远程 XFCE 会话启动的 Fcitx5 提供，Kitty 通过 <code>GLFW_IM_MODULE=ibus</code> 接入。</p>
+<p>以后出现输入异常，先看中文能否显示，再比较纯 Kitty 和 Zellij 内部的表现；如果只在远程桌面里出现，就检查会话和进程实际继承的环境。对长期不注销的开发桌面来说，这一步很容易被漏掉。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://sw.kovidgoyal.net/kitty/conf/" title="Kitty 配置文档" class="external-link" data-redirect="https%3A%2F%2Fsw.kovidgoyal.net%2Fkitty%2Fconf%2F">Kitty 配置文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://zellij.dev/documentation/commands.html" title="Zellij 命令文档" class="external-link" data-redirect="https%3A%2F%2Fzellij.dev%2Fdocumentation%2Fcommands.html">Zellij 命令文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/fcitx/fcitx5/discussions/628" title="Fcitx5 的 IBus 兼容接口" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ffcitx%2Ffcitx5%2Fdiscussions%2F628">Fcitx5 的 IBus 兼容接口讨论</a></li>
+</ul>
+<!-- url -->
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/09/42233/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/09/42233/">https://www.doratiger.top/2026/09/42233/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/09/46627/"><span>NAS 折腾日记（2）PVE 与 Docker 基础环境部署</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/09/31179/"><span>Homelab 搭建手记（10）实验室开发主机接入 W150 UPS 与 NUT 配置</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@1.7.22/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
