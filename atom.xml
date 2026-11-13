@@ -37,9 +37,9 @@
     
     <category term="nas" scheme="https://www.doratiger.top/tags/nas/"/>
     
-    <category term="docker" scheme="https://www.doratiger.top/tags/docker/"/>
-    
     <category term="truenas" scheme="https://www.doratiger.top/tags/truenas/"/>
+    
+    <category term="docker" scheme="https://www.doratiger.top/tags/docker/"/>
     
     <category term="immich" scheme="https://www.doratiger.top/tags/immich/"/>
     
@@ -66,9 +66,9 @@
     
     <category term="nas" scheme="https://www.doratiger.top/tags/nas/"/>
     
-    <category term="docker" scheme="https://www.doratiger.top/tags/docker/"/>
-    
     <category term="truenas" scheme="https://www.doratiger.top/tags/truenas/"/>
+    
+    <category term="docker" scheme="https://www.doratiger.top/tags/docker/"/>
     
     <category term="zfs" scheme="https://www.doratiger.top/tags/zfs/"/>
     
@@ -398,13 +398,13 @@
     
     <category term="nas" scheme="https://www.doratiger.top/tags/nas/"/>
     
+    <category term="docker" scheme="https://www.doratiger.top/tags/docker/"/>
+    
     <category term="qnap" scheme="https://www.doratiger.top/tags/qnap/"/>
     
     <category term="pve" scheme="https://www.doratiger.top/tags/pve/"/>
     
     <category term="lxc" scheme="https://www.doratiger.top/tags/lxc/"/>
-    
-    <category term="docker" scheme="https://www.doratiger.top/tags/docker/"/>
     
     <category term="portainer" scheme="https://www.doratiger.top/tags/portainer/"/>
     

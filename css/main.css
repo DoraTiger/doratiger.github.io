@@ -942,8 +942,9 @@ html[data-appearance='day'] .appearance-image > .appearance-image-night {
   }
 }
 .appearance-image.about-welcome {
-  width: 100%;
-  margin: 0 auto 2rem;
+  width: 240px;
+  max-width: 100%;
+  margin: 0 auto 1rem;
 }
 .appearance-image.about-welcome > img {
   width: 100%;
