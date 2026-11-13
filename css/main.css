@@ -921,6 +921,35 @@ html[data-appearance='day'] #celestial-sky #celestial-orbit {
   opacity: 0.5;
   pointer-events: none;
 }
+.appearance-image > .appearance-image-day {
+  display: none !important;
+}
+.appearance-image > .appearance-image-night {
+  display: block !important;
+}
+html[data-appearance='day'] .appearance-image > .appearance-image-day {
+  display: block !important;
+}
+html[data-appearance='day'] .appearance-image > .appearance-image-night {
+  display: none !important;
+}
+@media (prefers-color-scheme: light) {
+  html[data-appearance='system'] .appearance-image > .appearance-image-day {
+    display: block !important;
+  }
+  html[data-appearance='system'] .appearance-image > .appearance-image-night {
+    display: none !important;
+  }
+}
+.appearance-image.about-welcome {
+  width: 100%;
+  margin: 0 auto 2rem;
+}
+.appearance-image.about-welcome > img {
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
 #archive {
   width: 100%;
   margin-top: 2rem;
@@ -3504,9 +3533,6 @@ a.external-link::after {
   height: 7.5rem;
   border-radius: 50%;
   border: 0.125rem solid var(--dt-surface-raised);
-}
-#sidebar-info .author-info-avatar-img:hover {
-  animation: avatar 5s linear infinite;
 }
 #sidebar-info .author-info-name {
   margin-top: 1rem;
