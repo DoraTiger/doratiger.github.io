@@ -1,0 +1,648 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>服务器操作指北（16）Authentik 接入 Gitea 统一登录与账号关联【DoraTiger 的异次元】</title><meta name="description" content="前言 qBittorrent 接入后，这次继续处理 TrueNAS 上的 Gitea。Gitea 已经有正在使用的账号和仓库，我希望保留它们，通过 DoraTiger Auth 登录；以后有内部人员加入，也能在首次登录时自动创建自己的账号，再自行建立仓库。 这里遇到的第一个问题是两边账号资料不一致：Gitea 的用户名"><meta name="keywords" content="docker,gitea,truenas,authentik,oidc"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（16）Authentik 接入 Gitea 统一登录与账号关联【DoraTiger 的异次元】"><meta property="og:description" content="前言 qBittorrent 接入后，这次继续处理 TrueNAS 上的 Gitea。Gitea 已经有正在使用的账号和仓库，我希望保留它们，通过 DoraTiger Auth 登录；以后有内部人员加入，也能在首次登录时自动创建自己的账号，再自行建立仓库。 这里遇到的第一个问题是两边账号资料不一致：Gitea 的用户名"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/58245/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/58245/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（16）Authentik 接入 Gitea 统一登录与账号关联","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-14T18:14:00.000Z","dateModified":"2026-11-14T18:14:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/58245/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81OIDC-%E4%B8%8E%E8%B4%A6%E5%8F%B7%E5%85%B3%E7%B3%BB"><span class="toc-text">一、OIDC 与账号关系</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E8%AE%A4%E8%AF%81%E7%BB%93%E6%9E%84"><span class="toc-text">1.1 认证结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%89%8D%E5%93%A8%E4%B8%8E%E5%8E%9F%E7%94%9F-OIDC"><span class="toc-text">1.2 前哨与原生 OIDC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E8%BA%AB%E4%BB%BD%E6%BA%90%E3%80%81Provider-%E4%B8%8E%E6%9C%AC%E5%9C%B0%E7%94%A8%E6%88%B7"><span class="toc-text">1.3 身份源、Provider 与本地用户</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E5%91%BD%E5%90%8D%E4%B8%8E%E7%A4%BA%E4%BE%8B%E5%9C%B0%E5%9D%80"><span class="toc-text">1.4 命名与示例地址</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Authentik-%E5%BA%94%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">二、Authentik 应用配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E8%AE%BF%E9%97%AE%E7%BB%84"><span class="toc-text">2.1 访问组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-OAuth2-OpenID-Connect-Provider"><span class="toc-text">2.2 OAuth2&#x2F;OpenID Connect Provider</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%BA%94%E7%94%A8%E4%B8%8E%E7%BB%84%E7%BB%91%E5%AE%9A"><span class="toc-text">2.3 应用与组绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E5%8F%91%E7%8E%B0%E6%96%87%E6%A1%A3"><span class="toc-text">2.4 发现文档</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Gitea-%E8%AE%A4%E8%AF%81%E6%BA%90"><span class="toc-text">三、Gitea 认证源</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%96%B0%E5%BB%BA%E8%AE%A4%E8%AF%81%E6%BA%90"><span class="toc-text">3.1 新建认证源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E9%85%8D%E7%BD%AE%E4%BF%9D%E5%AD%98%E4%BD%8D%E7%BD%AE"><span class="toc-text">3.2 配置保存位置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%B7%B2%E6%9C%89%E8%B4%A6%E5%8F%B7%E5%85%B3%E8%81%94"><span class="toc-text">四、已有账号关联</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E7%94%A8%E6%88%B7%E5%90%8D%E4%B8%8E%E9%82%AE%E7%AE%B1%E4%B8%8D%E5%90%8C"><span class="toc-text">4.1 用户名与邮箱不同</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%90%8C%E5%90%8D%E8%B4%A6%E5%8F%B7%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%90%88%E5%B9%B6"><span class="toc-text">4.2 同名账号与自动合并</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%96%B0%E7%94%A8%E6%88%B7%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%86%8C"><span class="toc-text">五、新用户自动注册</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-app-ini-%E4%B8%8E%E6%8C%81%E4%B9%85%E5%8C%96"><span class="toc-text">5.1 app.ini 与持久化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%B3%A8%E5%86%8C%E5%BC%80%E5%85%B3"><span class="toc-text">5.2 注册开关</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E4%BB%93%E5%BA%93%E4%B8%8E%E7%BB%84%E7%BB%87%E6%9D%83%E9%99%90"><span class="toc-text">5.3 仓库与组织权限</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E9%87%8D%E5%90%AF%E4%B8%8E%E6%A3%80%E6%9F%A5"><span class="toc-text">5.4 重启与检查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E8%AE%BF%E9%97%AE%E7%BB%84%E4%B8%8E%E7%94%A8%E6%88%B7%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-text">六、访问组与用户生命周期</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E6%96%B0%E7%94%A8%E6%88%B7%E5%BC%80%E9%80%9A"><span class="toc-text">6.1 新用户开通</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%92%A4%E9%94%80%E8%AE%BF%E9%97%AE"><span class="toc-text">6.2 撤销访问</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E9%AA%8C%E8%AF%81%E4%B8%8E%E5%9B%9E%E9%80%80"><span class="toc-text">七、验证与回退</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%AE%9E%E9%99%85%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C"><span class="toc-text">7.1 实际验证结果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E5%9B%9E%E9%80%80%E8%8C%83%E5%9B%B4"><span class="toc-text">7.2 回退范围</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">八、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E7%82%B9%E5%87%BB%E5%85%B3%E8%81%94%E5%90%8E%E8%BF%94%E5%9B%9E%E4%B8%BB%E9%A1%B5"><span class="toc-text">8.1 点击关联后返回主页</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E8%AE%A4%E8%AF%81%E6%BA%90%E5%90%8D%E7%A7%B0%E4%B8%8E%E5%93%81%E7%89%8C%E4%B8%8D%E4%B8%80%E8%87%B4"><span class="toc-text">8.2 认证源名称与品牌不一致</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E9%82%AE%E7%AE%B1%E6%98%AF%E5%90%A6%E5%BF%85%E9%A1%BB%E7%BB%9F%E4%B8%80"><span class="toc-text">8.3 邮箱是否必须统一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-4-%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%86%8C%E4%B8%8E%E8%AE%BF%E9%97%AE%E9%99%90%E5%88%B6"><span class="toc-text">8.4 自动注册与访问限制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color6"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">74</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">142</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（16）Authentik 接入 Gitea 统一登录与账号关联</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/gitea/">gitea</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/truenas/">truenas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/oidc/">oidc</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">10086 字 · 约 34 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>qBittorrent 接入后，这次继续处理 TrueNAS 上的 Gitea。Gitea 已经有正在使用的账号和仓库，我希望保留它们，通过 DoraTiger Auth 登录；以后有内部人员加入，也能在首次登录时自动创建自己的账号，再自行建立仓库。</p>
+<p>这里遇到的第一个问题是两边账号资料不一致：Gitea 的用户名和邮箱，与 Authentik 中的账号不同。接入时需要先完成原账号关联，再开放新用户自动注册，避免把原来的用户当成新用户创建一遍。</p>
+<p>本文使用 Gitea <code>28.3.0</code>、TrueNAS <code>25.10.8</code> 和 Authentik <code>2026.8.5</code>。Gitea 已通过 Nginx Proxy Manager（NPM）提供 HTTPS，本文保留原反代，使用原生 OpenID Connect（OIDC）认证。域名、账号和部署路径均使用示例。</p>
+<span id="more"></span>
+<p>Authentik 的部署见 <a href="/2026/11/58241/" title="服务器操作指北（12）Authentik 基本概念、默认配置与部署">服务器操作指北（12）Authentik 基本概念、默认配置与部署</a>，下文复用的登录、应用授权和退出流程见 <a href="/2026/11/58242/" title="服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理">服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理</a>。本文不重新部署 Gitea，也不迁移已有仓库和组织。</p>
+<h2 id="一、OIDC-与账号关系">一、OIDC 与账号关系</h2>
+<h3 id="1-1-认证结构">1.1 认证结构</h3>
+<p>Gitea 自带 OIDC 客户端。点击登录按钮后，由 Gitea 发起授权请求，Authentik 完成用户认证，再把结果交回 Gitea。它不需要上一例中的 Proxy Provider、Outpost 或 NPM <code>auth_request</code>。<a target="_blank" rel="noopener" href="https://integrations.goauthentik.io/development/gitea/" class="external-link" data-redirect="https%3A%2F%2Fintegrations.goauthentik.io%2Fdevelopment%2Fgitea%2F">Authentik Gitea 接入文档</a></p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-text">浏览器 → Gitea 登录页 → DoraTiger Auth
+                         ↓
+              Authentik 登录、MFA 与应用访问检查
+                         ↓
+浏览器 ← Gitea 回调地址 ← 授权码
+             ↓
+Gitea 服务端向 Authentik 换取令牌、验证身份
+             ↓
+查找已有绑定，或按注册设置创建 Gitea 用户
+             ↓
+建立 Gitea 登录会话</code></div></pre>
+<p>浏览器必须能访问两个 HTTPS 域名，Gitea 容器也必须能访问 Authentik 的发现文档、令牌等端点。浏览器能打开 Authentik，并不能证明 Gitea 后端也能连通。</p>
+<p>NPM 继续负责原来的 HTTPS 转发。Gitea 的 <code>ROOT_URL</code> 应与浏览器实际使用的地址一致，例如 <code>https://git.example.com/</code>。不要为了接入 OIDC，再给这个站点叠加一套 Forward Auth。</p>
+<h3 id="1-2-前哨与原生-OIDC">1.2 前哨与原生 OIDC</h3>
+<a href="/2026/11/58244/" title="服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证">服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证</a> 中部署了 TrueNAS Proxy Outpost，但这个前哨并不是局域网内所有应用的统一认证中转站。是否使用它，取决于应用采用的认证协议和接入方式，而不是应用是否部署在 TrueNAS 上。
+<p>前一篇的 qBittorrent WebUI 没有使用原生 OIDC 登录，仍然验证自己的用户名和密码。因此，这套方案由 NPM 在转发请求前调用 Proxy Outpost，检查用户是否已经通过 Authentik 认证、是否允许访问应用；通过后，再把 Outpost 提供的 HTTP Basic 凭据转发给 qBittorrent。前哨承担了应用入口的认证检查和后端凭据转发所需的处理，qBittorrent 自身不负责解析 Authentik 的 OIDC 身份。</p>
+<p>Gitea 则具备原生 OIDC 客户端，可以自己发起授权、处理回调、换取令牌，并将外部身份关联到自己的用户。它直接连接云端 Authentik 的 OAuth2/OpenID Connect Provider，因此不需要通过 TrueNAS 上的 Proxy Outpost。</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>本次 qBittorrent 接入</th>
+<th>本次 Gitea 接入</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentik 提供者</td>
+<td>Proxy Provider</td>
+<td>OAuth2/OpenID Connect Provider</td>
+</tr>
+<tr>
+<td>谁处理应用侧的统一认证</td>
+<td>NPM 调用 TrueNAS Proxy Outpost</td>
+<td>Gitea 自带的 OIDC 客户端</td>
+</tr>
+<tr>
+<td>NPM 的工作</td>
+<td>HTTPS 反代、认证子请求、转发后端 Basic 凭据</td>
+<td>保留原 HTTPS 反代</td>
+</tr>
+<tr>
+<td>应用接受的登录凭据</td>
+<td>qBittorrent 自身的用户名和密码</td>
+<td>Authentik 提供的 OIDC 身份，关联到 Gitea 用户</td>
+</tr>
+<tr>
+<td>TrueNAS 前哨</td>
+<td>使用</td>
+<td>不使用</td>
+</tr>
+<tr>
+<td>云端 Authentik</td>
+<td>负责用户登录、MFA 和授权</td>
+<td>负责用户登录、MFA、授权及令牌签发</td>
+</tr>
+</tbody>
+</table>
+<p>这里的“直接连接云端”指认证协议的交互：浏览器跳转到云端登录，Gitea 服务端也向云端请求发现文档和令牌。用户访问 Gitea 页面仍经过原来的 NPM，业务流量不需要先绕到云端 Authentik。</p>
+<p>前哨也不是独立身份中心。前一篇把它部署在 TrueNAS，是为了让 NPM 在本地网络中调用认证端点，并没有为局域网复制一套能够独立完成新登录的用户库。两种方案都不能仅凭“组件部署在本地”就认定云端不可达时仍可完成新认证；已有应用会话是否继续有效，则取决于各自的会话状态。</p>
+<h3 id="1-3-身份源、Provider-与本地用户">1.3 身份源、Provider 与本地用户</h3>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>本次用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentik Source 身份源</td>
+<td>Google、Microsoft 等上游登录方式，已经配置的可继续使用</td>
+</tr>
+<tr>
+<td>Authentik OAuth2/OpenID Connect Provider</td>
+<td>向 Gitea 提供用户身份和令牌</td>
+</tr>
+<tr>
+<td>Authentik Application 应用</td>
+<td>关联 Provider、设置入口并绑定访问条件</td>
+</tr>
+<tr>
+<td>Gitea 认证源</td>
+<td>保存 OIDC 客户端参数，显示 DoraTiger Auth 登录入口</td>
+</tr>
+<tr>
+<td>Gitea 用户</td>
+<td>保存仓库归属、组织成员关系、权限、SSH Key 等应用数据</td>
+</tr>
+</tbody>
+</table>
+<p>Google 和 Microsoft 登录的是 Authentik 账号。Gitea 只接收 Authentik 提供的身份，无须再分别接入这两个上游。Source 与 Provider 的方向不同：前者让 Authentik 接受外部身份，后者让其他应用接受 Authentik 的身份。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/oauth2/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Foauth2%2F">OAuth2 Provider 说明</a></p>
+<p>统一登录后，Gitea 仍然需要自己的用户记录。已有用户关联身份后继续使用原记录；新用户首次登录时自动建立记录，也属于创建 Gitea 账号，只是省去了另一份注册表单。</p>
+<h3 id="1-4-命名与示例地址">1.4 命名与示例地址</h3>
+<p>同一种服务以后可能部署在多个位置，因此后台对象保留部署位置，登录按钮则使用品牌名称：</p>
+<table>
+<thead>
+<tr>
+<th>字段或对象</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentik 域名</td>
+<td><code>https://auth.example.com</code></td>
+</tr>
+<tr>
+<td>Gitea 对外地址</td>
+<td><code>https://git.example.com/</code></td>
+</tr>
+<tr>
+<td>应用名称</td>
+<td><code>TrueNAS · Gitea</code></td>
+</tr>
+<tr>
+<td>应用 Slug</td>
+<td><code>truenas-gitea</code></td>
+</tr>
+<tr>
+<td>Provider 名称</td>
+<td><code>doratiger-truenas-gitea</code></td>
+</tr>
+<tr>
+<td>Authentik 访问组</td>
+<td><code>truenas-gitea-users</code></td>
+</tr>
+<tr>
+<td>Gitea 认证源名称</td>
+<td><code>DoraTiger Auth</code></td>
+</tr>
+</tbody>
+</table>
+<p>应用 Slug 会进入发现文档地址，Gitea 认证源名称会进入回调路径。两个字段不能互换，也不能只改显示名称而忽略它对应的 URL。</p>
+<h2 id="二、Authentik-应用配置">二、Authentik 应用配置</h2>
+<h3 id="2-1-访问组">2.1 访问组</h3>
+<p>进入 Authentik 管理员界面的“目录 → 组”，创建 <code>truenas-gitea-users</code> 并保存。打开组的用户列表，将准备关联 Gitea 的管理员账号加入。</p>
+<p>这个组只表示允许使用此 Gitea 的 OIDC 入口。它不等于 Gitea 管理员组，也不会自动创建 Gitea 组织、团队或分配仓库权限。本次先只加入已有管理员对应的 Authentik 用户。</p>
+<h3 id="2-2-OAuth2-OpenID-Connect-Provider">2.2 OAuth2/OpenID Connect Provider</h3>
+<p>在“应用程序 → 提供者”中新建提供者，类型选择 <strong>OAuth2/OpenID Connect</strong>。以下名称来自前文已经创建的流程；如果使用自己的命名，应选择用途对应的对象。</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>本次选择及作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-truenas-gitea</code>，标识这个 Gitea 实例的提供者</td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td><code>doratiger-authentication</code>，执行已有登录与 MFA</td>
+</tr>
+<tr>
+<td>Authorization flow</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code>，应用授权时不增加逐次确认页面</td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td><code>doratiger-provider-invalidation</code>，复用 Provider 退出流程</td>
+</tr>
+<tr>
+<td>Client type</td>
+<td><code>Confidential</code>，Gitea 服务端保管客户端密钥</td>
+</tr>
+<tr>
+<td>Client ID、Client Secret</td>
+<td>保留生成值，稍后填写到 Gitea；密钥不放入公开配置</td>
+</tr>
+<tr>
+<td>Grant types</td>
+<td>启用 <code>Authorization code</code>，对应 <code>authorization_code</code></td>
+</tr>
+<tr>
+<td>Signing key</td>
+<td>选择现有签名证书，用于令牌签名</td>
+</tr>
+<tr>
+<td>Subject mode</td>
+<td>本次保留 <code>hashed_user_id</code>，不要在关联完成后随意更换</td>
+</tr>
+</tbody>
+</table>
+<p>名称中带 <code>implicit-consent</code> 的是“免确认授权流程”，不代表 OAuth 的 Implicit grant。这里实际使用的仍然是授权码模式。</p>
+<p>在 Redirect URIs 中新增一条：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>匹配方式</td>
+<td><code>Strict</code></td>
+</tr>
+<tr>
+<td>URI 类型</td>
+<td><code>Authorization</code></td>
+</tr>
+<tr>
+<td>URI</td>
+<td><code>https://git.example.com/user/oauth2/DoraTiger%20Auth/callback</code></td>
+</tr>
+</tbody>
+</table>
+<p>认证源名称中的空格在路径中编码为 <code>%20</code>。大小写、域名、路径及末尾斜杠都应与 Gitea 实际发送的 <code>redirect_uri</code> 一致；不要用扩大匹配范围来掩盖地址错误。本次没有额外配置 Post Logout 回调。</p>
+<p>在 Scope mappings 中选择提供 <code>openid</code>、<code>email</code>、<code>profile</code> 的标准映射，分别用于 OIDC 身份、邮箱及基本资料。本次没有添加组织团队或管理员权限映射。保存 Provider，并记录客户端参数。</p>
+<p><code>sub</code> 是 OIDC 中标识用户的 Subject。账号关联后，应保留原用户和 Provider 的身份配置；修改用户名、邮箱与改变 Subject 的含义不同，不能把邮箱当作稳定身份绑定的替代品。</p>
+<h3 id="2-3-应用与组绑定">2.3 应用与组绑定</h3>
+<p>进入“应用程序 → 应用程序”，新建应用。如果界面先让选择创建方式，使用 <strong>with existing provider</strong>，关联刚才的 Provider。</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填写内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>TrueNAS · Gitea</code></td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>truenas-gitea</code></td>
+</tr>
+<tr>
+<td>Provider</td>
+<td><code>doratiger-truenas-gitea</code></td>
+</tr>
+<tr>
+<td>Launch URL</td>
+<td><code>https://git.example.com/</code></td>
+</tr>
+</tbody>
+</table>
+<p>保存后打开该应用的策略／组／用户绑定页面，创建组绑定：选择 <code>truenas-gitea-users</code>，保持启用，不取反，顺序设为 <code>0</code>。本例只有这一条访问绑定，不额外添加一个允许所有人的绑定。</p>
+<p>绑定位置是 Application。只创建组但不绑定，不能限制应用访问；把名称填进应用的展示分组字段，也不等于授权。</p>
+<h3 id="2-4-发现文档">2.4 发现文档</h3>
+<p>应用保存后，对应发现文档为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/application/o/truenas-gitea/.well-known/openid-configuration</code></div></pre>
+<p>它使用应用 Slug，不使用 Provider 名称。可以从 Gitea 容器测试连通性；以下命令在 TrueNAS Shell 执行，容器名替换为本机实际值，且要求容器内有 <code>curl</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">docker exec GITEA_CONTAINER_NAME curl -fsS \
+  https://auth.example.com/application/o/truenas-gitea/.well-known/openid-configuration</code></div></pre>
+<p>应返回包含 issuer、授权端点、令牌端点和公钥地址的 JSON。请求失败时先处理 DNS、证书信任或网络访问，不通过跳过 TLS 校验来完成接入。</p>
+<h2 id="三、Gitea-认证源">三、Gitea 认证源</h2>
+<h3 id="3-1-新建认证源">3.1 新建认证源</h3>
+<p>先使用 Gitea 原有管理员账号登录，进入“站点管理 → 认证源”，新建认证源。不同语言版本可能显示为 Authentication Sources，按字段核对：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>本次填写</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentication type</td>
+<td><code>OAuth2</code></td>
+</tr>
+<tr>
+<td>Authentication name</td>
+<td><code>DoraTiger Auth</code></td>
+</tr>
+<tr>
+<td>OAuth2 provider</td>
+<td><code>OpenID Connect</code></td>
+</tr>
+<tr>
+<td>Client ID / Key</td>
+<td>Authentik Provider 中的 Client ID</td>
+</tr>
+<tr>
+<td>Client Secret</td>
+<td>同一 Provider 中的 Client Secret</td>
+</tr>
+<tr>
+<td>OpenID Connect Auto Discovery URL</td>
+<td>上一节的发现文档完整地址</td>
+</tr>
+<tr>
+<td>Additional scopes</td>
+<td><code>email</code>、<code>profile</code>，按界面分别添加；<code>openid</code> 由 OIDC 客户端处理</td>
+</tr>
+<tr>
+<td>启用认证源</td>
+<td>开启</td>
+</tr>
+</tbody>
+</table>
+<p>管理员组、组织团队和受限用户映射本次不填写。Authentik 管理员身份不会因此自动变成 Gitea 管理员。<a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fauthentication%2F">Gitea 认证说明</a></p>
+<p>本次实际通过 Gitea 原生 CLI 创建认证源，表中给出对应的 WebUI 配置方式。保存后，退出或使用无痕窗口检查登录页，应出现 <strong>DoraTiger Auth</strong> 按钮。此时先保持自动注册关闭，完成已有账号关联。</p>
+<h3 id="3-2-配置保存位置">3.2 配置保存位置</h3>
+<p>认证源的客户端参数保存在 Gitea 的数据库中；后面的注册开关保存在 <code>app.ini</code>。两者都需要纳入备份。</p>
+<p>修改前备份 Gitea 配置和数据库，并确认仓库、附件、LFS 等已有数据的备份可用。不要为了新增认证源重新初始化应用，也不要覆盖 TrueNAS 已有存储挂载。</p>
+<h2 id="四、已有账号关联">四、已有账号关联</h2>
+<h3 id="4-1-用户名与邮箱不同">4.1 用户名与邮箱不同</h3>
+<p>假设 Gitea 原账号为 <code>codeowner</code>，Authentik 账号为 <code>identityadmin</code>，两边邮箱也不同。无需先把邮箱改成一致，应该分别验证两侧账号，再建立关联。</p>
+<ol>
+<li>使用原密码登录 Gitea 的 <code>codeowner</code>。</li>
+<li>打开“用户设置 → 安全 → 管理关联账号”，也可以访问 <code>https://git.example.com/user/settings/security</code>。</li>
+<li>在关联入口选择 <code>DoraTiger Auth</code>。</li>
+<li>跳转到 Authentik 后，确认当前使用的是准备绑定的 <code>identityadmin</code>，完成登录和 MFA。</li>
+<li>返回 Gitea 后，重新打开安全设置，确认关联列表出现 DoraTiger Auth，并且当前用户仍是 <code>codeowner</code>。</li>
+<li>退出 Gitea，在无痕窗口通过 DoraTiger Auth 登录，检查原仓库和组织权限是否仍然存在。</li>
+</ol>
+<p>Authentik 如果已经有会话，可能直接完成授权。不要因为没有再次输入密码，就忽略了当前会话究竟属于哪个用户。</p>
+<p>本次先保持自动注册关闭，再完成原账号关联，最终确认仍使用原 Gitea 用户。这里没有修改原邮箱、迁移仓库或重新授予管理员权限。</p>
+<h3 id="4-2-同名账号与自动合并">4.2 同名账号与自动合并</h3>
+<p>后面配置中的 <code>ACCOUNT_LINKING=login</code> 表示发生已有账号冲突时，要求登录原账号完成关联。不要改成 <code>auto</code> 来省略这次确认；两个系统提供相同邮箱或用户名，不应直接作为接管已有仓库的依据。</p>
+<p>手动关联成功后，Gitea 通过保存的外部身份关联查找原用户。已有用户关联与新用户自动注册是两条路径，不要求每个用户都重新注册一遍。</p>
+<h2 id="五、新用户自动注册">五、新用户自动注册</h2>
+<h3 id="5-1-app-ini-与持久化">5.1 app.ini 与持久化</h3>
+<p>原账号关联成功后，再修改 Gitea 配置。本次是 TrueNAS 中运行的 rootless Gitea，容器内配置位于 <code>/etc/gitea/app.ini</code>；宿主机路径由应用存储挂载决定。不要把另一个镜像的 <code>/data/gitea/conf/app.ini</code> 直接套用到本实例。</p>
+<p>在 TrueNAS 的应用存储配置中找到映射到 <code>/etc/gitea</code> 的持久目录。下文统一以宿主机 <code>/srv/example/gitea/config/app.ini</code> 举例，实际操作前替换路径。先备份：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">cp -p /srv/example/gitea/config/app.ini \
+  /srv/example/gitea/config/app.ini.before-oidc-registration
+chmod 600 /srv/example/gitea/config/app.ini.before-oidc-registration</code></div></pre>
+<p>如果 TrueNAS 应用设置中同时配置了相应 <code>GITEA__...</code> 环境变量，应从部署入口统一修改，避免启动时重新覆盖。<strong>以下是需要合并到现有文件的配置片段，不是完整 app.ini</strong>；已有同名节和键直接修改，不重复追加，也不覆盖数据库和加密密钥。</p>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-ini">[oauth2_client]
+ENABLE_AUTO_REGISTRATION = true
+ACCOUNT_LINKING = login
+USERNAME = nickname
+
+[service]
+DISABLE_REGISTRATION = false
+ALLOW_ONLY_EXTERNAL_REGISTRATION = true
+ALLOW_ONLY_INTERNAL_REGISTRATION = false
+REQUIRE_EXTERNAL_REGISTRATION_PASSWORD = false
+DEFAULT_ALLOW_CREATE_ORGANIZATION = false
+
+[repository]
+DEFAULT_PRIVATE = private</code></div></pre>
+<h3 id="5-2-注册开关">5.2 注册开关</h3>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>本次作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ENABLE_AUTO_REGISTRATION=true</code></td>
+<td>外部身份没有对应 Gitea 用户时，允许自动建号</td>
+</tr>
+<tr>
+<td><code>DISABLE_REGISTRATION=false</code></td>
+<td>打开注册总开关，否则自动建号也受限制</td>
+</tr>
+<tr>
+<td><code>ALLOW_ONLY_EXTERNAL_REGISTRATION=true</code></td>
+<td>保留外部认证注册，关闭本地密码注册入口</td>
+</tr>
+<tr>
+<td><code>ALLOW_ONLY_INTERNAL_REGISTRATION=false</code></td>
+<td>不将注册限制为内部账号</td>
+</tr>
+<tr>
+<td><code>REQUIRE_EXTERNAL_REGISTRATION_PASSWORD=false</code></td>
+<td>外部注册不额外要求设置 Gitea 密码</td>
+</tr>
+<tr>
+<td><code>USERNAME=nickname</code></td>
+<td>按身份源提供的昵称资料生成新用户名</td>
+</tr>
+<tr>
+<td><code>ACCOUNT_LINKING=login</code></td>
+<td>已有账号冲突交由原账号登录确认</td>
+</tr>
+</tbody>
+</table>
+<p>因此，<code>DISABLE_REGISTRATION=false</code> 在这里不等于开放匿名本地注册，它和“仅外部注册”一起工作。本地管理员密码登录与本地注册也是不同功能，关闭后者不会自动关闭前者。<a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/config-cheat-sheet/" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fconfig-cheat-sheet%2F">Gitea 配置说明</a></p>
+<p>新用户资料需要能满足 Gitea 的用户名、邮箱等要求，冲突或资料不完整时仍可能需要处理。原实例的邮箱注册确认关闭，本次没有另开 Gitea 邮箱确认；如果另一实例启用了邮件确认或人工审核，也要检查 <code>[service]</code> 和 <code>[oauth2_client]</code> 中的相关设置。</p>
+<h3 id="5-3-仓库与组织权限">5.3 仓库与组织权限</h3>
+<p><code>DEFAULT_PRIVATE=private</code> 只让新建仓库默认选择私有，不禁止用户主动创建公开仓库，也不修改原仓库可见性。</p>
+<p><code>DEFAULT_ALLOW_CREATE_ORGANIZATION=false</code> 控制新用户默认的组织创建权限。已有组织与已有用户权限不随这一开关批量改变。当前只需要每个人管理自己的仓库，因此没有增加组织、团队或仓库配额；已有实例若另有限制，应检查其仓库创建上限和用户状态。</p>
+<p>网页 OIDC 登录也不会替代 Git 客户端的认证。SSH 继续使用用户在 Gitea 中登记的 SSH Key；HTTPS Git 操作按 Gitea 的令牌等方式配置，不把 Authentik 密码或 Client Secret 当作 Git 密码。</p>
+<h3 id="5-4-重启与检查">5.4 重启与检查</h3>
+<p>修改持久文件后，在 TrueNAS 中重启 Gitea 应用，或在确认容器归属后只重启 Gitea 服务容器：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">docker restart GITEA_CONTAINER_NAME</code></div></pre>
+<p>无需为这些开关重启数据库。重新打开登录与注册页面，确认品牌登录按钮仍在、本地管理员登录仍可用，注册页不再显示本地密码注册表单。然后从容器实际使用的配置位置核对上述键，确认未被环境变量覆盖。</p>
+<h2 id="六、访问组与用户生命周期">六、访问组与用户生命周期</h2>
+<h3 id="6-1-新用户开通">6.1 新用户开通</h3>
+<p>管理员在 Authentik 邀请或创建用户后，将其加入 <code>truenas-gitea-users</code>。用户在 Gitea 点击 DoraTiger Auth，完成 Authentik 登录；应用绑定允许访问后，Gitea 才能继续处理回调并按配置建号。</p>
+<p>这里有两道不同的判断：Authentik 访问组决定是否允许进行这次应用认证；Gitea 注册配置决定收到一个新身份后是否创建本地用户。只打开自动注册，不把用户加入访问组，仍不能通过这个入口登录。</p>
+<p>用户建立 Gitea 账号后，默认管理自己的个人仓库。需要参与公共工作时，再由 Gitea 管理员添加组织成员或团队权限。本次没有把 Authentik 的所有组同步成 Gitea 组织。</p>
+<h3 id="6-2-撤销访问">6.2 撤销访问</h3>
+<p>从 Authentik 组中移除用户，可限制其后续通过该应用发起的认证，但不等于立即注销所有已有 Gitea 会话，也不会自动删除 Gitea 用户、SSH Key、个人访问令牌或仓库。</p>
+<p>人员离开时，还需要在 Gitea 侧处理账号状态、有效凭据和仓库交接。不能只从访问组删除用户，就认定 SSH、API 和所有已登录会话都同时失效。本次也没有配置完整的跨应用单点退出。</p>
+<h2 id="七、验证与回退">七、验证与回退</h2>
+<h3 id="7-1-实际验证结果">7.1 实际验证结果</h3>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>本次结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gitea 健康端点</td>
+<td>返回 200</td>
+</tr>
+<tr>
+<td>登录页</td>
+<td>显示 DoraTiger Auth，并保留本地密码登录表单</td>
+</tr>
+<tr>
+<td>匿名 OIDC 请求</td>
+<td>完整跳转到 DoraTiger 登录流程，页面返回 200</td>
+</tr>
+<tr>
+<td>原用户关联</td>
+<td>已完成，并确认仍为原账号</td>
+</tr>
+<tr>
+<td>认证源改名</td>
+<td>保留原认证源 ID，原关联记录仍存在</td>
+</tr>
+<tr>
+<td>自动注册配置</td>
+<td>修改后重启，持久配置保留</td>
+</tr>
+<tr>
+<td>本地注册页</td>
+<td>没有本地密码注册表单</td>
+</tr>
+<tr>
+<td>原有用户、组织及仓库</td>
+<td>数量与变更前一致</td>
+</tr>
+<tr>
+<td>新用户首次登录及个人建仓</td>
+<td>尚未完成实际验收</td>
+</tr>
+</tbody>
+</table>
+<p>新用户验收应使用一个没有 Gitea 关联的测试身份：先不加入访问组检查拒绝，再加入组检查首次登录自动建号；之后确认不是管理员、能创建个人仓库、默认私有，且再次登录不会重复创建账号。该过程不能用“登录页出现按钮”替代。</p>
+<h3 id="7-2-回退范围">7.2 回退范围</h3>
+<p>需要撤销自动注册时，恢复变更前 <code>app.ini</code> 并重启 Gitea。配置回退不会删除期间已经创建的用户，应另行核对这些账号。</p>
+<p>如果整个 OIDC 接入需要暂停，先确认本地管理员登录可用，再在 Gitea 禁用认证源，并按需要停用 Authentik 应用。保留关联和配置便于排查；不要直接删除并重建认证源，更不要为撤销几项设置恢复整库，覆盖期间新增的仓库和用户数据。</p>
+<h2 id="八、配置问题与解答">八、配置问题与解答</h2>
+<h3 id="8-1-点击关联后返回主页">8.1 点击关联后返回主页</h3>
+<p><strong>Q：选择认证源后直接回到 Gitea 主页，没有看到关联成功，是邮箱不同吗？</strong></p>
+<p>本次原因不是邮箱。初次创建 Authentik Provider 时，<code>grant_types</code> 为空，Gitea 发出的授权码请求被拒绝，回调带有 <code>error=invalid_request</code>，关联没有建立。</p>
+<p>处理时编辑 <code>doratiger-truenas-gitea</code>，在 Grant types 中启用 Authorization code 并保存，然后重新发起关联。修复后请求进入 DoraTiger 登录流程，最终完成原账号绑定。通过 API 或脚本创建 Provider 时，不能假定所有字段都会自动获得界面向导里的预选值。</p>
+<p>排查应查看从 Gitea 发出请求到回调的完整跳转，以及 Authentik 对应事件。不要公开完整授权 URL、Cookie 或授权码。只看到第一跳 <code>307</code> 到 Authentik 域名，不能证明请求已经被接受。</p>
+<h3 id="8-2-认证源名称与品牌不一致">8.2 认证源名称与品牌不一致</h3>
+<p><strong>Q：关联列表显示 authentik，能改成 DoraTiger Auth 吗？</strong></p>
+<p>可以，但 Gitea 认证源名称还参与生成回调路径。本次保留原认证源 ID，在原记录上改名，同时把 Authentik 严格回调从示例中的：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://git.example.com/user/oauth2/authentik/callback</code></div></pre>
+<p>改为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://git.example.com/user/oauth2/DoraTiger%20Auth/callback</code></div></pre>
+<p>操作顺序是先在 Authentik 增加新回调，再编辑 Gitea 原认证源名称；验证新路径后，删除旧回调。这样既保留账号关联，也避免改名期间只有旧地址可用。</p>
+<p>本次验证了登录页名称、实际发送的 <code>redirect_uri</code> 以及到达登录流程的完整路径，原关联记录仍在。新接入可直接使用最终品牌名称，无须先创建一个名为 authentik 的认证源。</p>
+<h3 id="8-3-邮箱是否必须统一">8.3 邮箱是否必须统一</h3>
+<p><strong>Q：把 Authentik 邮箱改成 Gitea 邮箱，是否就能自动关联？</strong></p>
+<p>本次没有这样做。使用原 Gitea 账号发起关联，再验证 Authentik 身份即可。邮箱是用户资料，修改它可能影响通知及其他应用；不必为了这一个应用修改整个身份中心的邮箱。</p>
+<h3 id="8-4-自动注册与访问限制">8.4 自动注册与访问限制</h3>
+<p><strong>Q：既然自动注册打开，是否所有 Authentik 用户都能进入 Gitea？</strong></p>
+<p>还要经过应用上的访问组绑定。只有允许访问此应用的身份才能继续认证；Gitea 再根据已有绑定或自动注册设置选择用户处理路径。需要同时检查两端，不能只看注册开关。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://integrations.goauthentik.io/development/gitea/" class="external-link" data-redirect="https%3A%2F%2Fintegrations.goauthentik.io%2Fdevelopment%2Fgitea%2F">Authentik 与 Gitea 接入</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/oauth2/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Foauth2%2F">Authentik OAuth2 Provider</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fauthentication%2F">Gitea 认证源</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.gitea.com/administration/config-cheat-sheet/" class="external-link" data-redirect="https%3A%2F%2Fdocs.gitea.com%2Fadministration%2Fconfig-cheat-sheet%2F">Gitea 配置说明</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/58245/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/58245/">https://www.doratiger.top/2026/11/58245/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/58244/"><span>服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

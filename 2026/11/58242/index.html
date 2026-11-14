@@ -1,0 +1,1134 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理【DoraTiger 的异次元】</title><meta name="description" content="前言 Authentik 的默认配置能够直接登录，但后台的流程、阶段和策略一多，就容易只记住哪个按钮能用，不清楚它到底经过了哪些检查。这次索性把日常流程重新配置了一遍，逐项测试，再删除已经被替代的默认对象。 上一篇 服务器操作指北（12）Authentik 基本概念、默认配置与部署 介绍了基本概念和部署。这篇继续使用 "><meta name="keywords" content="authentik,mfa,webauthn"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理【DoraTiger 的异次元】"><meta property="og:description" content="前言 Authentik 的默认配置能够直接登录，但后台的流程、阶段和策略一多，就容易只记住哪个按钮能用，不清楚它到底经过了哪些检查。这次索性把日常流程重新配置了一遍，逐项测试，再删除已经被替代的默认对象。 上一篇 服务器操作指北（12）Authentik 基本概念、默认配置与部署 介绍了基本概念和部署。这篇继续使用 "><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/58242/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/58242/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-14T13:18:43.000Z","dateModified":"2026-11-14T14:03:48.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/58242/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%85%8D%E7%BD%AE%E5%AF%B9%E8%B1%A1%E4%B8%8E%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB"><span class="toc-text">一、配置对象与依赖关系</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%B5%81%E7%A8%8B%E4%B8%8E%E9%98%B6%E6%AE%B5%E5%88%9B%E5%BB%BA"><span class="toc-text">1.1 流程与阶段创建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E9%98%B6%E6%AE%B5%E7%BB%91%E5%AE%9A"><span class="toc-text">1.2 阶段绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%AF%86%E7%A0%81%E7%AD%96%E7%95%A5"><span class="toc-text">1.3 密码策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%9C%AC%E5%9C%B0%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95"><span class="toc-text">二、本地密码登录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%A4%9A%E5%9B%A0%E7%B4%A0%E8%AE%A4%E8%AF%81%E4%B8%8E%E5%87%AD%E6%8D%AE%E7%AE%A1%E7%90%86"><span class="toc-text">三、多因素认证与凭据管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-TOTP-%E8%AE%BE%E7%BD%AE"><span class="toc-text">3.1 TOTP 设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%A4%87%E7%94%A8%E6%81%A2%E5%A4%8D%E7%A0%81"><span class="toc-text">3.2 备用恢复码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-WebAuthn-%E8%AE%BE%E7%BD%AE"><span class="toc-text">3.3 WebAuthn 设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-MFA-%E7%99%BB%E5%BD%95"><span class="toc-text">3.4 MFA 登录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-%E7%8B%AC%E7%AB%8B-Passkey-%E7%99%BB%E5%BD%95"><span class="toc-text">3.5 独立 Passkey 登录</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%82%80%E8%AF%B7%E6%B3%A8%E5%86%8C%E4%B8%8E%E9%82%AE%E7%AE%B1%E9%AA%8C%E8%AF%81"><span class="toc-text">四、邀请注册与邮箱验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E6%B3%A8%E5%86%8C%E8%BE%93%E5%85%A5"><span class="toc-text">4.1 注册输入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E9%82%80%E8%AF%B7%E9%82%AE%E7%AE%B1%E6%A0%A1%E9%AA%8C%E7%AD%96%E7%95%A5"><span class="toc-text">4.2 邀请邮箱校验策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%B3%A8%E5%86%8C%E6%B5%81%E7%A8%8B%E9%98%B6%E6%AE%B5%E7%BB%91%E5%AE%9A"><span class="toc-text">4.3 注册流程阶段绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E9%82%80%E8%AF%B7%E5%88%9B%E5%BB%BA%E4%B8%8E%E9%AA%8C%E8%AF%81"><span class="toc-text">4.4 邀请创建与验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%89%BE%E5%9B%9E%E5%AF%86%E7%A0%81%E4%B8%8E%E7%99%BB%E5%BD%95%E5%90%8E%E6%94%B9%E5%AF%86"><span class="toc-text">五、找回密码与登录后改密</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%89%BE%E5%9B%9E%E5%AF%86%E7%A0%81%E6%B5%81%E7%A8%8B"><span class="toc-text">5.1 找回密码流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E7%99%BB%E5%BD%95%E5%90%8E%E7%9A%84%E4%B8%BB%E5%8A%A8%E6%94%B9%E5%AF%86"><span class="toc-text">5.2 登录后的主动改密</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E4%B8%AA%E4%BA%BA%E8%B5%84%E6%96%99%E3%80%81%E9%80%80%E5%87%BA%E4%B8%8E%E5%BA%94%E7%94%A8%E6%8E%88%E6%9D%83"><span class="toc-text">六、个人资料、退出与应用授权</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%B8%AA%E4%BA%BA%E8%B5%84%E6%96%99"><span class="toc-text">6.1 个人资料</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E9%80%80%E5%87%BA"><span class="toc-text">6.2 退出</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E6%98%BE%E5%BC%8F%E6%8E%88%E6%9D%83%E4%B8%8E%E5%85%8D%E7%A1%AE%E8%AE%A4%E6%8E%88%E6%9D%83"><span class="toc-text">6.3 显式授权与免确认授权</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E5%8D%8F%E8%AE%AE%E6%89%A9%E5%B1%95%E5%85%A5%E5%8F%A3"><span class="toc-text">6.4 协议扩展入口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E9%BB%98%E8%AE%A4%E9%85%8D%E7%BD%AE%E8%BF%81%E7%A7%BB%E4%B8%8E%E6%B8%85%E7%90%86"><span class="toc-text">七、默认配置迁移与清理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%85%A5%E5%8F%A3%E4%B8%8E%E5%BC%95%E7%94%A8%E8%BF%81%E7%A7%BB"><span class="toc-text">7.1 入口与引用迁移</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E9%BB%98%E8%AE%A4%E8%93%9D%E5%9B%BE%E5%81%9C%E7%94%A8"><span class="toc-text">7.2 默认蓝图停用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E9%BB%98%E8%AE%A4%E5%AF%B9%E8%B1%A1%E6%B8%85%E7%90%86"><span class="toc-text">7.3 默认对象清理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%85%8D%E7%BD%AE%E9%AA%8C%E8%AF%81"><span class="toc-text">八、配置验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E6%B5%81%E7%A8%8B%E6%A3%80%E6%9F%A5%E5%99%A8%E4%B8%8E%E4%BA%8B%E4%BB%B6%E6%97%A5%E5%BF%97"><span class="toc-text">8.1 流程检查器与事件日志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%8A%9F%E8%83%BD%E9%AA%8C%E8%AF%81%E8%AE%B0%E5%BD%95"><span class="toc-text">8.2 功能验证记录</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">九、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E7%99%BB%E5%BD%95%E6%B5%81%E7%A8%8B%E6%9C%AA%E5%88%87%E6%8D%A2"><span class="toc-text">9.1 登录流程未切换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-Configure-flow-%E7%9A%84%E5%BC%95%E7%94%A8%E5%85%B3%E7%B3%BB"><span class="toc-text">9.2 Configure flow 的引用关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E5%87%AD%E6%8D%AE%E8%AE%BE%E7%BD%AE%E5%85%A5%E5%8F%A3%E9%87%8D%E5%A4%8D"><span class="toc-text">9.3 凭据设置入口重复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-4-Passkey-%E7%99%BB%E5%BD%95%E5%85%A5%E5%8F%A3%E7%BC%BA%E5%A4%B1"><span class="toc-text">9.4 Passkey 登录入口缺失</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-5-%E9%82%80%E8%AF%B7%E6%B3%A8%E5%86%8C%E6%8F%90%E4%BA%A4%E5%90%8E%E5%81%9C%E7%95%99%E5%9C%A8%E8%A1%A8%E5%8D%95"><span class="toc-text">9.5 邀请注册提交后停留在表单</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-6-%E9%82%80%E8%AF%B7%E7%AE%A1%E7%90%86%E5%85%A5%E5%8F%A3%E4%B8%8D%E5%8F%AF%E8%A7%81"><span class="toc-text">9.6 邀请管理入口不可见</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-7-%E6%B3%A8%E5%86%8C%E4%B8%AD%E6%96%AD%E5%90%8E%E7%9A%84%E9%82%80%E8%AF%B7%E4%B8%8E%E7%94%A8%E6%88%B7%E7%8A%B6%E6%80%81"><span class="toc-text">9.7 注册中断后的邀请与用户状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-8-%E9%BB%98%E8%AE%A4%E7%AD%96%E7%95%A5%E7%9A%84%E5%BC%95%E7%94%A8%E6%A3%80%E6%9F%A5"><span class="toc-text">9.8 默认策略的引用检查</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-9-%E6%9C%AA%E7%BB%91%E5%AE%9A%E9%98%B6%E6%AE%B5%E7%9A%84%E6%B8%85%E7%90%86"><span class="toc-text">9.9 未绑定阶段的清理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color7"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color8"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">74</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">142</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-14</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-14</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/mfa/">mfa</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/webauthn/">webauthn</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">20430 字 · 约 69 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>Authentik 的默认配置能够直接登录，但后台的流程、阶段和策略一多，就容易只记住哪个按钮能用，不清楚它到底经过了哪些检查。这次索性把日常流程重新配置了一遍，逐项测试，再删除已经被替代的默认对象。</p>
+<p>上一篇 <a href="/2026/11/58241/" title="服务器操作指北（12）Authentik 基本概念、默认配置与部署">服务器操作指北（12）Authentik 基本概念、默认配置与部署</a> 介绍了基本概念和部署。这篇继续使用 <code>2026.8.5</code>，从本地登录、MFA、邀请注册开始，接着配置找回密码、个人资料和应用授权。对象使用 <code>doratiger-</code> 前缀，域名统一用 <code>auth.example.com</code> 举例。</p>
+<p>邮箱验证和密码恢复依赖可用的 SMTP。本文说明邮件阶段在流程中的职责；实际测试注册和找回密码前，需要完成 SMTP 配置并确认能够发信。</p>
+<span id="more"></span>
+<h2 id="一、配置对象与依赖关系">一、配置对象与依赖关系</h2>
+<h3 id="1-1-流程与阶段创建">1.1 流程与阶段创建</h3>
+<p>以下操作都在管理员界面完成。先区分几个创建入口：</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>后台位置</th>
+<th>创建后如何使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>流程 Flow</td>
+<td>流程和阶段 → 流程 → 创建</td>
+<td>添加阶段绑定，再由品牌、认证器设置或提供者选择该流程</td>
+</tr>
+<tr>
+<td>阶段 Stage</td>
+<td>流程和阶段 → 阶段 → 创建</td>
+<td>选择阶段类型；也可在流程内直接创建并绑定</td>
+</tr>
+<tr>
+<td>输入 Prompt</td>
+<td>流程和阶段 → 输入 → 创建</td>
+<td>在 Prompt Stage 的 Fields 中选中它</td>
+</tr>
+<tr>
+<td>策略 Policy</td>
+<td>自定义 → 策略 → 创建</td>
+<td>选择策略类型，再绑定到目标或选入表单的 Validation Policies</td>
+</tr>
+<tr>
+<td>事件 Event</td>
+<td>事件 → 日志</td>
+<td>系统执行操作时自动记录，用于核对结果，不需要为每个流程手工新建事件</td>
+</tr>
+</tbody>
+</table>
+<p>创建流程时，Name、Slug 和 Title 是三个字段。Name 用于后台识别，可以写“DoraTiger 本地密码登录”；Slug 填 <code>doratiger-authentication</code>，用于 URL；Title 是用户打开流程时看到的标题，例如“登录 DoraTiger”。阶段、策略和输入表中的 <code>doratiger-...</code> 则填到各自的 Name，不是让所有对象都填写 Slug。</p>
+<p><img src="https://cdn.superheaoz.top/images/2026/11/58242/official-create-flow.png" data-cdn-image-fallback-src="official-create-flow.png" alt="官方创建流程表单：Name、Title、Slug 与流程类型"></p>
+<p>图为 <a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/flow/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fflow%2F">Authentik 官方文档</a>中的创建表单，用于对照字段位置。官方配图与本文实例的版本、语言和外观可能不同，实际填写值以下文为准。</p>
+<p>以本地密码登录为例，创建流程后点击它的名称，进入“阶段绑定（Stage Bindings）”，点击“创建或绑定（Create or bind）”。首次添加时选“创建并绑定新阶段（Bind New Stage）”，选择阶段类型、填写名称与专用字段，再设置绑定顺序并保存。复用已经存在的阶段时，选“绑定已有阶段（Existing Stage）”，搜索对应名称，不要再创建一份。保存后回到列表，确认阶段名称、类型和顺序。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2F">阶段绑定操作</a></p>
+<p>只有 Prompt Stage 需要另外准备“输入”。Identification、Password、TOTP Setup 等阶段自带交互界面，不需要自己再造一个用户名框或二维码页。</p>
+<p>本篇需要用到的配置关系是：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-text">输入 Prompt ──组成表单──&gt; 输入阶段 Prompt Stage
+策略 Policy ──验证提交──&gt; 输入阶段
+阶段 Stage ──通过顺序绑定──&gt; 流程 Flow
+品牌／凭据设置／身份源／提供者 ──选择入口──&gt; 流程 Flow</code></div></pre>
+<p>先建立被依赖的输入和策略，再建阶段，最后关联入口。配置过程中保留默认登录和一个已登录的管理员窗口；新入口先用测试账号验证，最后再删除默认对象。</p>
+<h3 id="1-2-阶段绑定">1.2 阶段绑定</h3>
+<p>除下文另有说明，阶段绑定使用：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>设置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Order</td>
+<td>按各流程表格填写</td>
+</tr>
+<tr>
+<td>Evaluate on plan</td>
+<td>关闭</td>
+</tr>
+<tr>
+<td>Re-evaluate policies</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>Invalid response action</td>
+<td>Retry</td>
+</tr>
+<tr>
+<td>额外策略绑定</td>
+<td>没有明确需要时不添加</td>
+</tr>
+</tbody>
+</table>
+<p>输入阶段中的 Validation Policies 是提交后验证；流程或阶段的策略绑定则决定是否执行。密码强度要放到前者。把它绑到阶段入口，可能在用户还没输入密码时就评估了。</p>
+<p>还有三种看似相近的“策略关联”，操作位置不同：</p>
+<table>
+<thead>
+<tr>
+<th>目的</th>
+<th>操作位置</th>
+<th>本文例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>提交表单后检查填写内容</td>
+<td>编辑 Prompt Stage → Validation Policies</td>
+<td>密码强度、邀请邮箱、个人资料修改权限</td>
+</tr>
+<tr>
+<td>决定整个流程能否进入</td>
+<td>流程详情 → 策略／组／用户绑定</td>
+<td>需要额外限制访问的流程</td>
+</tr>
+<tr>
+<td>决定流程中的某一步是否执行</td>
+<td>流程详情 → 阶段绑定 → 展开对应行 → 创建或绑定策略</td>
+<td>默认登录中跳过部分阶段的条件策略</td>
+</tr>
+</tbody>
+</table>
+<p>后两种方式选择已有策略后，还要保存策略绑定；第一种是在阶段表单中选择策略并保存阶段。本文的三个表单校验策略使用第一种方式，不额外绑定到流程入口。已有阶段的复用也只复用阶段内容，各流程中的绑定顺序和条件仍各自设置。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/customize/policies/working_with_policies/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fcustomize%2Fpolicies%2Fworking_with_policies%2F">策略绑定操作</a></p>
+<h3 id="1-3-密码策略">1.3 密码策略</h3>
+<p>进入“自定义 → 策略”，点击创建，类型选择“密码策略（Password Policy）”，Name 填 <code>doratiger-password-policy</code>。它负责校验新密码的强度。本次使用以下参数：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Password field</td>
+<td><code>password</code></td>
+</tr>
+<tr>
+<td>Check static rules</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>Minimum length</td>
+<td><code>12</code></td>
+</tr>
+<tr>
+<td>小写字母最少数量</td>
+<td><code>2</code></td>
+</tr>
+<tr>
+<td>数字最少数量</td>
+<td><code>2</code></td>
+</tr>
+<tr>
+<td>大写字母、符号最少数量</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td>Check zxcvbn</td>
+<td>开启，阈值 <code>2</code></td>
+</tr>
+<tr>
+<td>Check Have I Been Pwned</td>
+<td>开启，允许泄露次数 <code>0</code></td>
+</tr>
+</tbody>
+</table>
+<p>填写后保存。此时只是创建了策略对象，还没有让任何表单使用它。配置注册或改密表单时，需要编辑对应 Prompt Stage，在 Validation Policies 中选中 <code>doratiger-password-policy</code>。Password field 的 <code>password</code> 对应输入对象的 Field key，不能填输入的 Name。</p>
+<p>泄露密码检查需要服务端出站网络，网络故障应查看策略和请求日志，不能把它当作纯本地长度校验。本篇记录的是实际采用的参数，不代表所有站点都应使用相同强度。</p>
+<p>后面的注册、找回密码和登录后改密，都引用这一条策略；日常登录的 Password Stage 验证已有密码，不负责给新密码打分。</p>
+<h2 id="二、本地密码登录">二、本地密码登录</h2>
+<p>在“流程和阶段 → 流程”创建本地密码登录流程：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填写内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>DoraTiger 本地密码登录</td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>doratiger-authentication</code></td>
+</tr>
+<tr>
+<td>Title</td>
+<td>登录 DoraTiger</td>
+</tr>
+<tr>
+<td>Designation</td>
+<td>Authentication（认证）</td>
+</tr>
+<tr>
+<td>Authentication requirement</td>
+<td>None／No requirement（无身份前提）</td>
+</tr>
+</tbody>
+</table>
+<p>这里允许未登录用户进入，验证身份由流程内的阶段完成。保存后进入该流程的“阶段绑定”，按下面的顺序创建三个阶段：</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>阶段</th>
+<th>类型与设置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10</td>
+<td><code>doratiger-login-identification</code></td>
+<td>Identification；用户字段选择 Username、Email；Password stage 留空；注册、恢复、无密码入口暂时留空</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>doratiger-login-password</code></td>
+<td>Password；只选“用户数据库＋标准密码”后端</td>
+</tr>
+<tr>
+<td>100</td>
+<td><code>doratiger-login-session</code></td>
+<td>User Login；Session duration、Remember me offset 均为 <code>seconds=0</code>；不终止其他会话</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>创建并绑定“用户识别（Identification）”阶段，Name 填 <code>doratiger-login-identification</code>。User fields 选 Username、Email；Sources 暂时不选；Password stage 留空，表示密码校验使用单独阶段。绑定 Order 填 <code>10</code>。</li>
+<li>再创建并绑定“密码（Password）”阶段，Name 填 <code>doratiger-login-password</code>。Backends 只选用户数据库的标准密码后端，绑定 Order 填 <code>20</code>。</li>
+<li>创建并绑定“用户登录（User Login）”阶段，Name 填 <code>doratiger-login-session</code>。按表格设置会话参数，绑定 Order 填 <code>100</code>。</li>
+<li>返回阶段绑定列表，确认依次为用户识别、密码校验、建立会话。这里的阶段名称用于后台检索，不是登录页上的提示文案。</li>
+</ol>
+<p><img src="https://cdn.superheaoz.top/images/2026/11/58242/official-simple-stages.png" data-cdn-image-fallback-src="official-simple-stages.png" alt="官方基本认证流程示意：识别用户、验证密码、建立会话"></p>
+<p>图源为 <a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/flow/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fflow%2F">Authentik 官方流程文档</a>。这是基础密码登录的关系示意图，尚未包含 MFA。</p>
+<p>识别阶段先找到 <code>pending_user</code>，密码阶段证明用户掌握该账号的密码，最后的 User Login 才建立登录会话。识别账号本身不等于认证成功。</p>
+<p>Password Stage 中看到的四个后端分别服务于标准本地密码、应用程序密码、LDAP 密码和 Kerberos 密码。目前没有用后两种目录认证，普通网页登录也没有要求接受应用程序密码，因此只启用标准密码后端。</p>
+<p>识别阶段的 Pretend user exists 已开启，Show matched user 在当前密码登录入口开启。后者会显示匹配用户信息，因此不能宣称这个登录入口完全隐藏账号存在性。找回密码入口会单独关闭它。</p>
+<p>打开新流程测试地址：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/if/flow/doratiger-authentication/?next=%2F</code></div></pre>
+<p>本地登录确认正常后，进入“系统 → 品牌”，编辑当前域名使用的品牌，在默认流程设置中将 Authentication flow 选为“DoraTiger 本地密码登录”，保存。用无痕窗口从站点根地址进入，再测试一次登录。</p>
+<h2 id="三、多因素认证与凭据管理">三、多因素认证与凭据管理</h2>
+<h3 id="3-1-TOTP-设置">3.1 TOTP 设置</h3>
+<p>TOTP 设置用于给已登录账号绑定动态验证码应用。按下面的顺序创建：</p>
+<ol>
+<li>在“流程和阶段 → 流程”创建流程，Name 填“DoraTiger TOTP 设置”，Slug 填 <code>doratiger-totp-setup</code>，Title 填“设置动态验证码”；Designation 选 Stage configuration（阶段配置），Authentication requirement 选 Require authenticated（要求已登录）。</li>
+<li>打开新流程的阶段绑定，创建并绑定“TOTP 认证器设置（TOTP Authenticator Setup）”阶段，Name 填 <code>doratiger-mfa-totp-setup</code>，Digits 填 <code>6</code>，绑定 Order 填 <code>0</code>。</li>
+<li>在“流程和阶段 → 阶段”找到刚创建的阶段，编辑 Configure flow，选择“DoraTiger TOTP 设置”，保存。这个引用让用户凭据页能找到设置入口。</li>
+<li>用测试账号登录，进入用户设置的“凭据 → MFA 设备”，打开 TOTP 设置，扫描二维码并输入一次验证码。完成后确认凭据列表中出现设备。登录流程绑定 MFA 验证阶段后，再退出并测试登录验证。</li>
+</ol>
+<h3 id="3-2-备用恢复码">3.2 备用恢复码</h3>
+<p>备用恢复码通过“静态认证器设置（Static Authenticator Setup）”阶段生成：</p>
+<ol>
+<li>新建流程，Name 填“DoraTiger 备用恢复码设置”，Slug 填 <code>doratiger-recovery-codes-setup</code>，Title 填“生成备用恢复码”；Designation 选 Stage configuration，Authentication requirement 选 Require authenticated。</li>
+<li>在该流程的阶段绑定中创建 Static Authenticator Setup 阶段，Name 填 <code>doratiger-mfa-recovery-setup</code>；Token count 填 <code>10</code>，Token length 填 <code>12</code>；绑定 Order 填 <code>10</code>。</li>
+<li>编辑该阶段，把 Configure flow 选为“DoraTiger 备用恢复码设置”，保存。</li>
+<li>从用户凭据页面进入此设置流程，生成并保存恢复码。MFA 验证阶段配置好后，用其中一个恢复码测试登录，并确认同一码不能再次使用。</li>
+</ol>
+<p>每个恢复码使用后失效。用户生成后应自行妥善保存；它用于第二因素应急，不是密码找回邮件中的令牌。</p>
+<h3 id="3-3-WebAuthn-设置">3.3 WebAuthn 设置</h3>
+<p>在“流程和阶段 → 流程”新建“DoraTiger WebAuthn 设置”，Slug 填 <code>doratiger-webauthn-setup</code>，Title 填“添加安全密钥或 Passkey”，Designation 选 Stage configuration，Authentication requirement 选 Require authenticated。</p>
+<p>打开阶段绑定，创建“WebAuthn 认证器设置（WebAuthn Authenticator Setup）”阶段，Name 填 <code>doratiger-mfa-webauthn-setup</code>，绑定 Order 填 <code>10</code>。阶段参数如下：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User verification</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>Resident key requirement</td>
+<td>Preferred</td>
+</tr>
+<tr>
+<td>Configure flow</td>
+<td><code>doratiger-webauthn-setup</code></td>
+</tr>
+</tbody>
+</table>
+<p>保存阶段后，从用户设置的“凭据 → MFA 设备”进入 WebAuthn 设置，按浏览器提示选择设备并完成注册。Configure flow 选择的是刚创建的设置流程，不是密码登录流程。</p>
+<p>浏览器必须通过有效 HTTPS 访问正确域名。用户验证由认证器提供，例如设备 PIN 或生物识别。</p>
+<p>当前配置允许不同认证器能力；要使用后面的无用户名 Passkey 登录，应注册支持可发现凭据的 Passkey。若希望强制所有新凭据都可发现，可选择 Required，但那是不同于本次实测设置的取舍。</p>
+<h3 id="3-4-MFA-登录">3.4 MFA 登录</h3>
+<p>打开“流程和阶段 → 流程 → DoraTiger 本地密码登录 → 阶段绑定”，创建并绑定“认证器验证（Authenticator Validation）”阶段。Name 填 <code>doratiger-login-mfa</code>，它负责登录时验证已有的第二因素。阶段参数如下：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Device classes</td>
+<td>Static、TOTP、WebAuthn</td>
+</tr>
+<tr>
+<td>Not configured action</td>
+<td>Configure</td>
+</tr>
+<tr>
+<td>Configuration stages</td>
+<td>仅选择 <code>doratiger-mfa-totp-setup</code></td>
+</tr>
+</tbody>
+</table>
+<p>绑定到 <code>doratiger-authentication</code> 的顺序 <code>30</code>，放在密码之后、建立会话之前。已有设备时验证相应设备；没有兼容设备时注入 TOTP 设置步骤。Skip 会允许跳过 MFA，Deny 会拒绝没有设备的用户，这两种行为均不符合当前首次登录引导的目标。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/authenticator_validate/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Fauthenticator_validate%2F">认证器验证阶段文档</a></p>
+<p>保存后，阶段列表应为 Order <code>10</code> 用户识别、<code>20</code> 密码、<code>30</code> MFA、<code>100</code> 用户登录。用已绑定 TOTP 的账号验证一次，再用未绑定验证器的测试账号确认会进入 TOTP 设置。这里选择的 Configuration stages 是设置阶段 <code>doratiger-mfa-totp-setup</code>，不是设置流程的 Slug。</p>
+<h3 id="3-5-独立-Passkey-登录">3.5 独立 Passkey 登录</h3>
+<p>在流程列表新建“DoraTiger Passkey 登录”，Slug 填 <code>doratiger-passkey-authentication</code>，Title 填“使用 Passkey 登录”，Designation 选 Authentication，Authentication requirement 选 None／No requirement。</p>
+<p>进入该流程的阶段绑定，先创建认证器验证阶段，再绑定已有的用户登录阶段：</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>阶段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10</td>
+<td><code>doratiger-passkey-validation</code></td>
+<td>Authenticator Validation；仅 WebAuthn；User verification 为 Required；未配置时 Deny；Configuration stages 留空</td>
+</tr>
+<tr>
+<td>100</td>
+<td><code>doratiger-login-session</code></td>
+<td>复用会话建立阶段</td>
+</tr>
+</tbody>
+</table>
+<p>第一行选择“创建并绑定新阶段”，类型为 Authenticator Validation，Name 填 <code>doratiger-passkey-validation</code>，按表格仅允许 WebAuthn。第二行选择“绑定已有阶段”，搜索 <code>doratiger-login-session</code>，Order 填 <code>100</code>。此流程不添加 Identification 或 Password 阶段。</p>
+<p>在 <code>doratiger-login-identification</code> 的 Passwordless flow 中选择它，登录页才会出现无密码入口。</p>
+<p>两条登录路径现在分别是：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">密码登录：识别账号 → 密码 → TOTP／恢复码／WebAuthn → 建立会话
+Passkey：WebAuthn 身份及用户验证 → 建立会话</code></div></pre>
+<p>本次使用独立入口，没有把 WebAuthn 自动填充嵌进识别阶段。因此没有照搬默认登录中“已用 Passkey 时跳过密码和 MFA”的两条分支策略。以后合并入口时必须重新检查这一点。</p>
+<h2 id="四、邀请注册与邮箱验证">四、邀请注册与邮箱验证</h2>
+<h3 id="4-1-注册输入">4.1 注册输入</h3>
+<p>进入“流程和阶段 → 输入”，逐个点击创建。每个输入都有后台 Name、数据字段键 Field key 和用户看到的 Label。以邮箱为例，Name 填 <code>doratiger-enrollment-email</code>，Field key 填 <code>email</code>，Label 填“邮箱”；Type 选 Email，Required 开启，Order 填 <code>30</code>，初始值留空。</p>
+<p>按相同方式创建下面五项，Required 均开启，初始值及初始值表达式均不设置：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>Field key</th>
+<th>类型</th>
+<th>顺序</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-enrollment-username</code></td>
+<td><code>username</code></td>
+<td>Username</td>
+<td>10</td>
+</tr>
+<tr>
+<td><code>doratiger-enrollment-name</code></td>
+<td><code>name</code></td>
+<td>Text</td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>doratiger-enrollment-email</code></td>
+<td><code>email</code></td>
+<td>Email</td>
+<td>30</td>
+</tr>
+<tr>
+<td><code>doratiger-enrollment-password</code></td>
+<td><code>password</code></td>
+<td>Password</td>
+<td>40</td>
+</tr>
+<tr>
+<td><code>doratiger-enrollment-password-repeat</code></td>
+<td><code>password_repeat</code></td>
+<td>Password</td>
+<td>50</td>
+</tr>
+</tbody>
+</table>
+<p>标签分别填写用户名、显示名称、邮箱、密码、确认密码。两个 Password 输入在同一阶段，原生会检查它们一致，无需额外写比较策略。</p>
+<h3 id="4-2-邀请邮箱校验策略">4.2 邀请邮箱校验策略</h3>
+<p>邀请携带 <code>fixed_data.email</code>。注册时应验证提交邮箱与邀请一致，不能只靠输入框初始值或前端只读状态。</p>
+<p>在“自定义 → 策略”点击创建，选择“表达式策略（Expression Policy）”，Name 填 <code>doratiger-enrollment-invited-email</code>。这条策略比较邀请中的邮箱和表单提交的邮箱。在 Expression 字段填入：</p>
+<pre><div class="code-header"><span class="code-header-type">python</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div></div><code class="language-python">from authentik.flows.views.executor import SESSION_KEY_PLAN
+
+plan = request.http_request.session.get(SESSION_KEY_PLAN)
+if not plan:
+    ak_message(&quot;注册会话已失效，请联系管理员重新获取邀请。&quot;)
+    return False
+
+invitation = plan.context.get(&quot;invitation&quot;)
+if not plan.context.get(&quot;invitation_in_effect&quot;) or invitation is None:
+    ak_message(&quot;请通过有效邀请链接注册。&quot;)
+    return False
+
+expected = (invitation.fixed_data.get(&quot;email&quot;) or &quot;&quot;).strip()
+submitted = (
+    request.context.get(&quot;prompt_data&quot;, &#123;&#125;).get(&quot;email&quot;) or &quot;&quot;
+).strip()
+
+if not expected:
+    ak_message(&quot;邀请未指定邮箱，请联系管理员重新创建邀请。&quot;)
+    return False
+if submitted.casefold() != expected.casefold():
+    ak_message(&quot;请使用邀请指定的邮箱注册。&quot;)
+    return False
+return True</code></div></pre>
+<p>保存策略后，在注册的 Prompt Stage 中将它与密码策略一起选入 Validation Policies。两个检查都需要通过：密码合格不能替代邀请邮箱匹配，邮箱匹配也不能跳过密码检查。不要把邀请邮箱策略绑定到整个流程入口，入口处尚未完成表单提交。</p>
+<p>这段使用了当前版本的内部执行计划常量，升级时需要重新验证。策略测试器没有真实邀请会话，不能替代带邀请链接的注册测试。</p>
+<h3 id="4-3-注册流程阶段绑定">4.3 注册流程阶段绑定</h3>
+<p>在流程列表创建“DoraTiger 邀请注册”，Slug 填 <code>doratiger-enrollment</code>，Title 填“创建 DoraTiger 账号”，Designation 选 Enrollment（注册），Authentication requirement 选 Require unauthenticated（要求未登录）。保存后进入阶段绑定。</p>
+<p>先按以下顺序完成对象创建和关联：</p>
+<ol>
+<li>创建“邀请（Invitation）”阶段，Name 填 <code>doratiger-enrollment-invitation</code>，关闭 Continue flow without invitation，绑定 Order <code>10</code>。这样没有邀请令牌的请求不能进入注册表单。</li>
+<li>创建“输入（Prompt）”阶段，Name 填 <code>doratiger-enrollment-prompt</code>。Fields 选择已创建的五个注册输入；Validation Policies 同时选择密码强度策略和邀请邮箱校验策略，绑定 Order <code>20</code>。输入框的显示顺序由各 Prompt 的 Order 决定。</li>
+<li>创建“用户写入（User Write）”阶段，Name 填 <code>doratiger-enrollment-write</code>。用户创建模式选择 Always Create，开启 Create users as inactive，User type 选 Internal，用户路径填 <code>users/invited</code>，绑定 Order <code>30</code>。</li>
+<li>创建“邮件（Email）”阶段，Name 填 <code>doratiger-enrollment-email-verification</code>，使用全局 SMTP，开启 Activate user on success，Token expiry 填 <code>minutes=30</code>，Template 填 <code>email/account_confirmation.html</code>，绑定 Order <code>40</code>。</li>
+<li>选择“绑定已有阶段”，搜索 <code>doratiger-login-mfa</code>，绑定 Order <code>50</code>。新账号还没有验证器时，由这个阶段引导配置 TOTP。</li>
+<li>再绑定已有的 <code>doratiger-login-session</code>，Order 填 <code>100</code>，用于所有验证成功后建立会话。</li>
+</ol>
+<p>保存后逐行核对：</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>阶段</th>
+<th>设置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10</td>
+<td><code>doratiger-enrollment-invitation</code></td>
+<td>Invitation；Continue flow without invitation 关闭</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>doratiger-enrollment-prompt</code></td>
+<td>Prompt；选择五个注册输入；Validation Policies 选择密码策略和邀请邮箱策略</td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>doratiger-enrollment-write</code></td>
+<td>User Write；Always Create；Create users as inactive 开启；User type 为 Internal；路径 <code>users/invited</code></td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>doratiger-enrollment-email-verification</code></td>
+<td>Email；使用全局 SMTP；Activate user on success 开启；Token expiry 为 <code>minutes=30</code></td>
+</tr>
+<tr>
+<td>50</td>
+<td><code>doratiger-login-mfa</code></td>
+<td>复用验证器检查；新用户尚未设置时进入 TOTP 配置</td>
+</tr>
+<tr>
+<td>100</td>
+<td><code>doratiger-login-session</code></td>
+<td>建立登录会话</td>
+</tr>
+</tbody>
+</table>
+<p>邮件模板使用原生 <code>email/account_confirmation.html</code>。</p>
+<p>这里先创建停用用户，再发验证邮件，是因为邮件阶段需要一个已保存的 <code>pending_user</code>。成功验证邮箱后激活账号，随后配置 MFA 并登录。不能把会话建立提前到邮箱验证之前。</p>
+<h3 id="4-4-邀请创建与验证">4.4 邀请创建与验证</h3>
+<p>创建 Invitation Stage 后刷新后台，进入“目录 → 邀请”；本版本实际路由是 <code>/if/admin/#/flow/stages/invitations</code>。点击创建，填写一个方便辨认的邀请名称，例如“测试用户注册”；Flow 选择“DoraTiger 邀请注册”，Single use 开启，设置过期时间。在固定数据（对应 <code>fixed_data</code>）中填写：</p>
+<pre><div class="code-header"><span class="code-header-type">json</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-json">&#123;&quot;email&quot;: &quot;invitee@example.com&quot;&#125;</code></div></pre>
+<p>复制原生邀请链接，或在 SMTP 配置完成后使用发送邮件操作。用未登录窗口打开，检查无邀请不能注册、邮箱不匹配不能提交、验证邮件后才能激活、MFA 配置后才能登录。</p>
+<h2 id="五、找回密码与登录后改密">五、找回密码与登录后改密</h2>
+<h3 id="5-1-找回密码流程">5.1 找回密码流程</h3>
+<p>在流程列表创建“DoraTiger 找回密码”，Slug 填 <code>doratiger-password-recovery</code>，Title 填“找回密码”，Designation 选 Recovery（恢复），Authentication requirement 选 None／No requirement，保存。</p>
+<p>在该流程的阶段绑定中创建 Identification 阶段，Name 填 <code>doratiger-recovery-identification</code>，绑定 Order <code>10</code>。User fields 选择 Username、Email，开启 Pretend user exists，关闭 Show matched user。Sources、密码阶段及各种关联流程均留空。未知账号也能进入相同的已发邮件提示，但不会真实发送恢复邮件，避免通过这个入口直接探查账号。</p>
+<p>进入“流程和阶段 → 输入”，创建两个新密码字段：</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Field key</th>
+<th>Label</th>
+<th>Type</th>
+<th>Required</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-recovery-password</code></td>
+<td><code>password</code></td>
+<td>新密码</td>
+<td>Password</td>
+<td>开启</td>
+<td>10</td>
+</tr>
+<tr>
+<td><code>doratiger-recovery-password-repeat</code></td>
+<td><code>password_repeat</code></td>
+<td>确认新密码</td>
+<td>Password</td>
+<td>开启</td>
+<td>20</td>
+</tr>
+</tbody>
+</table>
+<p>两项初始值留空。回到恢复流程的阶段绑定，继续创建：</p>
+<ol>
+<li>Email 阶段：Name 填 <code>doratiger-recovery-email</code>，使用全局 SMTP，令牌有效期填 <code>minutes=30</code>，Template 填 <code>email/password_reset.html</code>，关闭 Activate user on success，绑定 Order <code>20</code>。</li>
+<li>Prompt 阶段：Name 填 <code>doratiger-recovery-password-prompt</code>，Fields 选择刚创建的两个密码输入，Validation Policies 选 <code>doratiger-password-policy</code>，绑定 Order <code>30</code>。</li>
+<li>User Write 阶段：Name 填 <code>doratiger-recovery-write</code>，用户创建模式选 Never Create（禁止创建），绑定 Order <code>40</code>。它只更新已识别账号的密码。</li>
+</ol>
+<p>最终阶段列表如下：</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>阶段</th>
+<th>设置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10</td>
+<td><code>doratiger-recovery-identification</code></td>
+<td>上面的恢复专用识别阶段</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>doratiger-recovery-email</code></td>
+<td>全局 SMTP；<code>minutes=30</code>；Activate user on success <strong>关闭</strong></td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>doratiger-recovery-password-prompt</code></td>
+<td>选择两个新密码输入；验证策略为 <code>doratiger-password-policy</code></td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>doratiger-recovery-write</code></td>
+<td>User Write；Never Create</td>
+</tr>
+</tbody>
+</table>
+<p>邮件模板使用原生 <code>email/password_reset.html</code>。</p>
+<p>恢复阶段不应复用注册的邮件阶段：关闭 Activate user on success，才能避免找回密码顺带启用被管理员停用的账号。此设置不等于阻止停用账号收到邮件或改密码，它控制的是激活行为。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/email/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Femail%2F">Email Stage 文档</a></p>
+<p>流程不添加 User Login。验证邮箱并改密后，让原生流程正常结束、清理状态，再回正常登录入口。此时新密码有效，MFA 设备仍需照常验证。</p>
+<p>最后设置两处入口并分别保存：进入“系统 → 品牌”，编辑当前品牌，将 Recovery flow 选择为“DoraTiger 找回密码”；进入“流程和阶段 → 阶段”，编辑 <code>doratiger-login-identification</code>，把它的 Recovery flow 也选为同一个流程。前者设置站点恢复入口，后者在登录识别页提供找回密码链接。</p>
+<p>测试时从登录页点击找回密码，填写测试账号，打开收到的邮件，提交两次新密码，再回登录页检查新密码有效、旧密码失效且 MFA 仍然生效。</p>
+<h3 id="5-2-登录后的主动改密">5.2 登录后的主动改密</h3>
+<p>在流程列表创建“DoraTiger 修改密码”，Slug 填 <code>doratiger-password-change</code>，Title 填“修改你的密码”，Designation 选 Stage configuration，Authentication requirement 选 Require authenticated。</p>
+<p>在输入列表创建两个专用字段，避免编辑恢复表单时连带改变这里的显示内容：</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Field key</th>
+<th>Label</th>
+<th>Type</th>
+<th>Required</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-password-change-field-password</code></td>
+<td><code>password</code></td>
+<td>新密码</td>
+<td>Password</td>
+<td>开启</td>
+<td>300</td>
+</tr>
+<tr>
+<td><code>doratiger-password-change-field-password-repeat</code></td>
+<td><code>password_repeat</code></td>
+<td>确认新密码</td>
+<td>Password</td>
+<td>开启</td>
+<td>301</td>
+</tr>
+</tbody>
+</table>
+<p>初始值均留空。回到“DoraTiger 修改密码”的阶段绑定，创建 Prompt 阶段，Name 填 <code>doratiger-password-change-prompt</code>，Fields 选这两个输入，Validation Policies 选密码策略，绑定 Order <code>0</code>；再创建 User Write 阶段，Name 填 <code>doratiger-password-change-write</code>，用户创建模式选 Never Create，绑定 Order <code>1</code>。</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>阶段</th>
+<th>设置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>doratiger-password-change-prompt</code></td>
+<td>两个密码输入；验证策略为 <code>doratiger-password-policy</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>doratiger-password-change-write</code></td>
+<td>User Write；Never Create</td>
+</tr>
+</tbody>
+</table>
+<p>把 <code>doratiger-login-password</code> 的 Configure flow 改为该流程，用户凭据设置中的密码配置入口就会使用它。用户类型和创建组字段只针对新建用户，在 Never Create 模式下不会改变现有用户类型。</p>
+<p>本次保留默认的已登录会话改密逻辑，没有另外要求旧密码或 MFA 再认证。若需要再次确认身份，应把相应验证阶段放在新密码表单之前，并单独测试；不能仅因登录流程启用了 MFA，就认为改密时又验证了一次。</p>
+<h2 id="六、个人资料、退出与应用授权">六、个人资料、退出与应用授权</h2>
+<h3 id="6-1-个人资料">6.1 个人资料</h3>
+<p>在流程列表创建“DoraTiger 个人资料”，Slug 填 <code>doratiger-user-settings</code>，Title 填“修改个人资料”，Designation 选 Stage configuration，Authentication requirement 选 Require authenticated。</p>
+<p>进入“流程和阶段 → 输入”，创建以下四个字段，Required 均开启。Name 由表中前缀和后缀拼接，例如用户名字段的完整名称为 <code>doratiger-user-settings-field-username</code>。Label 分别填写“用户名”“显示名称”“邮箱”“语言”：</p>
+<table>
+<thead>
+<tr>
+<th>名称后缀（前缀均为 <code>doratiger-user-settings-field-</code>）</th>
+<th>Field key</th>
+<th>类型</th>
+<th>顺序</th>
+<th>初始值表达式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>username</td>
+<td><code>username</code></td>
+<td>Username</td>
+<td>200</td>
+<td><code>return user.username</code></td>
+</tr>
+<tr>
+<td>name</td>
+<td><code>name</code></td>
+<td>Text</td>
+<td>201</td>
+<td><code>return user.name</code></td>
+</tr>
+<tr>
+<td>email</td>
+<td><code>email</code></td>
+<td>Email</td>
+<td>202</td>
+<td><code>return user.email</code></td>
+</tr>
+<tr>
+<td>locale</td>
+<td><code>attributes.settings.locale</code></td>
+<td>authentik: Locale</td>
+<td>203</td>
+<td><code>return user.attributes.get(&quot;settings&quot;, &#123;&#125;).get(&quot;locale&quot;, &quot;&quot;)</code></td>
+</tr>
+</tbody>
+</table>
+<p>开启 Initial value expression，使表单显示当前资料。这里展示简写；实际导出的表达式还保留了读取失败时返回空字符串的处理。</p>
+<p>进入“自定义 → 策略”创建 Expression Policy，Name 填 <code>doratiger-user-settings-authorization</code>。它负责检查用户是否有权修改这些资料字段。Expression 填入：</p>
+<pre><div class="code-header"><span class="code-header-type">python</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div></div><code class="language-python">from authentik.core.models import (
+    USER_ATTRIBUTE_CHANGE_EMAIL,
+    USER_ATTRIBUTE_CHANGE_NAME,
+    USER_ATTRIBUTE_CHANGE_USERNAME,
+)
+
+prompt_data = request.context.get(&quot;prompt_data&quot;) or &#123;&#125;
+attrs = request.user.group_attributes(request.http_request)
+tenant = request.http_request.tenant
+checks = [
+    (&quot;email&quot;, USER_ATTRIBUTE_CHANGE_EMAIL, tenant.default_user_change_email),
+    (&quot;name&quot;, USER_ATTRIBUTE_CHANGE_NAME, tenant.default_user_change_name),
+    (&quot;username&quot;, USER_ATTRIBUTE_CHANGE_USERNAME, tenant.default_user_change_username),
+]
+for field, flag, default in checks:
+    if not attrs.get(flag, default):
+        if prompt_data.get(field) != getattr(request.user, field):
+            ak_message(&quot;没有修改该资料字段的权限。&quot;)
+            return False
+return True</code></div></pre>
+<p>这是把原策略的三段相同判断合并后的等价示例；实际实例保留了原来的逐字段写法。规则优先读取用户组属性，没有覆盖时使用租户默认设置。</p>
+<p>保存策略后，回到“DoraTiger 个人资料”的阶段绑定：</p>
+<ol>
+<li>创建 Prompt 阶段，Name 填 <code>doratiger-user-settings-prompt</code>，Fields 选择四个资料输入，Validation Policies 选择 <code>doratiger-user-settings-authorization</code>，绑定 Order <code>20</code>。</li>
+<li>创建 User Write 阶段，Name 填 <code>doratiger-user-settings-write</code>，用户创建模式选 Never Create，绑定 Order <code>100</code>。</li>
+<li>进入“系统 → 品牌”，编辑当前品牌，将 User settings flow 选为“DoraTiger 个人资料”，保存。</li>
+<li>进入用户设置，检查四个字段是否显示当前值。用允许修改资料的测试账号提交修改，并在“目录 → 用户”核对保存结果；另用受限账号检查不允许修改的字段是否被拒绝。</li>
+</ol>
+<p>当前保留默认的邮箱修改权限机制，没有增加“更换邮箱后重新验证邮件”。允许用户修改邮箱时，应将这个限制纳入后续配置，不能把注册时验证过邮箱当作永久证明。</p>
+<h3 id="6-2-退出">6.2 退出</h3>
+<p>在流程列表创建“DoraTiger 退出登录”，Slug 填 <code>doratiger-invalidation</code>，Title 填“退出 DoraTiger”，Designation 选 Invalidation（失效／退出），Authentication requirement 选 None／No requirement。</p>
+<p>进入阶段绑定，创建 User Logout（用户退出）阶段，Name 填 <code>doratiger-invalidation-logout</code>，Order 填 <code>0</code>。再编辑当前品牌，将 Invalidation flow 选为“DoraTiger 退出登录”。保存后用测试账号点击退出，确认再次访问需要登录的页面时会重新进入认证流程。</p>
+<p>它负责 Authentik 会话退出。下游应用自己的 Cookie、协议单点退出和上游 Google/Microsoft 会话，仍有各自的生命周期。</p>
+<h3 id="6-3-显式授权与免确认授权">6.3 显式授权与免确认授权</h3>
+<p>在流程列表分别创建以下两个流程，Designation 均选 Authorization（授权），Authentication requirement 均选 Require authenticated：</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Slug</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DoraTiger 应用显式授权</td>
+<td><code>doratiger-provider-authorization-explicit-consent</code></td>
+<td>授权应用访问</td>
+</tr>
+<tr>
+<td>DoraTiger 应用免确认授权</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code></td>
+<td>应用授权</td>
+</tr>
+</tbody>
+</table>
+<p>打开“DoraTiger 应用显式授权”的阶段绑定，创建 Consent（同意授权）阶段，Name 填 <code>doratiger-provider-authorization-consent</code>，Mode 选 Expiring（有期限），Consent expire in 填 <code>weeks=4</code>，绑定 Order <code>0</code>。</p>
+<p>“DoraTiger 应用免确认授权”保存后保持阶段列表为空。接入应用时，进入“应用程序 → 提供者”，编辑相应 Provider，将 Authorization flow 选为其中一个流程。当前没有下游应用时可以先保留流程，不为测试这一引用随意修改其他提供者。</p>
+<p>需要让用户确认应用将获得哪些身份信息时，选显式授权。自有可信应用可以按需要选择免确认授权；两者都不代替应用的访问策略。后续创建 Provider 时选择对应 Authorization flow，不能只创建流程而不关联提供者。</p>
+<h3 id="6-4-协议扩展入口">6.4 协议扩展入口</h3>
+<p>这些流程同样从“流程和阶段 → 流程”创建，但用途是给协议执行过程提供入口。按表格填写 Slug、Designation 和身份前提，Name 可依次填写“DoraTiger 应用退出”“DoraTiger 身份源预认证”“DoraTiger 访问申请”，Title 可使用对应中文用途。保存后保持阶段绑定为空。</p>
+<table>
+<thead>
+<tr>
+<th>流程</th>
+<th>Designation</th>
+<th>身份前提</th>
+<th>当前阶段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-provider-invalidation</code></td>
+<td>Invalidation</td>
+<td>None</td>
+<td>空，供应用退出协议调用</td>
+</tr>
+<tr>
+<td><code>doratiger-source-pre-authentication</code></td>
+<td>Stage configuration</td>
+<td>None</td>
+<td>空，身份源认证前的扩展入口</td>
+</tr>
+<tr>
+<td><code>doratiger-request</code></td>
+<td>Stage configuration</td>
+<td>Require authenticated</td>
+<td>空，访问申请服务会追加运行时处理</td>
+</tr>
+</tbody>
+</table>
+<p>编辑当前品牌，将 Request flow 选为“DoraTiger 访问申请”。应用退出流程在对应 Provider 的 Invalidation flow 中选择；身份源预认证流程在需要该入口的 Source 中选择，当前没有使用者时保留为空流程即可，不需要临时添加阶段来执行它。本版本的访问申请属于 Enterprise Preview；仅建这个流程，不会自动创建申请规则、审核人或应用授权关系。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/access-requests/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Faccess-requests%2F">访问申请文档</a></p>
+<p>这些入口本轮保留原生行为，没有为了让流程图看起来完整而添加用户登录、写入或退出阶段。目前还没有通过实际下游应用完成它们的集成测试。</p>
+<h2 id="七、默认配置迁移与清理">七、默认配置迁移与清理</h2>
+<h3 id="7-1-入口与引用迁移">7.1 入口与引用迁移</h3>
+<p>阶段和策略可以被多个流程复用，删除前从对象的 Used by、阶段绑定、Prompt 验证策略和 Configure flow 分别检查。下面是本地流程的主要入口：</p>
+<table>
+<thead>
+<tr>
+<th>配置位置</th>
+<th>自建流程</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Brand Authentication flow</td>
+<td><code>doratiger-authentication</code></td>
+</tr>
+<tr>
+<td>Brand Recovery flow</td>
+<td><code>doratiger-password-recovery</code></td>
+</tr>
+<tr>
+<td>Brand User settings flow</td>
+<td><code>doratiger-user-settings</code></td>
+</tr>
+<tr>
+<td>Brand Invalidation flow</td>
+<td><code>doratiger-invalidation</code></td>
+</tr>
+<tr>
+<td>Brand Request flow</td>
+<td><code>doratiger-request</code></td>
+</tr>
+<tr>
+<td>登录识别阶段 Recovery flow</td>
+<td><code>doratiger-password-recovery</code></td>
+</tr>
+<tr>
+<td>登录识别阶段 Passwordless flow</td>
+<td><code>doratiger-passkey-authentication</code></td>
+</tr>
+<tr>
+<td>密码阶段 Configure flow</td>
+<td><code>doratiger-password-change</code></td>
+</tr>
+<tr>
+<td>三个认证器设置阶段 Configure flow</td>
+<td>各自的 TOTP、恢复码、WebAuthn 设置流程</td>
+</tr>
+</tbody>
+</table>
+<p>实际替换时，进入表格第一列对应的编辑页面，从下拉框选择已创建的中文流程名称，保存后重新打开确认。认证器的 Configure flow 要分别编辑三个设置阶段，不能只修改品牌。已有 Provider 或 Source 也要逐个检查其流程字段，品牌不会替它们改引用。</p>
+<p>登录页 Enrollment flow 保持为空；邀请注册链接由管理员提供。直接访问注册流程仍需邀请阶段校验，隐藏按钮只是界面设置。</p>
+<p>如果已经接入外部身份源、邀请应用或通知规则，还需要检查它们的引用。对应功能尚未迁移时，保留仍在使用的默认对象。</p>
+<h3 id="7-2-默认蓝图停用">7.2 默认蓝图停用</h3>
+<p>先备份数据库和配置，导出旧流程，再在“自定义 → 蓝图”关闭 Enabled。按替代进度停用：</p>
+<table>
+<thead>
+<tr>
+<th>自建功能已经验证后</th>
+<th>停用的默认蓝图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本地登录</td>
+<td>Default - Authentication flow</td>
+</tr>
+<tr>
+<td>三个 MFA 设置入口</td>
+<td>Default - TOTP MFA setup flow、Static MFA setup flow、WebAuthn MFA setup flow</td>
+</tr>
+<tr>
+<td>主动改密和个人资料</td>
+<td>Default - Password change flow、User settings flow</td>
+</tr>
+<tr>
+<td>Authentik 退出</td>
+<td>Default - Invalidation flow</td>
+</tr>
+<tr>
+<td>应用授权及退出</td>
+<td>两个 Provider authorization flow、Provider invalidation flow</td>
+</tr>
+<tr>
+<td>身份源预认证和访问申请</td>
+<td>Default - Source pre-authentication flow、Request flow</td>
+</tr>
+<tr>
+<td>所有品牌默认入口已迁移</td>
+<td>Default - Brand</td>
+</tr>
+<tr>
+<td>Source 迁移完成</td>
+<td>Default - Source authentication flow、Source enrollment flow</td>
+</tr>
+<tr>
+<td>通知迁移完成</td>
+<td>Default - Events Transport &amp; Rules</td>
+</tr>
+</tbody>
+</table>
+<p>操作时按名称找到目标蓝图，打开编辑，将 Enabled 关闭并保存；回到列表确认停用状态。每完成一组替代并验证后，再停用这一组对应的蓝图。停用蓝图和删除它以前创建的流程是两个独立操作。</p>
+<p>OOBE 蓝图在首次初始化后已经停用，保持停用。停用不会删除已创建对象；保留停用的蓝图实例，也方便以后辨认官方配方和自建配置。</p>
+<h3 id="7-3-默认对象清理">7.3 默认对象清理</h3>
+<p>在确认没有入口引用后，依次删除旧流程及阶段绑定、无其他引用的旧阶段、无其他引用的输入和策略。不要看到名称带 <code>default</code> 就全选删除。</p>
+<p>默认改密的密码策略被 <code>doratiger-password-policy</code> 替代；默认用户设置权限策略要先复制到自建策略，再删除原对象。默认 OOBE 的三个策略、五个输入和专属阶段，可以在初始化完成后整体清理。共享的默认写入或登录阶段，要等其他默认流程也迁移完才能删除。</p>
+<p>在流程列表勾选已经替代的默认流程，使用删除操作并检查确认页面列出的关联对象。随后进入阶段、输入和策略列表，逐类清理专属对象。若确认页面包含仍需保留的自建对象，先取消删除并修正引用；存在共享引用的阶段不要随旧流程一起处理。删除后重新检查品牌、凭据设置和各 Provider／Source 的下拉框，确认没有缺失引用。</p>
+<p>保留 System 映射与 Scopes、Bootstrap、RBAC 等系统蓝图。它们提供协议属性或权限对象，不属于本文要重建的交互流程。旧输入迁移蓝图按固定名称清理历史对象，不会匹配当前 <code>doratiger-</code> 输入。</p>
+<h2 id="八、配置验证">八、配置验证</h2>
+<h3 id="8-1-流程检查器与事件日志">8.1 流程检查器与事件日志</h3>
+<p>配置保存后，先在流程详情查看阶段绑定顺序。需要定位执行过程时，可在详情页的 Execute flow 区域点击 Use inspector（使用检查器），观察 Next stage、Plan history 和 Current plan context。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/flow/inspector/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fflow%2Finspector%2F">Flow Inspector 文档</a></p>
+<p><img src="https://cdn.superheaoz.top/images/2026/11/58242/official-flow-inspector.png" data-cdn-image-fallback-src="official-flow-inspector.png" alt="官方流程检查器截图：表单与当前执行计划"></p>
+<p>图为官方的改密流程示例，右侧显示下一阶段及执行历史，不是本文实例的测试截图。检查器会真实执行流程，User Write 仍会写入数据；上下文还可能显示密码，应使用测试账号，不公开未经脱敏的上下文截图。</p>
+<p>再进入“事件 → 日志”，按测试时间和测试用户查找登录、失败或其他相关记录，打开详情核对事件动作、用户和上下文。事件由操作产生，不需要额外建一个“登录事件”并绑定到流程。日志中有错误时，再结合检查器判断停在哪个阶段；不是每一个表单步骤都会对应一条独立事件。</p>
+<p>通知规则和通知传输用于把选定事件发给接收者，与流程的 Stage Bindings 是不同配置。本篇验证流程执行结果时不需要新增邮件通知规则，也不要直接删除仍在工作的通知配置。</p>
+<h3 id="8-2-功能验证记录">8.2 功能验证记录</h3>
+<p>按功能逐项检查，避免只看登录首页能否打开：</p>
+<table>
+<thead>
+<tr>
+<th>检查</th>
+<th>本次结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本地密码登录、TOTP、恢复码、WebAuthn</td>
+<td>实际使用测试通过</td>
+</tr>
+<tr>
+<td>独立 Passkey 登录</td>
+<td>已配置并完成登录测试</td>
+</tr>
+<tr>
+<td>邀请注册、指定邮箱验证、MFA 配置</td>
+<td>实际注册测试通过</td>
+</tr>
+<tr>
+<td>找回密码后新密码登录，继续要求 MFA</td>
+<td>实际测试通过</td>
+</tr>
+<tr>
+<td>个人资料入口</td>
+<td>临时认证会话能正常显示表单</td>
+</tr>
+<tr>
+<td>主动改密</td>
+<td>临时账号测试：弱密码及不一致密码被拒绝，新密码有效、旧密码失效</td>
+</tr>
+<tr>
+<td>退出</td>
+<td>临时认证会话被清除</td>
+</tr>
+<tr>
+<td>下游应用授权、协议退出、访问申请</td>
+<td>保留原生配置，尚未完成实际应用集成测试</td>
+</tr>
+</tbody>
+</table>
+<p>服务端验证使用临时账号和事务回滚，没有修改管理员密码，也没有留下测试账号。登录、找回密码以及通知需要的既有自建配置保持不变。</p>
+<p>判断是否完成迁移，应看实际入口、绑定和策略引用，不能只统计流程数量或检查名称前缀。</p>
+<h2 id="九、配置问题与解答">九、配置问题与解答</h2>
+<h3 id="9-1-登录流程未切换">9.1 登录流程未切换</h3>
+<p><strong>Q：品牌已经选择自建认证流程，为什么浏览器仍显示默认登录页？</strong></p>
+<p><strong>A：</strong> 检查当前域名匹配的 Brand，以及它的 Authentication flow。浏览器如果仍停在旧流程 URL，刷新只会继续访问旧流程，需要重新从站点首页进入。默认流程删除后，旧标签页也应从站点入口重新打开，无需重建同名默认流程。</p>
+<h3 id="9-2-Configure-flow-的引用关系">9.2 Configure flow 的引用关系</h3>
+<p><strong>Q：认证器设置阶段为什么又指回包含自己的流程，会不会递归执行？</strong></p>
+<p><strong>A：</strong> 流程的阶段绑定决定进入流程后执行哪些步骤；阶段的 Configure flow 则决定用户在凭据页点击配置时打开哪个流程。两者用途不同，Configure flow 不是执行完阶段后再次跳转的指令。</p>
+<h3 id="9-3-凭据设置入口重复">9.3 凭据设置入口重复</h3>
+<p><strong>Q：为什么 MFA 设备页面同时出现默认英文入口和自建入口？</strong></p>
+<p><strong>A：</strong> 默认认证器设置阶段及其 Configure flow 仍然存在。新建自定义阶段不会自动替换旧对象，改名也不会合并入口。核对引用、测试自建入口后，再按清理顺序删除不再使用的默认设置阶段和流程。</p>
+<h3 id="9-4-Passkey-登录入口缺失">9.4 Passkey 登录入口缺失</h3>
+<p><strong>Q：WebAuthn 凭据已经注册，为什么登录页没有 Passkey 入口？</strong></p>
+<p><strong>A：</strong> WebAuthn 设置流程负责注册凭据，独立无密码流程负责验证凭据并建立会话。还需要在当前登录识别阶段的 Passwordless flow 中选择 <code>doratiger-passkey-authentication</code>，登录页才有对应入口。</p>
+<h3 id="9-5-邀请注册提交后停留在表单">9.5 邀请注册提交后停留在表单</h3>
+<p><strong>Q：输入用户名和密码后点击“继续”，为什么没有进入邮箱验证或 MFA？</strong></p>
+<p><strong>A：</strong> 本次遇到的问题来自邀请邮箱策略读取上下文的方式。<code>2026.8.5</code> 的 Prompt 验证策略可以直接读取 <code>prompt_data</code>，但没有同样直接提供 <code>flow_plan</code>。改为通过 <code>SESSION_KEY_PLAN</code> 从当前 HTTP 会话取得执行计划，再读取邀请数据后，测试通过。正文给出的是修正后的策略；策略测试器没有真实邀请会话，仍需使用邀请链接验证。</p>
+<h3 id="9-6-邀请管理入口不可见">9.6 邀请管理入口不可见</h3>
+<p><strong>Q：创建邀请阶段后，为什么后台没有“邀请”菜单，或手工打开地址提示 URL 不存在？</strong></p>
+<p><strong>A：</strong> 创建 Invitation Stage 后刷新后台，再进入“目录 → 邀请”。本版本实际路由是 <code>/if/admin/#/flow/stages/invitations</code>，不是 <code>/if/admin/#/directory/invitations</code>。</p>
+<h3 id="9-7-注册中断后的邀请与用户状态">9.7 注册中断后的邀请与用户状态</h3>
+<p><strong>Q：没有完成注册，为什么邀请已经不能使用，或者邮箱已有用户记录？</strong></p>
+<p><strong>A：</strong> 当前版本的单次邀请在通过邀请阶段时就可能被消耗，不会一直保留到整个注册成功。用户写入阶段又在邮箱验证之前执行，因此中断后可能留下未激活用户。重试前应检查邀请和该邮箱的用户记录，再决定如何恢复，不要反复创建邀请或重复账号。</p>
+<h3 id="9-8-默认策略的引用检查">9.8 默认策略的引用检查</h3>
+<p><strong>Q：普通策略绑定列表没有引用，是否就可以删除默认策略？</strong></p>
+<p><strong>A：</strong> 还需要检查 Prompt Stage 的 Validation Policies。密码强度和用户资料权限策略可能直接被输入阶段引用，不一定出现在普通 Policy Binding 列表中。应先替换这些引用，再删除旧策略。</p>
+<h3 id="9-9-未绑定阶段的清理">9.9 未绑定阶段的清理</h3>
+<p><strong>Q：对象都使用 <code>doratiger-</code> 前缀，是否就表示清理完成？</strong></p>
+<p><strong>A：</strong> 命名前缀不能说明对象是否仍在使用。本次排障曾留下未绑定的 <code>doratiger-invitation-finish</code> 阶段，它不参与执行，新部署无需创建。应结合入口、阶段绑定和策略引用检查残留对象。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/flow/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fflow%2F">流程创建与字段</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2F">阶段创建与绑定</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/customize/policies/working_with_policies/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fcustomize%2Fpolicies%2Fworking_with_policies%2F">策略创建与绑定</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/flow/inspector/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fflow%2Finspector%2F">Flow Inspector</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/prompt/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Fprompt%2F">Prompt Stage</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/authenticator_validate/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Fauthenticator_validate%2F">Authenticator Validation Stage</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/invitation/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Finvitation%2F">Invitation Stage</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/email/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Femail%2F">Email Stage</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/user_write/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Fuser_write%2F">User Write Stage</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/access-requests/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Faccess-requests%2F">访问申请</a></p>
+</li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/58242/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/58242/">https://www.doratiger.top/2026/11/58242/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/58243/"><span>服务器操作指北（14）Authentik 邮件通知与外部身份源</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/58241/"><span>服务器操作指北（12）Authentik 基本概念、默认配置与部署</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>服务器操作指北（12）Authentik 基本概念、默认配置与部署【DoraTiger 的异次元】</title><meta name="description" content="前言 自建服务逐渐多起来以后，每个服务都要单独维护一套账号。代码仓库、文件同步、资料管理各有各的入口，账号和密码也需要分别管理。 这次在云服务器上部署 Authentik，作为统一身份提供者，后续再逐个接入应用。 本文使用的 Authentik 版本为 ，数据库为 PostgreSQL 16。域名、目录和账号均使用示例"><meta name="keywords" content="docker,authentik,oidc,microsoft,google"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（12）Authentik 基本概念、默认配置与部署【DoraTiger 的异次元】"><meta property="og:description" content="前言 自建服务逐渐多起来以后，每个服务都要单独维护一套账号。代码仓库、文件同步、资料管理各有各的入口，账号和密码也需要分别管理。 这次在云服务器上部署 Authentik，作为统一身份提供者，后续再逐个接入应用。 本文使用的 Authentik 版本为 ，数据库为 PostgreSQL 16。域名、目录和账号均使用示例"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/58241/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/58241/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（12）Authentik 基本概念、默认配置与部署","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-11T10:40:43.000Z","dateModified":"2026-11-14T13:48:52.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/58241/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81Authentik-%E4%BB%8B%E7%BB%8D"><span class="toc-text">一、Authentik 介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E4%B8%8E%E5%BA%94%E7%94%A8%E6%8E%88%E6%9D%83"><span class="toc-text">1.1 身份认证与应用授权</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%A0%B8%E5%BF%83%E9%85%8D%E7%BD%AE%E5%AF%B9%E8%B1%A1"><span class="toc-text">1.2 核心配置对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E9%BB%98%E8%AE%A4%E7%99%BB%E5%BD%95%E6%B5%81%E7%A8%8B"><span class="toc-text">1.3 默认登录流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E8%BE%93%E5%85%A5%E3%80%81%E9%98%B6%E6%AE%B5%E4%B8%8E%E7%AD%96%E7%95%A5"><span class="toc-text">1.4 输入、阶段与策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-%E9%BB%98%E8%AE%A4%E6%B5%81%E7%A8%8B%E4%B8%8E%E6%9D%A1%E4%BB%B6%E7%AD%96%E7%95%A5"><span class="toc-text">1.5 默认流程与条件策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-6-%E8%93%9D%E5%9B%BE%E3%80%81Bootstrap-%E4%B8%8E-OOBE"><span class="toc-text">1.6 蓝图、Bootstrap 与 OOBE</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-7-%E4%BA%8B%E4%BB%B6%E3%80%81%E9%80%9A%E7%9F%A5%E4%B8%8E%E5%93%81%E7%89%8C"><span class="toc-text">1.7 事件、通知与品牌</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%83%A8%E7%BD%B2-Authentik"><span class="toc-text">二、部署 Authentik</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%87%86%E5%A4%87%E7%9B%AE%E5%BD%95%E4%B8%8E%E5%AF%86%E9%92%A5"><span class="toc-text">2.1 准备目录与密钥</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Compose-%E9%85%8D%E7%BD%AE"><span class="toc-text">2.2 Compose 配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-HTTPS-%E4%B8%8E%E5%88%9D%E5%A7%8B%E7%AE%A1%E7%90%86%E5%91%98"><span class="toc-text">2.3 HTTPS 与初始管理员</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%83%A8%E7%BD%B2%E5%90%8E%E7%9A%84%E6%A3%80%E6%9F%A5%E4%B8%8E%E5%A4%87%E4%BB%BD"><span class="toc-text">三、部署后的检查与备份</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color10"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color1"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">74</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">142</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（12）Authentik 基本概念、默认配置与部署</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-11</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-14</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/oidc/">oidc</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/microsoft/">microsoft</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/google/">google</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">8777 字 · 约 30 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>自建服务逐渐多起来以后，每个服务都要单独维护一套账号。代码仓库、文件同步、资料管理各有各的入口，账号和密码也需要分别管理。</p>
+<p>这次在云服务器上部署 Authentik，作为统一身份提供者，后续再逐个接入应用。</p>
+<p>本文使用的 Authentik 版本为 <code>2026.8.5</code>，数据库为 PostgreSQL 16。域名、目录和账号均使用示例，部署时自行替换。</p>
+<span id="more"></span>
+<h2 id="一、Authentik-介绍">一、Authentik 介绍</h2>
+<h3 id="1-1-身份认证与应用授权">1.1 身份认证与应用授权</h3>
+<p>Authentik 是一个可以自建的身份提供者（IdP）。它维护用户、组和认证会话，为接入的应用提供统一的身份认证，也可以从 Microsoft、Google 等外部身份源接收用户身份。</p>
+<p>接入后，应用可以把登录请求交给 Authentik，再根据返回的身份信息建立自己的会话。应用内部的资源权限仍需要配置，例如 Gitea 中哪些仓库允许访问、Nextcloud 中哪些目录可以共享。统一登录不会自动替应用完成这些授权设置。</p>
+<p>这次的关系可以先理解为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">Microsoft / Google
+        ↓ 外部身份源 Source
+Authentik 本地用户与认证会话
+        ↓ 应用对应的 Provider
+Gitea / Nextcloud 等下游应用（后续接入）</code></div></pre>
+<p>因此，Google 登录 Authentik 和 Gitea 使用 Authentik 登录，需要配置的对象不同。前者创建 Source，后者为 Gitea 创建 Application 和 Provider。</p>
+<h3 id="1-2-核心配置对象">1.2 核心配置对象</h3>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>用途</th>
+<th>本文中的例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User / Group</td>
+<td>本地用户与分组，承载账号、属性和权限关系</td>
+<td>已有管理员账号及其外部身份绑定</td>
+</tr>
+<tr>
+<td>Source（身份源）</td>
+<td>接入外部身份，配置匹配方式和后续流程</td>
+<td>Microsoft、Google OAuth Source</td>
+</tr>
+<tr>
+<td>Application（应用）</td>
+<td>表示一个接入服务，关联认证提供者和访问配置</td>
+<td>后续接入的 Gitea</td>
+</tr>
+<tr>
+<td>Provider（提供者）</td>
+<td>按 OIDC、SAML 等协议向应用提供认证能力</td>
+<td>Gitea 对应的 OIDC Provider</td>
+</tr>
+<tr>
+<td>Flow（流程）</td>
+<td>组织一次登录、注册、授权等操作的步骤</td>
+<td>默认登录流程</td>
+</tr>
+<tr>
+<td>Stage（阶段）</td>
+<td>执行一个具体步骤</td>
+<td>识别用户、校验密码、建立登录会话</td>
+</tr>
+<tr>
+<td>Binding（绑定）</td>
+<td>把阶段接到流程中并指定顺序，或把策略、用户、组等条件接到目标上</td>
+<td>登录流程中的 Stage Bindings</td>
+</tr>
+<tr>
+<td>Policy（策略）</td>
+<td>根据条件决定是否允许访问或执行相应流程、阶段</td>
+<td>后续按用户组限制应用访问</td>
+</tr>
+<tr>
+<td>Brand</td>
+<td>按访问域名选择站点外观及默认流程等设置</td>
+<td>认证入口使用的默认登录 Flow</td>
+</tr>
+</tbody>
+</table>
+<p>Source 里的“账号绑定”和 Flow 的 Stage Binding 也不是同一件事。前者记录某个外部身份属于哪个本地用户，后者表示一个流程要执行哪些步骤。</p>
+<p>Outpost 则是部分集成方式使用的独立组件，例如代理认证或 LDAP 集成。本文的基础部署不需要额外部署 Outpost；服务器 SSH 登录也需要另行选择并配置接入方式。</p>
+<h3 id="1-3-默认登录流程">1.3 默认登录流程</h3>
+<p>安装完成后，Authentik 已带有一组默认 Flow 和 Stage，可以先在它们的基础上配置。新部署首先会接触以下对象：</p>
+<table>
+<thead>
+<tr>
+<th>默认对象</th>
+<th>作用</th>
+<th>本次如何处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>initial-setup</code></td>
+<td>首次初始化管理员的流程入口</td>
+<td>安装后完成一次初始化</td>
+</tr>
+<tr>
+<td><code>default-authentication-flow</code></td>
+<td>用户进入 Authentik 时使用的默认登录流程</td>
+<td>保留现有本地登录能力</td>
+</tr>
+<tr>
+<td><code>default-authentication-identification</code></td>
+<td>登录流程中的用户识别阶段，也负责列出可选身份源</td>
+<td>后续按需增加外部身份源</td>
+</tr>
+<tr>
+<td><code>default-source-authentication</code></td>
+<td>外部身份已经关联本地用户后的认证流程</td>
+<td>作为 Source 的 Authentication flow 保留</td>
+</tr>
+<tr>
+<td><code>default-source-enrollment</code></td>
+<td>外部身份尚未关联用户时使用的注册流程</td>
+<td>由 Source 的 Enrollment flow 引用</td>
+</tr>
+</tbody>
+</table>
+<p>这些是本文版本的默认名称。若实例已经自定义过流程，应以实际绑定关系为准，不能只凭名称找到一个对象就修改。</p>
+<p>典型的本地密码登录，可以概括为下面的顺序：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">Identification：确定要登录哪个用户
+        ↓
+Password：校验该用户的密码
+        ↓
+User Login：为用户建立登录会话</code></div></pre>
+<p>实际 Flow 还可以包含验证器检查等阶段，并按绑定条件决定是否执行。<strong>输入用户名、验证身份和建立会话是不同步骤</strong>；添加外部登录按钮时，不需要删掉整个密码登录流程。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/flow/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fflow%2F">Flow 文档</a>介绍了阶段、执行顺序与策略的关系。</p>
+<p>点击 Google 时，浏览器会转到 Google 授权，再回到 Authentik 的 Source 回调。之后根据已有绑定和匹配结果，进入认证、注册或已登录用户的绑定处理。这也解释了为什么浏览器授权成功，还可能在返回 Authentik 后遇到“不能注册”或“进入了另一个用户”的情况。</p>
+<h3 id="1-4-输入、阶段与策略">1.4 输入、阶段与策略</h3>
+<p>Prompt（输入）定义一个字段，例如字段键 <code>password</code>、标签“新密码”、类型 Password。Prompt Stage 把若干输入排成一个表单，提交后保存在流程上下文的 <code>prompt_data</code> 中。User Write Stage 才会把这些值写入用户。单独创建输入，或者只让表单提交成功，都不会自动改掉账号资料。</p>
+<p>Identification 和 Password 等专用阶段有自己的界面，不需要先创建用户名、密码 Prompt。只有需要自己组织表单时，才创建输入和 Prompt Stage。</p>
+<p>策略也有两个常用位置：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>执行时机</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>流程或阶段的策略绑定</td>
+<td>判断能否进入流程、是否执行阶段</td>
+<td>已完成 Passkey 验证时跳过密码阶段</td>
+</tr>
+<tr>
+<td>Prompt Stage 的 Validation Policies</td>
+<td>表单提交后检查内容</td>
+<td>密码强度、注册邮箱是否符合邀请</td>
+</tr>
+</tbody>
+</table>
+<p>阶段绑定的 Order 决定先后，不要求连续。<code>10、20、30、100</code> 之间留出空位，后面比较方便插入阶段。Evaluate on plan 在规划流程时检查，Re-evaluate policies 在执行阶段时重新检查；依赖前一步产生的数据时，不能只在流程开始前评估一次。</p>
+<h3 id="1-5-默认流程与条件策略">1.5 默认流程与条件策略</h3>
+<p>默认登录需要兼容本地密码、LDAP、Kerberos、应用程序密码及无密码认证，因此带有条件策略。本文版本的蓝图中，两条关键策略是：</p>
+<table>
+<thead>
+<tr>
+<th>默认策略</th>
+<th>判断内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default-authentication-flow-password-stage</code></td>
+<td>检查 <code>pending_user</code> 是否已经附带认证 backend；尚未认证时才执行密码阶段</td>
+</tr>
+<tr>
+<td><code>default-authentication-flow-authenticator-validate-stage</code></td>
+<td>如果认证方法已是 <code>auth_webauthn_pwl</code>，跳过额外的认证器验证</td>
+</tr>
+</tbody>
+</table>
+<p>它们返回 False 时，只控制所绑定的阶段是否执行，不等于整个登录失败。自建流程如果把密码登录和 Passkey 登录拆成两个入口，就不必照搬所有跳过分支；但后来再把 Passkey 自动填充混进密码流程时，需要重新考虑这些条件。</p>
+<p>其他默认流程可以按用途看：</p>
+<table>
+<thead>
+<tr>
+<th>默认流程</th>
+<th>阶段或职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default-authentication-flow</code></td>
+<td>识别账号 → 密码 → MFA 检查 → 建立会话</td>
+</tr>
+<tr>
+<td><code>default-authenticator-totp-setup</code></td>
+<td>配置 TOTP 验证器</td>
+</tr>
+<tr>
+<td><code>default-authenticator-static-setup</code></td>
+<td>生成备用恢复码</td>
+</tr>
+<tr>
+<td><code>default-authenticator-webauthn-setup</code></td>
+<td>注册 WebAuthn 凭据</td>
+</tr>
+<tr>
+<td><code>default-source-authentication</code></td>
+<td>已关联的外部身份返回后建立本地会话；<code>default-source-authentication-if-sso</code> 限定从 SSO 上下文进入</td>
+</tr>
+<tr>
+<td><code>default-source-enrollment</code></td>
+<td>处理外部身份对应的新用户注册；它与管理员邀请注册不同</td>
+</tr>
+<tr>
+<td><code>default-source-pre-authentication</code></td>
+<td>身份源发起认证之前的扩展入口，默认没有持久化阶段</td>
+</tr>
+<tr>
+<td><code>default-password-change</code></td>
+<td>已登录用户填写两次新密码 → 用户写入</td>
+</tr>
+<tr>
+<td><code>default-user-settings-flow</code></td>
+<td>个人资料表单 → 权限检查 → 用户写入</td>
+</tr>
+<tr>
+<td><code>default-invalidation-flow</code></td>
+<td>退出 Authentik 会话</td>
+</tr>
+<tr>
+<td><code>default-provider-authorization-explicit-consent</code></td>
+<td>授权同意阶段，默认同意有效期为 4 周</td>
+</tr>
+<tr>
+<td><code>default-provider-authorization-implicit-consent</code></td>
+<td>已登录后免确认地继续提供者授权，默认空流程</td>
+</tr>
+<tr>
+<td><code>default-provider-invalidation-flow</code></td>
+<td>供应用退出协议调用，默认空流程</td>
+</tr>
+<tr>
+<td><code>default-request</code></td>
+<td>访问申请扩展入口，默认空流程；当前版本的访问申请属于 Enterprise Preview 功能</td>
+</tr>
+</tbody>
+</table>
+<p><code>default-password-change-password-policy</code> 检查默认改密表单的密码；<code>default-user-settings-authorization</code> 则按租户设置和用户组属性，限制用户名、姓名、邮箱能否修改。它们直接放在 Prompt Stage 的验证策略里，不一定出现在普通 Policy Binding 列表中。</p>
+<p>默认 Source 注册还带有两条策略：<code>default-source-enrollment-if-sso</code> 限制从外部身份返回的上下文进入；<code>default-source-enrollment-if-username</code> 检查上游是否已提供用户名，没有时才显示用户名输入。随后用户写入阶段采用 Always Create，再建立会话。这解释了为什么开放 Source 注册时，匿名外部登录可能创建第二个本地账号。</p>
+<p>空流程不一定是漏配。有些协议处理会在运行时追加阶段；直接打开空流程 URL，不能代替从应用或身份源进入的测试。</p>
+<h3 id="1-6-蓝图、Bootstrap-与-OOBE">1.6 蓝图、Bootstrap 与 OOBE</h3>
+<p>Blueprint（蓝图）是一份 YAML 配置配方，可以创建流程、阶段、策略、角色和属性映射。镜像内的默认流程也由蓝图生成。实例会监测蓝图文件变化并执行发现任务，因此删除默认对象前，应先检查对应蓝图是否仍启用。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/customize/blueprints/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fcustomize%2Fblueprints%2F">官方蓝图说明</a></p>
+<p>停用蓝图不会删除已有对象；删除对象也不会自动停用蓝图。已经导出的流程蓝图可以用于恢复和复用，但导出文件需要检查是否含凭据或私有配置，不能直接全部公开。</p>
+<p>首次部署还涉及两个容易混淆的部分：</p>
+<ul>
+<li><code>authentik Bootstrap</code> 准备管理员组和初始 <code>akadmin</code>，也支持从部署环境读取初始凭据。当前条目使用 <code>state: created</code>，已有对象不会因此反复被覆盖；对象被删后重新应用仍可能创建它。</li>
+<li>OOBE（Out-of-box Experience）是首次网页初始化。<code>initial-setup</code> 收集管理员邮箱、两次密码和 Base URL，再更新初始管理员并登录。</li>
+</ul>
+<p>OOBE 的入口策略 <code>default-oobe-password-usable</code> 检查是否由正式初始化入口启动，以及初始管理员是否还没有可用密码。<code>default-oobe-prefill-user</code> 把 <code>akadmin</code> 放进 <code>pending_user</code>，<code>default-oobe-base-url-valid</code> 检查站点地址。原生收尾步骤保存地址、标记初始化完成并停用 OOBE 蓝图。正常运行后，不需要把这个向导复制成日常管理流程。</p>
+<p>蓝图列表中还有另一类系统基础配置：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>提供的对象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OAuth2、Proxy、SAML Provider</td>
+<td>标准 Scope、协议属性及代理所需映射</td>
+</tr>
+<tr>
+<td>SCIM、Google Workspace、Microsoft Entra Provider</td>
+<td>向下游目录同步用户和组的映射；不是 Google/Microsoft 社交登录 Source</td>
+</tr>
+<tr>
+<td>LDAP、Kerberos Source</td>
+<td>把外部目录属性转换成 Authentik 用户属性</td>
+</tr>
+<tr>
+<td>RAC Provider</td>
+<td>RDP、SSH 远程连接参数</td>
+</tr>
+<tr>
+<td>Object Attributes - User</td>
+<td>姓名、地址、语言等用户扩展属性的定义</td>
+</tr>
+<tr>
+<td>RBAC Read-only、Agent Users</td>
+<td>只读管理角色，以及自助创建 Agent 用户的权限预设</td>
+</tr>
+<tr>
+<td>Migration - Remove old prompt fields</td>
+<td>按明确名称清理旧版输入对象的历史迁移</td>
+</tr>
+</tbody>
+</table>
+<p>系统映射蓝图的存在不会自动连接外部服务。后续创建 Provider 或 Source 并选择映射时，才会使用它们。自建全部日常流程，也不要求将这些协议对象逐个改名。</p>
+<h3 id="1-7-事件、通知与品牌">1.7 事件、通知与品牌</h3>
+<p>事件日志保存发生了什么，例如登录失败、策略异常或配置错误。通知规则通过事件匹配策略挑选事件，再决定接收用户和严重级别；通知传输负责邮件、站内通知或 Webhook。创建了 SMTP 或邮件传输，并不等于已经配置收件人和触发规则。</p>
+<p>默认事件蓝图提供 <code>default-notify-configuration-error</code>、<code>default-notify-configuration-warning</code>、<code>default-notify-exception</code>、<code>default-notify-update</code> 四条规则，分别使用配置错误、配置警告、策略/属性映射异常、版本更新的 Event Matcher 策略。<code>default-email-transport</code> 和 <code>default-local-transport</code> 是它们使用的传输。是否实际发信，还要查看当前规则收件组和全局 SMTP；存在默认对象不等于通知已可用。</p>
+<p>品牌设置可选择登录 Logo、favicon、背景和默认流程。欢迎语通常来自流程的 Title，页面外观和流程执行不是同一层。邮件模板也有独立的渲染和图片机制，不能只改网页 Logo 就假定邮件会跟着更新。后续按需配置。</p>
+<h2 id="二、部署-Authentik">二、部署 Authentik</h2>
+<h3 id="2-1-准备目录与密钥">2.1 准备目录与密钥</h3>
+<p>服务器需要安装 Docker Engine、Compose v2，并准备一个可用域名。示例使用 <code>auth.example.com</code>，DNS 指向 HTTPS 反向代理所在主机。如果同时配置 AAAA 记录，也要保证 IPv6 的访问路径可用。</p>
+<p>以下命令在服务器宿主机执行。<code>/srv/example/authentik</code> 是示例部署目录：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-bash">sudo install -d -m 700 -o &quot;$(id -u)&quot; -g &quot;$(id -g)&quot; /srv/example/authentik
+cd /srv/example/authentik
+mkdir -p custom-templates/email/doratiger
+
+# 仅首次创建；已有部署不要重新生成数据库密码和密钥
+if [ ! -e .env ]; then
+  umask 077
+  printf 'PG_PASS=%s\nAUTHENTIK_SECRET_KEY=%s\n' \
+    &quot;$(openssl rand -hex 32)&quot; &quot;$(openssl rand -hex 48)&quot; &gt; .env
+fi</code></div></pre>
+<p><code>PG_PASS</code> 用于数据库连接，<code>AUTHENTIK_SECRET_KEY</code> 是 Authentik 的持久配置，均应随部署备份。不能在重建容器时顺手换掉。</p>
+<h3 id="2-2-Compose-配置">2.2 Compose 配置</h3>
+<p>本次部署由 PostgreSQL、server 和 worker 三个服务组成。server 提供 Web/API，worker 执行后台任务，两者使用同一版本的 Authentik 镜像。</p>
+<p>下面是按本次服务关系整理的最小新部署示例，使用命名卷保存数据；已有实例迁移时应保留原挂载。保存为 <code>compose.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div></div><code class="language-yaml">name: authentik
+
+x-authentik-environment: &amp;authentik-environment
+  AUTHENTIK_SECRET_KEY: $&#123;AUTHENTIK_SECRET_KEY:?set secret key&#125;
+  AUTHENTIK_POSTGRESQL__HOST: postgresql
+  AUTHENTIK_POSTGRESQL__USER: authentik
+  AUTHENTIK_POSTGRESQL__NAME: authentik
+  AUTHENTIK_POSTGRESQL__PASSWORD: $&#123;PG_PASS:?set database password&#125;
+
+services:
+  postgresql:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: authentik
+      POSTGRES_DB: authentik
+      POSTGRES_PASSWORD: $&#123;PG_PASS:?set database password&#125;
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, &quot;pg_isready -U authentik -d authentik&quot;]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    image: ghcr.io/goauthentik/server:2026.8.5
+    command: server
+    restart: unless-stopped
+    environment: *authentik-environment
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    ports:
+      - &quot;127.0.0.1:19000:9000&quot;
+    volumes:
+      - data:/data
+      - ./custom-templates:/templates
+
+  worker:
+    image: ghcr.io/goauthentik/server:2026.8.5
+    command: worker
+    user: root
+    restart: unless-stopped
+    environment: *authentik-environment
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    volumes:
+      - data:/data
+      - ./custom-templates:/templates
+      - certs:/certs
+
+volumes:
+  database:
+  data:
+  certs:</code></div></pre>
+<p>这里没有给 worker 挂载 Docker socket。当前基础部署不需要它自动管理其他容器。以后使用自动部署 Outpost 的功能时，再按需要配置。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/install-config/install/docker-compose/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Finstall-config%2Finstall%2Fdocker-compose%2F">官方安装文档</a>也说明了这一挂载的用途。</p>
+<p>启动并检查服务：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">docker compose config -q
+docker compose pull
+docker compose up -d
+docker compose ps
+curl -fsS http://127.0.0.1:19000/-/health/ready/</code></div></pre>
+<p>本文保留当时使用的版本。新装其他版本时，应使用对应版本的 Compose 和升级说明，不把不同版本的组件与存储目录混在一起。</p>
+<h3 id="2-3-HTTPS-与初始管理员">2.3 HTTPS 与初始管理员</h3>
+<p>我使用 1Panel 的 OpenResty 配置 HTTPS 反向代理。示例站点为 <code>auth.example.com</code>，后端指向 <code>http://127.0.0.1:19000</code>，并开启 WebSocket 支持。需要保留请求的 <code>Host</code>，正确传递 <code>X-Forwarded-Proto</code> 和客户端转发信息，具体要求见 <a target="_blank" rel="noopener" href="https://docs.goauthentik.io/install-config/reverse-proxy/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Finstall-config%2Freverse-proxy%2F">Authentik 反向代理文档</a>。</p>
+<p>这里的回环地址要求反向代理能访问宿主机网络。如果 OpenResty 运行在独立的 Docker bridge 网络里，容器内的 <code>127.0.0.1</code> 指向 OpenResty 自己，应另行配置可达的上游地址或共享 Docker 网络。</p>
+<p>HTTPS 可用后，先从站点根地址进入，让当前版本的原生 Setup 入口启动初始化：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/</code></div></pre>
+<p>当前版本会检查初始化流程的启动上下文，不建议手工拼接 <code>initial-setup</code> URL 绕过入口。按向导设置 <code>akadmin</code> 的邮箱、密码和站点 Base URL，再进入管理员界面。这个账号保留本地登录方式，后续绑定外部身份时也从这个已登录的账号开始操作。</p>
+<h2 id="三、部署后的检查与备份">三、部署后的检查与备份</h2>
+<p>先验证本地密码登录、退出和重新登录，再修改流程。创建一个普通测试账号，保留管理员会话，用无痕窗口检查修改后的配置，避免把唯一的管理入口一起改坏。</p>
+<p>备份范围包括 PostgreSQL、<code>.env</code>、Compose 文件、<code>/data</code>、自定义模板和证书挂载。数据库使用 <code>pg_dump</code> 等一致性备份，不直接复制运行中的数据库文件。示例在部署目录执行，备份保存在宿主机：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">mkdir -p backups
+chmod 700 backups
+umask 077
+docker compose exec -T postgresql pg_dump -U authentik -d authentik -Fc \
+  &gt; &quot;backups/authentik-$(date +%Y%m%d-%H%M%S).dump&quot;</code></div></pre>
+<p>数据库备份含用户和敏感配置，不放到博客资源目录。升级前同时阅读目标版本的升级说明，server 和 worker 使用同一版本。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/flow/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fflow%2F">Authentik 流程与阶段</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/customize/branding/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fcustomize%2Fbranding%2F">Authentik 品牌</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/install-config/install/docker-compose/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Finstall-config%2Finstall%2Fdocker-compose%2F">Authentik Docker Compose 部署</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/install-config/reverse-proxy/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Finstall-config%2Freverse-proxy%2F">Authentik 反向代理</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/customize/blueprints/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fcustomize%2Fblueprints%2F">Authentik 蓝图</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/58241/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/58241/">https://www.doratiger.top/2026/11/58241/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/58242/"><span>服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/49627/"><span>NAS 折腾日记（10）Immich 部署与离线模型配置</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

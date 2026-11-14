@@ -1,0 +1,1043 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>服务器操作指北（14）Authentik 邮件通知与外部身份源【DoraTiger 的异次元】</title><meta name="description" content="前言 前两篇把 Authentik 部署起来，并配置了 DoraTiger 的登录、注册、MFA 和用户设置流程。接下来补上流程之外的连接：让服务器发邮件，让现有账号通过 Google/Microsoft 登录，以及把系统异常发送给管理员。 这部分遇到的问题比较具体：容器无法访问 Google，OAuth 回调不匹配，"><meta name="keywords" content="docker,authentik,oidc,microsoft,google"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（14）Authentik 邮件通知与外部身份源【DoraTiger 的异次元】"><meta property="og:description" content="前言 前两篇把 Authentik 部署起来，并配置了 DoraTiger 的登录、注册、MFA 和用户设置流程。接下来补上流程之外的连接：让服务器发邮件，让现有账号通过 Google/Microsoft 登录，以及把系统异常发送给管理员。 这部分遇到的问题比较具体：容器无法访问 Google，OAuth 回调不匹配，"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/58243/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/58243/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（14）Authentik 邮件通知与外部身份源","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-14T13:19:43.000Z","dateModified":"2026-11-14T14:29:53.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/58243/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%85%A8%E5%B1%80-SMTP"><span class="toc-text">一、全局 SMTP</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E9%98%BF%E9%87%8C%E4%BA%91%E4%BC%81%E4%B8%9A%E9%82%AE%E7%AE%B1"><span class="toc-text">1.1 阿里云企业邮箱</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%BA%94%E7%94%A8%E4%B8%8E%E9%AA%8C%E8%AF%81"><span class="toc-text">1.2 应用与验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%BB%9F%E4%B8%80%E9%82%AE%E4%BB%B6%E5%93%81%E7%89%8C%E6%A8%A1%E6%9D%BF"><span class="toc-text">二、统一邮件品牌模板</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%96%87%E4%BB%B6%E4%B8%8E%E6%8C%82%E8%BD%BD"><span class="toc-text">2.1 文件与挂载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%82%AE%E4%BB%B6%E5%86%85%E5%B5%8C-Logo"><span class="toc-text">2.2 邮件内嵌 Logo</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%82%AE%E4%BB%B6%E6%A8%A1%E6%9D%BF%E5%BC%95%E7%94%A8"><span class="toc-text">2.3 邮件模板引用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E7%AE%A1%E7%90%86%E5%91%98%E7%B3%BB%E7%BB%9F%E9%80%9A%E7%9F%A5"><span class="toc-text">三、管理员系统通知</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E9%80%9A%E7%9F%A5%E4%BC%A0%E8%BE%93%E4%B8%8E%E4%BA%8B%E4%BB%B6%E5%8C%B9%E9%85%8D%E7%AD%96%E7%95%A5"><span class="toc-text">3.1 通知传输与事件匹配策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E9%80%9A%E7%9F%A5%E8%A7%84%E5%88%99%E4%B8%8E%E6%94%B6%E4%BB%B6%E7%BB%84"><span class="toc-text">3.2 通知规则与收件组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%BB%98%E8%AE%A4%E9%80%9A%E7%9F%A5%E6%B8%85%E7%90%86"><span class="toc-text">3.3 测试与默认通知清理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Microsoft-%E4%B8%AA%E4%BA%BA%E8%B4%A6%E5%8F%B7%E7%99%BB%E5%BD%95"><span class="toc-text">四、Microsoft 个人账号登录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%A4%96%E9%83%A8%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B"><span class="toc-text">4.1 外部身份认证流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-Microsoft-%E5%BA%94%E7%94%A8%E6%B3%A8%E5%86%8C"><span class="toc-text">4.2 Microsoft 应用注册</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-Microsoft-%E8%BA%AB%E4%BB%BD%E6%BA%90"><span class="toc-text">4.3 Microsoft 身份源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-Microsoft-%E8%B4%A6%E5%8F%B7%E7%BB%91%E5%AE%9A"><span class="toc-text">4.4 Microsoft 账号绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-%E7%99%BB%E5%BD%95%E9%A1%B5%E8%BA%AB%E4%BB%BD%E6%BA%90%E5%85%A5%E5%8F%A3"><span class="toc-text">4.5 登录页身份源入口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81Google-%E8%B4%A6%E5%8F%B7%E7%99%BB%E5%BD%95"><span class="toc-text">五、Google 账号登录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-Google-OAuth-%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="toc-text">5.1 Google OAuth 客户端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-Google-%E8%BA%AB%E4%BB%BD%E6%BA%90"><span class="toc-text">5.2 Google 身份源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E6%B3%A8%E5%86%8C%E9%99%90%E5%88%B6%E4%B8%8E%E8%B4%A6%E5%8F%B7%E5%8C%B9%E9%85%8D"><span class="toc-text">5.3 注册限制与账号匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-Google-%E8%B4%A6%E5%8F%B7%E7%BB%91%E5%AE%9A"><span class="toc-text">5.4 Google 账号绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E7%99%BB%E5%BD%95%E5%85%A5%E5%8F%A3%E4%B8%8E%E5%8A%9F%E8%83%BD%E9%AA%8C%E8%AF%81"><span class="toc-text">5.5 登录入口与功能验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%AE%B9%E5%99%A8%E5%87%BA%E7%AB%99%E4%BB%A3%E7%90%86"><span class="toc-text">六、容器出站代理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1"><span class="toc-text">6.1 代理服务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%85%B1%E4%BA%AB-Docker-%E7%BD%91%E7%BB%9C"><span class="toc-text">6.2 共享 Docker 网络</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%9C%A8-Authentik-%E5%AE%B9%E5%99%A8%E5%86%85%E9%AA%8C%E8%AF%81"><span class="toc-text">6.3 在 Authentik 容器内验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E7%AE%A1%E7%90%86%E5%91%98%E9%82%80%E8%AF%B7%E5%85%A5%E5%8F%A3"><span class="toc-text">七、管理员邀请入口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E8%BE%93%E5%85%A5%E4%B8%8E%E6%B5%81%E7%A8%8B"><span class="toc-text">7.1 输入与流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E9%82%80%E8%AF%B7%E5%88%9B%E5%BB%BA%E4%B8%8E%E5%8F%91%E4%BF%A1%E7%AD%96%E7%95%A5"><span class="toc-text">7.2 邀请创建与发信策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E5%BA%94%E7%94%A8%E5%85%A5%E5%8F%A3%E4%B8%8E%E8%AE%BF%E9%97%AE%E7%AD%96%E7%95%A5"><span class="toc-text">7.3 应用入口与访问策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E9%82%80%E8%AF%B7%E5%8F%91%E9%80%81%E9%AA%8C%E8%AF%81"><span class="toc-text">7.4 邀请发送验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C%E4%B8%8E%E7%BB%B4%E6%8A%A4"><span class="toc-text">八、验证结果与维护</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">九、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E5%85%A8%E5%B1%80-SMTP-%E4%B8%8E%E9%98%B6%E6%AE%B5-SMTP"><span class="toc-text">9.1 全局 SMTP 与阶段 SMTP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-%E9%82%AE%E4%BB%B6%E9%A1%B6%E9%83%A8-Logo-%E7%A0%B4%E5%9B%BE"><span class="toc-text">9.2 邮件顶部 Logo 破图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E9%80%9A%E7%9F%A5%E6%B5%8B%E8%AF%95%E4%BA%8B%E4%BB%B6%E6%B2%A1%E6%9C%89%E5%91%BD%E4%B8%AD%E8%A7%84%E5%88%99"><span class="toc-text">9.3 通知测试事件没有命中规则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-4-Microsoft-%E5%9B%9E%E8%B0%83%E5%9C%B0%E5%9D%80%E4%B8%8D%E5%8C%B9%E9%85%8D"><span class="toc-text">9.4 Microsoft 回调地址不匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-5-%E5%A4%96%E9%83%A8%E7%99%BB%E5%BD%95%E5%88%9B%E5%BB%BA%E4%BA%86%E7%AC%AC%E4%BA%8C%E4%B8%AA%E7%94%A8%E6%88%B7"><span class="toc-text">9.5 外部登录创建了第二个用户</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-6-Google-%E5%8F%91%E7%8E%B0%E6%96%87%E6%A1%A3%E8%AF%B7%E6%B1%82%E8%B6%85%E6%97%B6"><span class="toc-text">9.6 Google 发现文档请求超时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-7-%E5%AE%8C%E6%95%B4%E8%AE%A2%E9%98%85%E5%8F%AA%E5%8A%A0%E8%BD%BD%E8%8A%82%E7%82%B9"><span class="toc-text">9.7 完整订阅只加载节点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-8-%E9%82%80%E8%AF%B7%E5%85%A5%E5%8F%A3%E7%9B%B4%E6%8E%A5%E8%B7%B3%E8%BD%AC%E6%88%96%E5%9C%B0%E5%9D%80%E4%B8%8D%E5%AD%98%E5%9C%A8"><span class="toc-text">9.8 邀请入口直接跳转或地址不存在</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-9-%E9%87%8D%E5%A4%8D%E9%82%80%E8%AF%B7%E4%B8%8E%E9%82%AE%E4%BB%B6%E6%9C%AA%E9%80%81%E8%BE%BE"><span class="toc-text">9.9 重复邀请与邮件未送达</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color9"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color8"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">74</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">142</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（14）Authentik 邮件通知与外部身份源</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-14</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-14</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/oidc/">oidc</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/microsoft/">microsoft</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/google/">google</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">24880 字 · 约 83 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>前两篇把 Authentik 部署起来，并配置了 DoraTiger 的登录、注册、MFA 和用户设置流程。接下来补上流程之外的连接：让服务器发邮件，让现有账号通过 Google/Microsoft 登录，以及把系统异常发送给管理员。</p>
+<p>这部分遇到的问题比较具体：容器无法访问 Google，OAuth 回调不匹配，外部登录误建账号，收到的品牌邮件顶部图片加载失败。下面按最终配置整理，仍以 <code>2026.8.5</code> 为准，域名和发件账号使用示例。</p>
+<span id="more"></span>
+<p>前置文章：<a href="/2026/11/58241/" title="服务器操作指北（12）Authentik 基本概念、默认配置与部署">服务器操作指北（12）Authentik 基本概念、默认配置与部署</a>、<a href="/2026/11/58242/" title="服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理">服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理</a>。示例部署目录沿用 <code>/srv/example/authentik</code>，Compose 服务名为 <code>server</code>、<code>worker</code>、<code>postgresql</code>。</p>
+<p>各功能的配置位置不同。SMTP 和模板挂载在宿主机部署目录修改；通知传输、匹配策略、规则和身份源在 Authentik 管理员界面创建；Microsoft、Google 的 OAuth 客户端则在各自的云控制台注册。用户的外部账号绑定从 Authentik 用户设置中完成。</p>
+<p>本文继续使用 <code>doratiger-</code> 作为对象名称前缀。流程的 Slug、Source 的 Slug 都会进入 URL；阶段、策略、传输和规则表中的名称填入各自的 Name。中文用途放在名称旁说明，避免把标识符与界面字段混在一起。</p>
+<h2 id="一、全局-SMTP">一、全局 SMTP</h2>
+<h3 id="1-1-阿里云企业邮箱">1.1 阿里云企业邮箱</h3>
+<p>本次使用中国内地站点的阿里云企业邮箱，邮箱侧先启用 SMTP 并准备授权码。示例发件地址为 <code>noreply@example.com</code>，接收测试及异常通知的是管理员用户已保存的邮箱。</p>
+<p>先在“目录 → 用户”打开管理员账号，确认 Email 字段是实际接收通知的邮箱。发件邮箱 <code>noreply@example.com</code> 配置在 SMTP 中，收件地址来自用户资料，两者不必相同。</p>
+<p>登录部署宿主机，在 <code>/srv/example/authentik</code> 中编辑已有 <code>.env</code>，保留原数据库密码和 Authentik 密钥，追加以下配置。阿里云内地站点的 SMTP 主机与 SSL 端口可对照<a target="_blank" rel="noopener" href="https://help.aliyun.com/zh/document_detail/36576.html" class="external-link" data-redirect="https%3A%2F%2Fhelp.aliyun.com%2Fzh%2Fdocument_detail%2F36576.html">服务商说明</a>：</p>
+<pre><div class="code-header"><span class="code-header-type">dotenv</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-dotenv">AUTHENTIK_EMAIL__HOST=smtp.qiye.aliyun.com
+AUTHENTIK_EMAIL__PORT=465
+AUTHENTIK_EMAIL__USERNAME=noreply@example.com
+AUTHENTIK_EMAIL__PASSWORD=REPLACE_WITH_SMTP_AUTHORIZATION_CODE
+AUTHENTIK_EMAIL__USE_TLS=false
+AUTHENTIK_EMAIL__USE_SSL=true
+AUTHENTIK_EMAIL__TIMEOUT=30
+AUTHENTIK_EMAIL__FROM=DoraTiger Auth &lt;noreply@example.com&gt;</code></div></pre>
+<p>授权码只保存在自己的部署环境中，特殊字符的引用与转义按 Compose 语法处理。邮箱服务商、站点不同，主机和 TLS 参数也可能不同；不要照抄到海外邮箱或其他服务商。</p>
+<p>只写 <code>.env</code> 不会自动把任意变量放进容器。第一篇使用共享环境变量锚点，因此还要在 <code>compose.yaml</code> 的 <code>x-authentik-environment</code> 中补上以下键；这是插入片段，不是整份文件：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-yaml">  AUTHENTIK_EMAIL__HOST: $&#123;AUTHENTIK_EMAIL__HOST&#125;
+  AUTHENTIK_EMAIL__PORT: $&#123;AUTHENTIK_EMAIL__PORT&#125;
+  AUTHENTIK_EMAIL__USERNAME: $&#123;AUTHENTIK_EMAIL__USERNAME&#125;
+  AUTHENTIK_EMAIL__PASSWORD: $&#123;AUTHENTIK_EMAIL__PASSWORD&#125;
+  AUTHENTIK_EMAIL__USE_TLS: $&#123;AUTHENTIK_EMAIL__USE_TLS&#125;
+  AUTHENTIK_EMAIL__USE_SSL: $&#123;AUTHENTIK_EMAIL__USE_SSL&#125;
+  AUTHENTIK_EMAIL__TIMEOUT: $&#123;AUTHENTIK_EMAIL__TIMEOUT&#125;
+  AUTHENTIK_EMAIL__FROM: $&#123;AUTHENTIK_EMAIL__FROM&#125;</code></div></pre>
+<p>465 使用隐式 TLS，对应 USE_SSL；587 常见 STARTTLS，对应 USE_TLS。两者不要同时开启。全局 SMTP 在部署配置中设置，UI 的 Email Stage 可以使用自己的 SMTP，但那不会替代系统通知使用的全局配置。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/install-config/email/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Finstall-config%2Femail%2F">官方邮件配置</a></p>
+<h3 id="1-2-应用与验证">1.2 应用与验证</h3>
+<p>在宿主机部署目录执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">chmod 600 .env
+docker compose config -q
+docker compose up -d --no-deps server worker
+docker compose exec worker ak test_email admin@example.com</code></div></pre>
+<p>最后一条会真实发送邮件，应换成自己的测试收件地址。先检查收件箱和垃圾邮件，再从实际注册或找回密码流程测试。命令成功、任务入队、SMTP 提交成功和最终收件是不同检查点。</p>
+<p>再进入“流程和阶段 → 阶段”，分别编辑注册验证邮件阶段 <code>doratiger-enrollment-email-verification</code> 和密码恢复邮件阶段 <code>doratiger-recovery-email</code>，开启 Use global connection settings 并保存。这样两个阶段都使用部署中的 SMTP 参数，不需要重复填写授权码。</p>
+<p>不要连带修改它们的激活行为：注册验证阶段的 Activate user on success 保持开启，密码恢复阶段保持关闭。全局发信测试通过后，再用测试账号分别走一次注册验证和密码恢复，检查收件及链接执行结果。</p>
+<h2 id="二、统一邮件品牌模板">二、统一邮件品牌模板</h2>
+<h3 id="2-1-文件与挂载">2.1 文件与挂载</h3>
+<p>网页品牌 Logo 不会自动替换所有邮件图片。自定义邮件模板放在 <code>/templates</code>，本例由宿主机 <code>./custom-templates</code> 挂入 server 和 worker。</p>
+<p>这次使用的脱敏模板整理成了附件：<a href="/2026/11/58243/doratiger-mail-templates.tar.gz" title="邮件模板包">邮件模板包</a>。包含 <code>base.html</code>，以及邀请、账号验证、密码恢复、事件通知四组 HTML/TXT 模板；域名统一替换为 <code>auth.example.com</code>，不含账号、邀请令牌和 Logo 图片。</p>
+<p>把下载的压缩包放到部署目录，解压后应为：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">mkdir -p custom-templates
+tar -xzf doratiger-mail-templates.tar.gz -C custom-templates</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-text">custom-templates/email/doratiger/
+├── base.html
+├── invitation.html / invitation.txt
+├── account_confirmation.html / account_confirmation.txt
+├── password_reset.html / password_reset.txt
+├── event_notification.html / event_notification.txt
+└── logo.png  # 自行放入现有品牌 PNG</code></div></pre>
+<p>先检查并替换模板中的 <code>auth.example.com</code> 为自己的认证域名，再使用。HTML 的用户字段保持 Django 自动转义，链接由 Authentik 提供。HTML 与同名 TXT 一起存在时，可提供 HTML 和纯文本邮件。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/email/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Femail%2F">模板说明</a></p>
+<p>共用模板负责页头、Logo、正文容器和页脚，四种子模板只写各自内容。注册验证和密码恢复不要混用文案：前者继续注册，后者设置新密码。</p>
+<p>核对 <code>compose.yaml</code> 中 server 和 worker 的 volumes。沿用基础部署时已经有下面这一项；如果没有，在两个服务的原有列表中各追加一次，不覆盖数据或证书挂载：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-yaml">- ./custom-templates:/templates:ro</code></div></pre>
+<p>宿主机的 <code>custom-templates/email/doratiger/invitation.html</code> 因此对应容器内的 <code>/templates/email/doratiger/invitation.html</code>。UI 和策略里的模板名称填写 <code>email/doratiger/invitation.html</code>，不带 <code>/templates/</code> 前缀。若已有同一目录的挂载，直接保留，不重复添加。</p>
+<p>替换域名、放好 Logo 并完成挂载后再重建容器。可以先在部署目录检查文件和模板引用：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">test -f custom-templates/email/doratiger/base.html
+test -f custom-templates/email/doratiger/invitation.html
+rg -n 'auth\.example\.com|cid:logo' custom-templates/email/doratiger</code></div></pre>
+<p>第一项搜索用于发现尚未替换的示例域名，第二项用于确认内嵌 Logo 引用仍然存在。</p>
+<h3 id="2-2-邮件内嵌-Logo">2.2 邮件内嵌 Logo</h3>
+<p>当前版本的邮件发送代码识别正文中的 <code>cid:logo</code>，并从 <code>web/dist/assets/icons/icon_left_brand.png</code> 读取图片作为内嵌附件。于是将共用模板的图片改为：</p>
+<pre><div class="code-header"><span class="code-header-type">html</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-html">&lt;img src=&quot;cid:logo&quot; width=&quot;258&quot; alt=&quot;DoraTiger Auth&quot;
+     style=&quot;display:block;max-width:100%;height:auto;border:0;&quot;&gt;</code></div></pre>
+<p>在 server 和 worker 原有 volumes 列表中各追加这一项，其他数据、证书和模板挂载保留：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-yaml">- ./custom-templates/email/doratiger/logo.png:/web/dist/assets/icons/icon_left_brand.png:ro</code></div></pre>
+<p>这里利用的是 <code>2026.8.5</code> 的原生 CID 发送机制，但图片路径属于镜像内部实现，不是一个“邮件品牌 Logo”配置项。升级后应复核路径及收件效果。该挂载也会影响其他引用此内嵌 Logo 的邮件。</p>
+<p>确认源文件确实是 PNG，再重建应用容器：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">test -f custom-templates/email/doratiger/logo.png
+docker compose config -q
+docker compose up -d --no-deps server worker</code></div></pre>
+<p>修改后重新发送新邮件，Outlook 和 Gmail 都已确认显示 Logo。旧邮件不会自动随模板更新。</p>
+<h3 id="2-3-邮件模板引用">2.3 邮件模板引用</h3>
+<table>
+<thead>
+<tr>
+<th>使用位置</th>
+<th>Template</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>管理员邀请策略</td>
+<td><code>email/doratiger/invitation.html</code></td>
+</tr>
+<tr>
+<td><code>doratiger-enrollment-email-verification</code></td>
+<td><code>email/doratiger/account_confirmation.html</code></td>
+</tr>
+<tr>
+<td><code>doratiger-recovery-email</code></td>
+<td><code>email/doratiger/password_reset.html</code></td>
+</tr>
+<tr>
+<td>管理员邮件通知传输</td>
+<td><code>email/doratiger/event_notification.html</code></td>
+</tr>
+</tbody>
+</table>
+<p>具体引用需要在各自对象中保存：</p>
+<ol>
+<li>注册验证：在“流程和阶段 → 阶段”编辑 <code>doratiger-enrollment-email-verification</code>，Template 改为 <code>email/doratiger/account_confirmation.html</code>，保留全局 SMTP、有效期和激活设置。</li>
+<li>密码恢复：编辑 <code>doratiger-recovery-email</code>，Template 改为 <code>email/doratiger/password_reset.html</code>，保持 Activate user on success 关闭。</li>
+<li>管理员通知：编辑邮件通知传输 <code>doratiger-admin-email</code>，在 Template 中选择或填写 <code>email/doratiger/event_notification.html</code>。</li>
+<li>管理员邀请：在邀请表达式策略的 <code>ak_send_email()</code> 调用中，将 <code>template</code> 参数设为 <code>email/doratiger/invitation.html</code>。原生邀请页的发信按钮不通过这段自定义策略，不能只改策略就认定所有邀请邮件都会使用同一模板。</li>
+</ol>
+<p>对象尚未创建时，在对应创建步骤中填写这个路径即可。保存后发送新邮件检查，不能用收件箱里的旧邮件验证模板更新。</p>
+<p>邮件日期用 <code>Asia/Shanghai</code> 显示，标明北京时间；后台日志可能显示 UTC，排查时要转换后比较。品牌模板不改变令牌生成、账号激活或密码验证逻辑。</p>
+<h2 id="三、管理员系统通知">三、管理员系统通知</h2>
+<p>通知链路由四个部分组成：事件记录描述发生了什么，Event Matcher 策略筛选事件，通知规则指定接收者和级别，通知传输决定通过邮件还是站内通知送达。登录或异常发生后系统会记录事件，不需要先手工创建一个长期保留的“异常事件”。</p>
+<h3 id="3-1-通知传输与事件匹配策略">3.1 通知传输与事件匹配策略</h3>
+<p>进入“事件 → 通知传输”，点击创建。先创建邮件传输，Name 填 <code>doratiger-admin-email</code>，Mode 选择 Email，填写主题前缀和模板，关闭 Send once 并保存。再创建站内传输，Name 填 <code>doratiger-admin-local</code>，Mode 选择 authentik inbuilt notifications，同样关闭 Send once。</p>
+<p>这两个对象分别是“管理员邮件通道”和“管理员站内通道”，字段汇总如下：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>设置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-admin-email</code></td>
+<td>Email</td>
+<td>主题前缀 <code>[DoraTiger Auth] </code>；使用上节事件模板；Send once 关闭</td>
+</tr>
+<tr>
+<td><code>doratiger-admin-local</code></td>
+<td>authentik inbuilt notifications</td>
+<td>站内通知；Send once 关闭</td>
+</tr>
+</tbody>
+</table>
+<p>Send once 不是“同类异常限流”。当前实现启用时会在一个传输的收件人循环中发送一次后停止；要让管理员组每个成员收到通知，保持关闭。</p>
+<p>进入“自定义 → 策略”，点击创建，类型选择 Event Matcher（事件匹配器）。以系统异常为例，Name 填 <code>doratiger-match-system-exception</code>，Action 选 <code>system_exception</code>，其他过滤条件留空，保存。依次按下表创建其余策略；一条策略对应一种事件动作，不把多个 Action 拼成一个字符串：</p>
+<table>
+<thead>
+<tr>
+<th>策略名称</th>
+<th>Action</th>
+<th>中文用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-match-system-exception</code></td>
+<td><code>system_exception</code></td>
+<td>系统异常</td>
+</tr>
+<tr>
+<td><code>doratiger-match-system-task-exception</code></td>
+<td><code>system_task_exception</code></td>
+<td>后台任务异常</td>
+</tr>
+<tr>
+<td><code>doratiger-match-policy-exception</code></td>
+<td><code>policy_exception</code></td>
+<td>策略执行异常</td>
+</tr>
+<tr>
+<td><code>doratiger-match-property-mapping-exception</code></td>
+<td><code>property_mapping_exception</code></td>
+<td>属性映射异常</td>
+</tr>
+<tr>
+<td><code>doratiger-match-configuration-error</code></td>
+<td><code>configuration_error</code></td>
+<td>配置错误</td>
+</tr>
+<tr>
+<td><code>doratiger-match-configuration-warning</code></td>
+<td><code>configuration_warning</code></td>
+<td>配置警告</td>
+</tr>
+<tr>
+<td><code>doratiger-match-update</code></td>
+<td><code>update_available</code></td>
+<td>可用版本更新</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-2-通知规则与收件组">3.2 通知规则与收件组</h3>
+<p>先进入“目录 → 组”确认实际的管理员组及其成员，再在“目录 → 用户”检查这些成员的 Email。这里选择已有管理员组，不新建同名空组，也不因配置收件人而授予新的管理员权限。</p>
+<p>在“事件 → 通知规则”点击创建，Name 填下表中的规则名称，Severity 选对应级别。Destination group 选择现有管理员组，Destination event user／Send notification to event user 关闭，Transports 同时选择 <code>doratiger-admin-email</code> 和 <code>doratiger-admin-local</code>，Policy engine mode 选 Any，保存。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>级别</th>
+<th>绑定策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-notify-system-errors</code></td>
+<td>Alert</td>
+<td>前五条异常策略，任意一条匹配即可</td>
+</tr>
+<tr>
+<td><code>doratiger-notify-configuration-warning</code></td>
+<td>Warning</td>
+<td>配置警告策略</td>
+</tr>
+<tr>
+<td><code>doratiger-notify-update</code></td>
+<td>Notice</td>
+<td>版本更新策略</td>
+</tr>
+</tbody>
+</table>
+<p>规则保存后，还需要绑定匹配策略：</p>
+<ol>
+<li>回到通知规则列表，展开 <code>doratiger-notify-system-errors</code> 左侧的箭头，点击“创建或绑定（Create or bind）”。</li>
+<li>选择“绑定已有策略”，选中 <code>doratiger-match-system-exception</code>，Order 填 <code>10</code>，Enabled 开启、Negate 关闭，保存。</li>
+<li>用同样方式依次绑定后台任务、策略、属性映射异常和配置错误策略，Order 分别填 <code>20、30、40、50</code>。</li>
+<li>确认系统异常规则的 Policy engine mode 为 <strong>Any</strong>。一个事件通常只具有一种 Action，这里需要任意一种异常命中即发送，不能要求五种 Action 同时匹配。</li>
+<li>展开配置警告规则，绑定 <code>doratiger-match-configuration-warning</code>；展开版本更新规则，绑定 <code>doratiger-match-update</code>。两条绑定的 Order 均可填 <code>10</code>，Enabled 开启、Negate 关闭。</li>
+</ol>
+<p>策略绑定在通知规则上，不放进登录流程或 Prompt Stage 的 Validation Policies。保存后逐条展开规则，检查收件组、两个传输和策略绑定都存在。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/sys-mgmt/events/notifications/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fsys-mgmt%2Fevents%2Fnotifications%2F">官方通知规则配置</a></p>
+<p>确认管理员用户资料里有正确邮箱。事件是谁触发的，与通知发给谁是两回事；这里固定通知管理员组，不发给每个事件的操作者。</p>
+<p>规则没有包含 <code>login_failed</code> 或 <code>email_sent</code>，因此不会把普通输错密码和通知发送成功也当作系统异常。当前逐事件通知，没有合并风暴或同类异常限流。</p>
+<h3 id="3-3-测试与默认通知清理">3.3 测试与默认通知清理</h3>
+<p>检查时先确认全局 SMTP 测试能够收件，再核对通知规则的配置。触发或遇到符合规则的事件后，按以下顺序查看：</p>
+<ol>
+<li>“事件 → 日志”：找到原始事件，确认 Action 与策略中的值一致。</li>
+<li>管理员用户的通知列表：检查站内通知是否出现，级别是否符合规则。</li>
+<li>“事件 → 日志”及后台任务：检查对应邮件发送记录或任务失败信息。</li>
+<li>管理员邮箱：检查实际收件、主题前缀、正文与 Logo。</li>
+</ol>
+<p>已有真实错误日志可用于核对事件字段，但不能仅凭旧事件存在就判断新规则已成功发送通知。不要通过故意填错生产数据库或 SMTP 凭据来制造异常。</p>
+<p>本次通过一条明确标注测试的配置错误事件检查整条链路，确认生成一条站内通知，并产生对应的 <code>email_sent</code> 记录。邮件采用内嵌品牌 Logo。发送成功事件说明 SMTP 提交完成，实际收件仍需检查邮箱。</p>
+<p>验证后停用 <code>Default - Events Transport &amp; Rules</code> 蓝图，删除旧的配置错误、配置警告、异常规则及对应匹配策略。版本更新保留功能，使用上面自建的规则和策略；当所有规则都已使用自建传输时，再删除 <code>default-email-transport</code> 和 <code>default-local-transport</code>。</p>
+<p>这套通知依赖 Authentik 和 worker 仍能运行、SMTP 仍能连接。整台服务器停机需要外部监控，不能指望停机的服务给自己发信。</p>
+<h2 id="四、Microsoft-个人账号登录">四、Microsoft 个人账号登录</h2>
+<h3 id="4-1-外部身份认证流程">4.1 外部身份认证流程</h3>
+<p>进入“流程和阶段 → 流程”创建一个供外部身份返回后使用的流程：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填写内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>DoraTiger 外部身份认证</td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>doratiger-source-authentication</code></td>
+</tr>
+<tr>
+<td>Title</td>
+<td>完成身份验证</td>
+</tr>
+<tr>
+<td>Designation</td>
+<td>Authentication（认证）</td>
+</tr>
+<tr>
+<td>Authentication requirement</td>
+<td>Require unauthenticated（要求未登录）</td>
+</tr>
+</tbody>
+</table>
+<p>保存后打开“阶段绑定”，两次选择“绑定已有阶段”：Order <code>10</code> 选择 MFA 验证阶段 <code>doratiger-login-mfa</code>，Order <code>100</code> 选择会话建立阶段 <code>doratiger-login-session</code>。这两个阶段已经在本地登录配置中创建，不再复制一份。上游 Source 完成身份验证后，该流程继续验证本地 MFA 并建立会话。</p>
+<p>在“自定义 → 策略”创建 Expression Policy（表达式策略），Name 填 <code>doratiger-source-authentication-if-sso</code>，Expression 填：</p>
+<pre><div class="code-header"><span class="code-header-type">python</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-python">return ak_is_sso_flow</code></div></pre>
+<p>保存策略后，返回“DoraTiger 外部身份认证”流程详情，打开“策略／组／用户绑定”，点击创建或绑定，选择已有策略 <code>doratiger-source-authentication-if-sso</code>，Order 填 <code>0</code>，Enabled 开启、Negate 关闭并保存。</p>
+<p>这里绑定到整个流程，不绑定到某个阶段，也不放进表单校验。它限定从外部身份认证上下文进入，避免把仅含 MFA 和登录的流程作为任意直接登录入口。直接打开流程 URL 被拒绝不代表配置失败，测试应从 Source 按钮发起。</p>
+<p>Google 和 Microsoft 的 Authentication flow 都选择它；Enrollment flow 留空，User matching mode 选择 identifier。本文使用的是登录页 Source 按钮，不是另行把 Source Stage 插入一个外层流程，两种集成的恢复执行机制不能混用。</p>
+<h3 id="4-2-Microsoft-应用注册">4.2 Microsoft 应用注册</h3>
+<p>在 <a target="_blank" rel="noopener" href="https://entra.microsoft.com/" class="external-link" data-redirect="https%3A%2F%2Fentra.microsoft.com%2F">Microsoft Entra 管理中心</a>进入“应用程序 → 应用注册”，点击“新注册”。Name 可填 <code>DoraTiger Auth</code>，用于在微软控制台辨认这个 OAuth 客户端。</p>
+<p>Supported account types 要包含个人 Microsoft 账号。本例只允许个人账号登录，按控制台可用选项选择个人账号类型；如果选择“任何组织目录中的账号和个人 Microsoft 账号”，它允许的范围更大，仍需用身份源端点限定本例的登录入口。应用注册需要有相应目录和应用管理权限，个人 Hotmail 邮箱作为登录身份与管理应用注册的权限是两件事。</p>
+<p>为应用添加 Web 平台，注册以下回调地址。这里约定 Authentik Source 的 slug 为 <code>microsoft</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/source/oauth/callback/microsoft/</code></div></pre>
+<p>完成注册后，在 Overview 记录 Application（client）ID。进入“Certificates &amp; secrets → Client secrets → New client secret”，填写用途和有效期，创建后保存密钥的 <strong>Value</strong>，不是 Secret ID。密钥只在创建时完整显示，到期前需要更换。</p>
+<p>在 API permissions 中检查 Microsoft Graph 的委托权限，身份识别使用 <code>openid</code>、<code>profile</code>、<code>email</code> 和 <code>User.Read</code>；本例不同步组织组，不申请 <code>GroupMember.Read.All</code>。组织目录要求管理员同意时，由对应管理员处理；个人账号登录不要照搬组织组同步配置。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/users-sources/sources/social-logins/entra-id/oauth/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fusers-sources%2Fsources%2Fsocial-logins%2Fentra-id%2Foauth%2F">Authentik Entra OAuth 配置</a></p>
+<h3 id="4-3-Microsoft-身份源">4.3 Microsoft 身份源</h3>
+<p>回到 Authentik 管理员界面，进入“目录 → 联合认证与社交登录（Federation and Social login）”，点击创建，类型选择 Entra ID OAuth Source。按表填写：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填写内容</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Microsoft</td>
+<td>后台和身份源按钮的名称</td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>microsoft</code></td>
+<td>必须与微软端回调路径末段一致</td>
+</tr>
+<tr>
+<td>Enabled</td>
+<td>开启</td>
+<td>启用身份源</td>
+</tr>
+<tr>
+<td>Consumer key</td>
+<td>微软 Application（client）ID</td>
+<td>标识 OAuth 客户端</td>
+</tr>
+<tr>
+<td>Consumer secret</td>
+<td>客户端密钥 Value</td>
+<td>服务端交换令牌时使用</td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td>DoraTiger 外部身份认证</td>
+<td>选择已创建的自建流程</td>
+</tr>
+<tr>
+<td>Enrollment flow</td>
+<td>留空</td>
+<td>禁止该身份源创建新用户</td>
+</tr>
+<tr>
+<td>User matching mode</td>
+<td>Use the source-specific identifier</td>
+<td>仅按已建立的外部身份关联匹配</td>
+</tr>
+</tbody>
+</table>
+<p>Consumer key 和 secret 属于 Protocol settings。展开 URL settings，检查下面的授权和令牌端点，填写后保存，再打开身份源详情核对 Callback URL。</p>
+<p>微软端点中的租户部分也要与应用支持的账号类型匹配：</p>
+<table>
+<thead>
+<tr>
+<th>端点中的值</th>
+<th>适用账号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>consumers</code></td>
+<td>个人 Microsoft 账号</td>
+</tr>
+<tr>
+<td><code>organizations</code></td>
+<td>工作或学校账号</td>
+</tr>
+<tr>
+<td><code>common</code></td>
+<td>工作或学校账号，以及个人账号；还受应用注册的账号类型限制</td>
+</tr>
+<tr>
+<td>具体租户 ID</td>
+<td>指定组织租户</td>
+</tr>
+</tbody>
+</table>
+<p>本次最终使用 <code>consumers</code>。对应的授权和令牌端点为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize
+https://login.microsoftonline.com/consumers/oauth2/v2.0/token</code></div></pre>
+<p>用户资料接口使用 <code>https://graph.microsoft.com/v1.0/me</code>，属性映射保留 Entra ID Source 的原生配置；不要为个人账号额外创建组织组映射。<code>common</code> 并不专指个人账号；不能只改端点而忽略应用注册中的账号类型。<a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/entra/identity-platform/msal-client-application-configuration" class="external-link" data-redirect="https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fentra%2Fidentity-platform%2Fmsal-client-application-configuration">微软文档</a>对这些取值有具体说明。</p>
+<h3 id="4-4-Microsoft-账号绑定">4.4 Microsoft 账号绑定</h3>
+<ol>
+<li>先用本地密码和 MFA 登录要绑定的 Authentik 账号，确认当前用户正确。</li>
+<li>切换到用户界面，进入“Settings → Sources”，找到 Microsoft，点击连接。</li>
+<li>在微软页面选择自己的个人账号，完成授权并返回 Authentik。</li>
+<li>在外部身份列表确认 Microsoft 已连接，再用无痕窗口从 Microsoft 登录入口测试。</li>
+<li>登录后核对用户名和原有权限，并检查用户列表没有新增同邮箱账号。</li>
+</ol>
+<p>如果已经误建了用户，先检查外部身份连接归属，再处理解绑和重新绑定，不要直接把新用户升成管理员来掩盖账号重复的问题。本次已经将 Microsoft 身份绑定到原管理员，并关闭了该 Source 的注册流程。</p>
+<h3 id="4-5-登录页身份源入口">4.5 登录页身份源入口</h3>
+<p>登录页上的按钮由认证流程中的 Identification Stage 决定。Source 创建成功后，还要把它加入这个阶段的 Sources 列表。这一步不需要编写 Expression Policy。</p>
+<p>在管理员界面按以下顺序操作：</p>
+<ol>
+<li>打开 <strong>Flows and Stages → Flows</strong>。</li>
+<li>进入 <code>doratiger-authentication</code>。</li>
+<li>打开 <strong>Stage Bindings</strong>，找到 <code>doratiger-login-identification</code>。</li>
+<li>点击 <strong>Edit Stage</strong>，在 <strong>Source settings → Sources</strong> 中把 Microsoft 移到 <strong>Selected Sources</strong>。Google 创建完成后也在这里添加，保留已经选中的其他身份源。</li>
+<li>开启 <strong>Show source labels</strong>，让按钮显示名称，然后保存。</li>
+</ol>
+<p>这里编辑的是已绑定的阶段，不需要新建一个同名 Flow，也不需要删除原有的用户名、密码认证阶段。如果使用了自定义 Brand 或认证 Flow，应先确认该入口实际使用的 Flow，再修改其中的 Identification Stage。</p>
+<p>保存后打开无痕窗口访问自建登录页：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/if/flow/doratiger-authentication/</code></div></pre>
+<p>本次 Microsoft 和 Google 都已加入该阶段。匿名访问自建流程时，返回的登录挑战中包含两个身份源入口。自建流程的配置位置也可对照 <a target="_blank" rel="noopener" href="https://docs.goauthentik.io/users-sources/sources/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fusers-sources%2Fsources%2F">官方登录页配置说明</a>。</p>
+<p><strong>显示按钮只决定入口是否可见，不等于允许注册。</strong> 外部身份能否找到本地用户、能否创建新用户，要继续看 Source 自己的匹配模式与注册流程。</p>
+<h2 id="五、Google-账号登录">五、Google 账号登录</h2>
+<h3 id="5-1-Google-OAuth-客户端">5.1 Google OAuth 客户端</h3>
+<p>在 <a target="_blank" rel="noopener" href="https://console.cloud.google.com/" class="external-link" data-redirect="https%3A%2F%2Fconsole.cloud.google.com%2F">Google Cloud Console</a>选择或新建一个项目，确认当前项目正确。进入 Google Auth platform；如果尚未初始化，按引导填写应用信息。在已有配置中，分别检查 Branding、Audience 和 Data Access：<a target="_blank" rel="noopener" href="https://developers.google.com/workspace/guides/configure-oauth-consent" class="external-link" data-redirect="https%3A%2F%2Fdevelopers.google.com%2Fworkspace%2Fguides%2Fconfigure-oauth-consent">Google 同意屏幕配置</a></p>
+<table>
+<thead>
+<tr>
+<th>配置位置</th>
+<th>填写内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Branding → App name</td>
+<td>DoraTiger Auth</td>
+</tr>
+<tr>
+<td>User support email、联系邮箱</td>
+<td>自己可接收通知的邮箱</td>
+</tr>
+<tr>
+<td>Authorized domains</td>
+<td>自己控制的域名，示例为 <code>example.com</code></td>
+</tr>
+<tr>
+<td>Audience</td>
+<td>External，供个人 Google 账号使用</td>
+</tr>
+<tr>
+<td>Test users</td>
+<td>测试状态下加入实际参与测试的账号</td>
+</tr>
+<tr>
+<td>Data Access</td>
+<td>仅保留登录需要的基本身份信息，不增加 Drive、Gmail 等业务权限</td>
+</tr>
+</tbody>
+</table>
+<p>旧版控制台从“API 与服务 → OAuth 同意屏幕”进入。下面是 <a target="_blank" rel="noopener" href="https://docs.goauthentik.io/users-sources/sources/social-logins/google/cloud/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fusers-sources%2Fsources%2Fsocial-logins%2Fgoogle%2Fcloud%2F">Authentik 官方教程</a>保留的旧版入口截图，不是当前实例的截图；新版对应 Google Auth platform 的配置页面。</p>
+<p><img src="https://cdn.superheaoz.top/images/2026/11/58243/official-google-consent.png" data-cdn-image-fallback-src="official-google-consent.png" alt="官方旧版 Google OAuth 同意屏幕入口"></p>
+<p>同意屏幕配置完成后，在 Clients 中创建 OAuth 客户端；旧版位置为“凭据 → 创建凭据 → OAuth 客户端 ID”。Application type 选择 <strong>Web application</strong>，Name 可填 <code>DoraTiger Auth</code>，在 <strong>Authorized redirect URIs</strong> 添加：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/source/oauth/callback/google/</code></div></pre>
+<p><img src="https://cdn.superheaoz.top/images/2026/11/58243/official-google-client.png" data-cdn-image-fallback-src="official-google-client.png" alt="官方 Google Web application 客户端与回调地址示例"></p>
+<p>图中的 <code>authentik.company</code> 是官方示例，本文使用 <code>auth.example.com</code>。回调应填在 Authorized redirect URIs，不填到 Authorized JavaScript origins。保存后记录 Client ID 和 Client Secret，供 Authentik 使用。</p>
+<h3 id="5-2-Google-身份源">5.2 Google 身份源</h3>
+<p>在 Authentik 的“目录 → 联合认证与社交登录”点击创建，选择 Google OAuth Source，填写：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填写内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Google</td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>google</code></td>
+</tr>
+<tr>
+<td>Enabled</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>Consumer key</td>
+<td>Google OAuth 客户端的 Client ID</td>
+</tr>
+<tr>
+<td>Consumer secret</td>
+<td>对应的 Client Secret</td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td>DoraTiger 外部身份认证（<code>doratiger-source-authentication</code>）</td>
+</tr>
+<tr>
+<td>Enrollment flow</td>
+<td>留空</td>
+</tr>
+<tr>
+<td>User matching mode</td>
+<td>Use the source-specific identifier（<code>identifier</code>）</td>
+</tr>
+</tbody>
+</table>
+<p>Google Source 的协议端点和基本身份映射采用原生配置，不额外添加用户名或邮箱自动关联策略。保存后核对 Callback URL 与 Google 客户端完全一致。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/users-sources/sources/social-logins/google/cloud/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fusers-sources%2Fsources%2Fsocial-logins%2Fgoogle%2Fcloud%2F">Google Source 配置</a></p>
+<p>保存及登录过程中，Authentik 服务端需要访问 Google 的发现文档和令牌接口。若容器无法访问，先完成容器出站代理配置并验证网络，再回来保存和测试身份源。浏览器能打开 Google 不能替代这项检查。</p>
+<h3 id="5-3-注册限制与账号匹配">5.3 注册限制与账号匹配</h3>
+<p>创建时就保持 Enrollment flow 为空、匹配模式为 identifier。已有 Google Source 则按下面的方法检查并修改，避免测试匿名登录时创建第二个账号。</p>
+<p>在管理员界面打开 <strong>Directory → Federation and Social login</strong>，编辑 Google OAuth Source。不同语言界面可能将该菜单翻译为“联合认证与社交登录”，需要修改的是 Source 本身。</p>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>本次设置</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enabled</td>
+<td>开启</td>
+<td>保留 Google 身份源可用</td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td><code>doratiger-source-authentication</code></td>
+<td>已关联用户完成外部认证后继续登录</td>
+</tr>
+<tr>
+<td>Enrollment flow</td>
+<td>清空，不选择任何流程</td>
+<td>禁止通过这个 Source 注册本地新用户</td>
+</tr>
+<tr>
+<td>User matching mode</td>
+<td><code>Use the source-specific identifier</code>（<code>identifier</code>）</td>
+<td>按已建立的来源身份关联识别用户</td>
+</tr>
+</tbody>
+</table>
+<p>找到 <strong>Enrollment flow</strong>，移除原来选中的 <code>default-source-enrollment</code>，使这个字段为空，然后保存。这里清空的是 Google Source 对注册流程的引用，<strong>不要删除全局的 <code>default-source-enrollment</code> Flow</strong>，其他身份源可能仍在使用它。</p>
+<p>保留 Authentication flow，并将 User matching mode 设为 <code>identifier</code>。这样，已绑定的 Google 身份通过已有连接找到对应本地用户；未绑定身份不会仅因邮箱相同就自动连到本地账号。</p>
+<p>几个容易混淆的匹配选项如下：</p>
+<table>
+<thead>
+<tr>
+<th>匹配方式</th>
+<th>行为与本次取舍</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>identifier</code></td>
+<td>使用身份源唯一标识及已保存的关联；本次采用</td>
+</tr>
+<tr>
+<td><code>email_link</code></td>
+<td>按相同邮箱自动关联已有用户；本次不采用</td>
+</tr>
+<tr>
+<td><code>username_link</code></td>
+<td>按相同用户名自动关联已有用户；本次不采用</td>
+</tr>
+<tr>
+<td><code>email_deny</code> / <code>username_deny</code></td>
+<td>遇到重复邮箱或用户名时拒绝注册；这不等于关闭所有新用户注册</td>
+</tr>
+</tbody>
+</table>
+<p>单独清空 Enrollment flow 只控制该身份源的注册路径，不会关闭整个 Authentik 的其他注册入口。也不能只看界面上有没有“注册”按钮来判断是否允许注册。</p>
+<h3 id="5-4-Google-账号绑定">5.4 Google 账号绑定</h3>
+<p>采用上述设置后，已有本地账号仍可主动绑定 Google。操作顺序是：</p>
+<ol>
+<li>先用本地密码登录要绑定的 Authentik 账号，确认当前用户正确。</li>
+<li>在用户界面进入 <strong>Settings → Sources</strong>，找到 Google 并选择连接。当前版本的设置入口也可通过 <code>/if/user/#/settings;page-sources</code> 进入。</li>
+<li>跳转到 Google 后选择自己的账号，完成授权并返回 Authentik。</li>
+<li>在外部身份列表中确认 Google 已连接，再用无痕窗口从登录页测试 Google 登录。</li>
+</ol>
+<p>这里验证了本地账号和外部账号两边的身份，随后保存关联。未登录时直接点 Google，是尝试用 Google 登录本地账号，不是给某个指定本地账号添加绑定。</p>
+<p>管理员为其他人提供这种登录方式时，应先创建其本地用户，并让用户完成本地登录后自行绑定。不要为了省掉绑定步骤，把 <code>email_link</code> 当作关闭注册的替代方案。若需要进一步限定哪些本地用户可以绑定某个 Source，再单独配置 Source 的策略或组限制；本次没有增加额外的 Expression Policy。</p>
+<h3 id="5-5-登录入口与功能验证">5.5 登录入口与功能验证</h3>
+<p>进入“流程和阶段 → 阶段”，编辑本地登录识别阶段 <code>doratiger-login-identification</code>，在 Sources 中加入 Google，保留 Microsoft，开启 Show source labels 并保存。Source 的创建和用户绑定都不会自动完成这一步。</p>
+<p>按下表分别验证入口、账号归属和注册限制：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>预期结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无痕窗口打开自建登录页</td>
+<td>能看到 Microsoft 和 Google</td>
+</tr>
+<tr>
+<td>用已绑定的 Google 账号完成登录</td>
+<td>回到原来的 Authentik 用户，不创建第二个用户</td>
+</tr>
+<tr>
+<td>用未绑定的 Google 账号在未登录状态下尝试登录</td>
+<td>因该 Source 未配置注册流程而被拒绝，不创建新用户</td>
+</tr>
+<tr>
+<td>已有本地用户先登录，再从设置连接 Google</td>
+<td>可以建立外部身份关联；仍受该 Source 的访问策略约束</td>
+</tr>
+</tbody>
+</table>
+<p>本次服务端已确认 Google 的 Enrollment flow 为空、匹配模式为 <code>identifier</code>，自建登录挑战包含 Google，原管理员绑定保持不变。部署版本对未关联身份进入注册分支的处理是返回“Source is not configured for enrollment.”。这项限制来自 Source 配置，无需改写默认注册 Flow 的内部阶段。</p>
+<p>Google 和 Microsoft 后续都已完成账号持有人的浏览器登录测试，返回原账号，MFA 也正常。配置检查和入口显示只完成了其中一部分，实际授权仍需分别测试。</p>
+<h2 id="六、容器出站代理">六、容器出站代理</h2>
+<h3 id="6-1-代理服务">6.1 代理服务</h3>
+<p>最终使用 MetaCubeXD 完整服务端管理 Mihomo，它包含 WebUI、配置管理 Agent 和内核。完整订阅作为远程 Profile 导入，端口、管理密钥等放在独立的本地覆盖 Profile 中，原生刷新间隔设置为 1440 分钟。</p>
+<p>完整订阅在 <code>/profiles</code> 页面作为远程 Profile 管理，部署方式见 <a target="_blank" rel="noopener" href="https://github.com/MetaCubeX/metacubexd#3-all-in-one-server-docker" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FMetaCubeX%2Fmetacubexd%233-all-in-one-server-docker">MetaCubeXD 官方说明</a>。下面以代理服务已经可用为前提，配置 Authentik 与它的连接。</p>
+<p>接入 Authentik 前，代理服务应已经运行，能通过所选节点访问 Google。以下示例约定它加入名为 <code>egress-proxy</code> 的 Docker 自定义网络，网络别名也为 <code>egress-proxy</code>，容器内 HTTP 代理端口为 <code>7890</code>。</p>
+<h3 id="6-2-共享-Docker-网络">6.2 共享 Docker 网络</h3>
+<p>同一自定义网络中的容器可以通过网络别名访问彼此，因此 Authentik 的代理地址直接使用：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">http://egress-proxy:7890</code></div></pre>
+<p>这条连接不经过宿主机的公开端口，也不需要把代理端口开放到公网。容器之间使用容器监听端口，WebUI 的宿主端口映射与这条连接无关。</p>
+<p>这里的网络名和别名是示例约定，不是安装 Mihomo 后自动出现的名称。先检查代理容器加入的 Docker 网络、它在该网络中的别名以及实际 HTTP 监听端口，再将示例中的 <code>egress-proxy</code> 和 <code>7890</code> 替换成一致的值。代理必须允许同网段容器连接；若只监听代理容器自己的回环地址，其他容器仍无法使用。</p>
+<p>如果当前部署没有这个外部网络，需要在代理服务的部署配置中建立并加入共享网络、配置别名，再执行 Authentik 的覆盖配置。仅在 Authentik 侧声明 external 网络不会自动把代理容器加入其中。</p>
+<p>在 Authentik 部署目录新增 <code>compose.override.yaml</code>。如果已有覆盖文件，应将下面字段合并进去，保留原设置：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div></div><code class="language-yaml">x-outbound-proxy: &amp;outbound-proxy
+  HTTP_PROXY: http://egress-proxy:7890
+  HTTPS_PROXY: http://egress-proxy:7890
+  NO_PROXY: localhost,127.0.0.1,::1,server,worker,postgresql,egress-proxy,auth.example.com,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+  http_proxy: http://egress-proxy:7890
+  https_proxy: http://egress-proxy:7890
+  no_proxy: localhost,127.0.0.1,::1,server,worker,postgresql,egress-proxy,auth.example.com,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+
+services:
+  server:
+    environment: *outbound-proxy
+    networks: [default, egress-proxy]
+  worker:
+    environment: *outbound-proxy
+    networks: [default, egress-proxy]
+
+networks:
+  egress-proxy:
+    external: true
+    name: egress-proxy</code></div></pre>
+<p>这里保留 <code>default</code> 网络，以继续连接 PostgreSQL；只给 server 和 worker 增加代理网络。<code>HTTPS_PROXY</code> 的值仍以 <code>http://</code> 开头，表示通过 HTTP 代理的 CONNECT 隧道访问 HTTPS 目标。<code>NO_PROXY</code> 中还应补上自己实际使用的内部域名和网段。</p>
+<p>应用配置会重建 server 和 worker，安排在允许短暂中断登录服务时执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">docker network inspect egress-proxy &gt;/dev/null
+docker compose config -q
+docker compose up -d --no-deps server worker</code></div></pre>
+<h3 id="6-3-在-Authentik-容器内验证">6.3 在 Authentik 容器内验证</h3>
+<p>测试要放在实际发起请求的容器里。以下命令会使用容器中配置的环境代理：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash">for service in server worker; do
+  docker compose exec -T &quot;$service&quot; python -c '
+import requests
+r = requests.get(&quot;https://accounts.google.com/.well-known/openid-configuration&quot;, timeout=30)
+r.raise_for_status()
+print(r.status_code, r.json()[&quot;issuer&quot;])
+'
+done</code></div></pre>
+<p>本次两个容器均返回 <code>200</code>，issuer 为 <code>https://accounts.google.com</code>；Authentik 的 server、worker 和 PostgreSQL 健康检查也正常。</p>
+<h2 id="七、管理员邀请入口">七、管理员邀请入口</h2>
+<h3 id="7-1-输入与流程">7.1 输入与流程</h3>
+<p>原生邀请管理能创建邀请，但每次都要填写固定数据 JSON，再点发送邮件。我另外建了一个只供管理员使用的入口，仍在 Authentik 内完成。</p>
+<p>先进入“流程和阶段 → 输入”创建受邀邮箱字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-invitation-email</code></td>
+</tr>
+<tr>
+<td>Field key</td>
+<td><code>invitation_email</code></td>
+</tr>
+<tr>
+<td>Label</td>
+<td>受邀邮箱</td>
+</tr>
+<tr>
+<td>Type</td>
+<td>Email</td>
+</tr>
+<tr>
+<td>Required</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>Order</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Initial value</td>
+<td>留空</td>
+</tr>
+</tbody>
+</table>
+<p>再进入“流程和阶段 → 流程”，创建“DoraTiger 发送邀请”，Slug 填 <code>doratiger-send-invitation</code>，Title 填“邀请新用户”，Designation 选 Stage configuration，Authentication requirement 选 Require superuser。</p>
+<p>保存后打开阶段绑定，选择“创建并绑定新阶段”，类型选 Prompt，Name 填 <code>doratiger-invitation-recipient-prompt</code>，Fields 只选择刚创建的受邀邮箱输入，绑定 Order 填 <code>10</code>。这时表单已经有了，但尚不能创建邀请；需要保存发信策略并关联到这个表单。</p>
+<h3 id="7-2-邀请创建与发信策略">7.2 邀请创建与发信策略</h3>
+<p>在“自定义 → 策略”点击创建，类型选 Expression Policy，Name 填 <code>doratiger-admin-create-invitation</code>，Expression 填入下面的代码。这里的中文用途是“管理员创建邀请并发送邮件”。</p>
+<p>下面是实际策略的脱敏版本。替换 <code>auth.example.com</code>，流程 slug、输入字段键和模板路径需要与前文一致。它会写入邀请并发邮件，不是纯粹的布尔判断，因此专门限制了执行入口。</p>
+<pre><div class="code-header"><span class="code-header-type">python</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div><div class="line-numbers-item">39</div><div class="line-numbers-item">40</div><div class="line-numbers-item">41</div><div class="line-numbers-item">42</div><div class="line-numbers-item">43</div><div class="line-numbers-item">44</div><div class="line-numbers-item">45</div><div class="line-numbers-item">46</div><div class="line-numbers-item">47</div><div class="line-numbers-item">48</div><div class="line-numbers-item">49</div><div class="line-numbers-item">50</div><div class="line-numbers-item">51</div><div class="line-numbers-item">52</div><div class="line-numbers-item">53</div><div class="line-numbers-item">54</div><div class="line-numbers-item">55</div><div class="line-numbers-item">56</div><div class="line-numbers-item">57</div><div class="line-numbers-item">58</div><div class="line-numbers-item">59</div><div class="line-numbers-item">60</div><div class="line-numbers-item">61</div><div class="line-numbers-item">62</div><div class="line-numbers-item">63</div><div class="line-numbers-item">64</div><div class="line-numbers-item">65</div><div class="line-numbers-item">66</div><div class="line-numbers-item">67</div><div class="line-numbers-item">68</div><div class="line-numbers-item">69</div><div class="line-numbers-item">70</div><div class="line-numbers-item">71</div><div class="line-numbers-item">72</div><div class="line-numbers-item">73</div><div class="line-numbers-item">74</div><div class="line-numbers-item">75</div><div class="line-numbers-item">76</div><div class="line-numbers-item">77</div><div class="line-numbers-item">78</div><div class="line-numbers-item">79</div><div class="line-numbers-item">80</div><div class="line-numbers-item">81</div><div class="line-numbers-item">82</div><div class="line-numbers-item">83</div><div class="line-numbers-item">84</div><div class="line-numbers-item">85</div><div class="line-numbers-item">86</div><div class="line-numbers-item">87</div><div class="line-numbers-item">88</div><div class="line-numbers-item">89</div><div class="line-numbers-item">90</div><div class="line-numbers-item">91</div><div class="line-numbers-item">92</div><div class="line-numbers-item">93</div><div class="line-numbers-item">94</div><div class="line-numbers-item">95</div><div class="line-numbers-item">96</div><div class="line-numbers-item">97</div><div class="line-numbers-item">98</div><div class="line-numbers-item">99</div><div class="line-numbers-item">100</div><div class="line-numbers-item">101</div><div class="line-numbers-item">102</div><div class="line-numbers-item">103</div><div class="line-numbers-item">104</div><div class="line-numbers-item">105</div><div class="line-numbers-item">106</div><div class="line-numbers-item">107</div><div class="line-numbers-item">108</div><div class="line-numbers-item">109</div><div class="line-numbers-item">110</div><div class="line-numbers-item">111</div><div class="line-numbers-item">112</div><div class="line-numbers-item">113</div><div class="line-numbers-item">114</div><div class="line-numbers-item">115</div><div class="line-numbers-item">116</div><div class="line-numbers-item">117</div><div class="line-numbers-item">118</div><div class="line-numbers-item">119</div><div class="line-numbers-item">120</div><div class="line-numbers-item">121</div><div class="line-numbers-item">122</div><div class="line-numbers-item">123</div><div class="line-numbers-item">124</div><div class="line-numbers-item">125</div><div class="line-numbers-item">126</div><div class="line-numbers-item">127</div><div class="line-numbers-item">128</div><div class="line-numbers-item">129</div><div class="line-numbers-item">130</div><div class="line-numbers-item">131</div><div class="line-numbers-item">132</div><div class="line-numbers-item">133</div><div class="line-numbers-item">134</div></div><code class="language-python">import re
+from datetime import timedelta
+from uuid import uuid4
+from zoneinfo import ZoneInfo
+
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db import transaction
+from django.utils import timezone
+from django.utils.text import slugify
+
+from authentik.core.models import User
+from authentik.flows.models import Flow
+from authentik.stages.invitation.models import Invitation
+
+http = request.http_request
+
+# 只允许管理员在指定流程提交表单时执行。
+# 策略测试和 GET 请求不能创建邀请或发信。
+if (
+    request.debug
+    or http is None
+    or http.method != &quot;POST&quot;
+    or http.path != &quot;/api/v3/flows/executor/doratiger-send-invitation/&quot;
+):
+    ak_message(&quot;请从管理员邀请流程提交邮箱。&quot;)
+    return False
+
+actor = http.user
+if not actor.is_authenticated or not actor.is_active or not actor.is_superuser:
+    ak_message(&quot;只有超级管理员可以发送邀请。&quot;)
+    return False
+
+email = (
+    request.context.get(&quot;prompt_data&quot;, &#123;&#125;).get(&quot;invitation_email&quot;) or &quot;&quot;
+).strip()
+
+try:
+    validate_email(email)
+except ValidationError:
+    ak_message(&quot;请输入有效的邮箱地址。&quot;)
+    return False
+
+flow = Flow.objects.filter(
+    slug=&quot;doratiger-enrollment&quot;,
+    designation=&quot;enrollment&quot;,
+).first()
+
+if flow is None:
+    ak_message(&quot;未找到 doratiger-enrollment 注册流程。&quot;)
+    return False
+
+if User.objects.filter(email__iexact=email).exists():
+    ak_message(&quot;该邮箱已有账号，请先在用户列表中确认。&quot;)
+    return False
+
+# 名称只用于识别，去重使用实际邮箱。
+# 示例：akadmin-someone-at-gmail-com-20261114-173228-a1b2c3d4
+inviter = slugify(actor.username)[:40] or f&quot;user-&#123;actor.pk&#125;&quot;
+email_label = re.sub(
+    r&quot;[^a-z0-9-]+&quot;,
+    &quot;-&quot;,
+    email.casefold().replace(&quot;@&quot;, &quot;-at-&quot;),
+).strip(&quot;-&quot;)
+
+# 锁住管理员记录，避免同一管理员并发创建重复邀请。
+with transaction.atomic():
+    User.objects.select_for_update().get(pk=actor.pk)
+    now = timezone.now()
+
+    existing = Invitation.objects.filter(
+        created_by=actor,
+        flow=flow,
+        fixed_data__email__iexact=email,
+        expires__gt=now,
+    ).first()
+
+    if existing:
+        ak_message(
+            &quot;该邮箱已有有效邀请，本次未重复发送。&quot;
+            &quot;如需重发，请到“目录 → 邀请”操作。&quot;
+        )
+        return False
+
+    timestamp = now.astimezone(
+        ZoneInfo(&quot;Asia/Shanghai&quot;)
+    ).strftime(&quot;%Y%m%d-%H%M%S&quot;)
+
+    short_id = uuid4().hex[:8]
+    name = f&quot;&#123;inviter&#125;-&#123;email_label&#125;-&#123;timestamp&#125;-&#123;short_id&#125;&quot;
+
+    invitation = Invitation.objects.create(
+        name=name,
+        created_by=actor,
+        flow=flow,
+        single_use=True,
+        expiring=True,
+        expires=now + timedelta(hours=48),
+        fixed_data=&#123;&quot;email&quot;: email&#125;,
+    )
+
+# 先保存邀请，再提交邮件；失败时保留邀请供检查和重发。
+url = (
+    &quot;https://auth.example.com/if/flow/doratiger-enrollment/&quot;
+    f&quot;?itoken=&#123;invitation.pk&#125;&quot;
+)
+
+try:
+    queued = ak_send_email(
+        address=email,
+        subject=&quot;邀请你加入 DoraTiger&quot;,
+        template=&quot;email/doratiger/invitation.html&quot;,
+        context=&#123;
+            &quot;url&quot;: url,
+            &quot;expires&quot;: invitation.expires,
+            &quot;host&quot;: &quot;auth.example.com&quot;,
+        &#125;,
+    )
+except Exception:
+    ak_message(
+        &quot;邀请已创建，但邮件提交结果不确定。&quot;
+        &quot;请检查系统任务，再从“目录 → 邀请”决定是否重发。&quot;
+    )
+    return False
+
+if not queued:
+    ak_message(
+        &quot;邀请已创建，邮件未成功入队。&quot;
+        &quot;请检查邮件配置，再从“目录 → 邀请”重发。&quot;
+    )
+    return False
+
+ak_message(f&quot;邀请邮件已提交发送：&#123;email&#125;&quot;)
+return True</code></div></pre>
+<p>保存策略后，进入“流程和阶段 → 阶段”，编辑 <code>doratiger-invitation-recipient-prompt</code>，在 Validation Policies 中选择 <code>doratiger-admin-create-invitation</code> 并保存。不要绑定到流程入口，否则执行时还没有提交邮箱。也不要把它复制到其他表单，其 POST 路径检查只允许当前邀请流程。</p>
+<p>回到流程详情，确认只有 Order <code>10</code> 的输入阶段，无需添加 User Write、User Login 或 Redirect 阶段：管理员已经登录，用户账号由受邀者完成注册时才创建。</p>
+<p>策略先检查真实 HTTP POST、准确的执行器路径及当前超级管理员身份，拒绝策略测试器和页面 GET 创建邀请。验证邮箱后，再检查该邮箱是否已有账号。</p>
+<p>去重以“同一管理员、同一邮箱、同一注册流程、仍有效”为范围，用管理员记录的数据库锁串行处理并发点击。邀请名称采用“邀请人－邮箱标签－北京时间－8 位随机标识”，便于后台辨认；末尾是 UUID 随机片段，并不是邮箱哈希，去重也不依赖名称。</p>
+<p>创建的邀请为单次使用、48 小时有效，固定数据为目标邮箱。数据库写入结束后才提交邮件任务。入队失败或结果不确定时保留邀请，管理员到邀请页检查并决定是否重发，不自动创建第二份。</p>
+<p>这个策略使用当前版本 Django 模型和执行器路径，属于实例内自定义代码。跨管理员的全局去重、邀请被消耗后继续去重，以及邮件投递和数据库写入的跨系统事务，都不在这段实现范围内。升级后需要重测，不能仅凭策略返回 True 认为收件箱已经收到邮件。</p>
+<h3 id="7-3-应用入口与访问策略">7.3 应用入口与访问策略</h3>
+<p>进入“应用程序 → 应用程序”，从创建按钮的选项中选择 <strong>with existing provider</strong>。Name 填“邀请新用户”，Slug 可填 <code>doratiger-invitation</code>，Provider 保持未选择。这里创建的是应用列表中的链接入口，不需要创建 OIDC Provider。</p>
+<p>在应用的启动地址（Launch URL）中填写下面的完整地址并保存。应用 Slug 只标识这张入口卡片；地址中的 <code>doratiger-send-invitation</code> 才是刚创建的流程 Slug。</p>
+<p>Launch URL 填写：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/if/flow/doratiger-send-invitation/?next=%2Fif%2Fadmin%2F%23%2Fflow%2Fstages%2Finvitations</code></div></pre>
+<p>在“自定义 → 策略”创建 Expression Policy，Name 填 <code>doratiger-admin-only</code>，用于限制邀请入口仅供超级管理员访问。Expression 填：</p>
+<pre><div class="code-header"><span class="code-header-type">python</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-python">return request.user.is_authenticated and request.user.is_superuser</code></div></pre>
+<p>保存后返回“邀请新用户”应用详情，打开“策略／组／用户绑定”，点击创建或绑定，选择已有策略 <code>doratiger-admin-only</code>，Order 填 <code>0</code>，Enabled 开启、Negate 关闭。确认没有其他会让普通用户放行的绑定，保存后再回用户界面检查应用卡片。</p>
+<p>应用绑定控制入口可见和可访问范围，流程自身还要求超级管理员，写入策略再次检查真实用户。即使知道流程 URL，也不能绕过内部检查。</p>
+<p>提交完成后，通过 Launch URL 中的 <code>next</code> 返回原生邀请管理页面。使用正常流程完成后的跳转，不额外添加 Redirect Stage。</p>
+<h3 id="7-4-邀请发送验证">7.4 邀请发送验证</h3>
+<p>用超级管理员打开“邀请新用户”应用，填写一个尚未注册、没有有效重复邀请的测试邮箱并提交。到“目录 → 邀请”确认名称、创建者、注册流程、固定邮箱和 48 小时有效期，再检查收件箱。重复提交同一邮箱，应提示已有有效邀请；普通用户应无法执行这个邀请流程。</p>
+<p>随后用未登录窗口打开邮件链接，完成邀请注册、邮箱验证和 MFA。检查新用户的邮箱与邀请一致。若邮件没有收到，先查看邀请是否已经创建，再决定重发；直接重新填写邮箱可能先命中重复邀请检查。</p>
+<h2 id="八、验证结果与维护">八、验证结果与维护</h2>
+<p>Microsoft、Google 都已完成绑定和登录测试；邀请创建与发信、注册验证、找回密码已测试成功。Outlook/Gmail 收件 Logo 经过更换内嵌图片后确认正常。管理员异常测试产生了站内通知和邮件发送成功事件，版本更新规则通过了事件匹配检查，没有伪造一个真实更新来证明发布版本存在。</p>
+<p>维护时分别检查 OAuth 客户端密钥有效期、SMTP 授权码、后台任务和邮件模板挂载。品牌图片的内部覆盖路径与邀请策略的模型接口都与版本有关，升级后至少重测一次邀请、注册验证和恢复邮件。</p>
+<p>默认配置清理按实际替代进度进行：Source 的自建认证流程验证后再停用默认 Source 蓝图，通知验证后再停用默认事件蓝图。最后保留的系统映射和 RBAC 蓝图，作用见第一篇；不要为了清掉默认名称而删除协议基础配置。</p>
+<h2 id="九、配置问题与解答">九、配置问题与解答</h2>
+<h3 id="9-1-全局-SMTP-与阶段-SMTP">9.1 全局 SMTP 与阶段 SMTP</h3>
+<p><strong>Q：UI 的邮件阶段可以填写 SMTP，为什么还需要修改部署环境变量？</strong></p>
+<p><strong>A：</strong> Email Stage 的连接设置只作用于该阶段。系统通知和邀请策略使用的全局邮件连接仍由部署配置提供。本例统一配置全局 SMTP，再让两个 Email Stage 使用全局设置。只修改 <code>.env</code> 也不够，还需确认 Compose 已将变量传给 server 和 worker，并重建容器。</p>
+<h3 id="9-2-邮件顶部-Logo-破图">9.2 邮件顶部 Logo 破图</h3>
+<p><strong>Q：公网图片地址可以访问，为什么 Outlook 和 Gmail 仍显示破图？</strong></p>
+<p><strong>A：</strong> 本次图片文件完整，IPv4/IPv6 均能返回 PNG，日志也记录到 Gmail 代理成功下载；加版本号仍未解决，不能断言是文件不存在。最终使用原生 <code>cid:logo</code> 内嵌附件，并挂载品牌 PNG 替换镜像对应文件，重新发信后两种邮箱均确认显示。该路径属于版本内部实现，升级时需要复核。</p>
+<h3 id="9-3-通知测试事件没有命中规则">9.3 通知测试事件没有命中规则</h3>
+<p><strong>Q：日志里有测试事件，为什么系统异常规则没有发送邮件？</strong></p>
+<p><strong>A：</strong> 先核对 Action、规则绑定的策略、Any 模式、收件组及其成员邮箱，再检查后台任务。当前版本用 <code>Event.new()</code> 直接传字符串 <code>&quot;configuration_error&quot;</code> 会得到 <code>custom_configuration_error</code>，与原生 Action 不同；需要构造原生测试事件时使用 <code>EventAction.CONFIGURATION_ERROR</code> 枚举。普通策略测试通过也不等于整条通知投递链路成功。</p>
+<h3 id="9-4-Microsoft-回调地址不匹配">9.4 Microsoft 回调地址不匹配</h3>
+<p><strong>Q：出现 <code>redirect_uri</code> 不合法或未注册的错误，应修改哪里？</strong></p>
+<p><strong>A：</strong> 对照 Authentik Source 详情显示的 Callback URL，检查 Microsoft 应用注册中的 Web Redirect URI。协议、域名、路径、Source Slug 和末尾斜杠必须对应。<code>https://auth.example.com/</code> 是站点入口，不是 OAuth 回调；本例回调末段为 <code>/microsoft/</code>。</p>
+<h3 id="9-5-外部登录创建了第二个用户">9.5 外部登录创建了第二个用户</h3>
+<p><strong>Q：Microsoft 授权成功后，为什么进入了新账号，而不是原管理员？</strong></p>
+<p><strong>A：</strong> 未登录状态点击身份源按钮是在尝试外部登录。身份尚未绑定且 Source 允许注册时，可能新建本地用户。本例关闭 Enrollment flow，使用 identifier 匹配，先登录原本的本地账号，再从用户设置连接外部身份。误建账号时先核对连接归属，再解绑和重新绑定，不把新账号升为管理员来代替处理。</p>
+<h3 id="9-6-Google-发现文档请求超时">9.6 Google 发现文档请求超时</h3>
+<p><strong>Q：浏览器可以打开 Google，为什么保存身份源时仍报连接超时？</strong></p>
+<p><strong>A：</strong> 浏览器重定向和 Authentik 服务端出站请求不是同一条连接。本次失败目标是 <code>accounts.google.com/.well-known/openid-configuration</code>。应在 server 和 worker 容器内验证请求；需要代理时，检查环境变量、Docker 网络、别名和代理监听端口。两个容器都成功返回发现文档后，再测试实际账号授权。</p>
+<h3 id="9-7-完整订阅只加载节点">9.7 完整订阅只加载节点</h3>
+<p><strong>Q：订阅在桌面客户端包含策略组和规则，为什么放入 <code>proxy-providers</code> 后只剩节点？</strong></p>
+<p><strong>A：</strong> <code>proxy-providers</code> 只提供节点集合，完整订阅则是包含节点、策略组和规则的 Profile。本次改为完整服务端的远程 Profile，并单独保留本地端口、密钥等覆盖配置。节点更新与完整 Profile 刷新不是一回事。</p>
+<h3 id="9-8-邀请入口直接跳转或地址不存在">9.8 邀请入口直接跳转或地址不存在</h3>
+<p><strong>Q：打开邀请应用时没有邮箱输入框，或跳转后提示 URL 不存在，如何检查？</strong></p>
+<p><strong>A：</strong> 先检查应用 Launch URL 是否指向 <code>doratiger-send-invitation</code>，而不是直接指向后台邀请列表。流程内只保留邮箱输入阶段，通过正常完成后的 <code>next</code> 跳转，避免旧 Redirect Stage 留下的执行状态。当前邀请管理页为 <code>#/flow/stages/invitations</code>，不是 <code>#/directory/invitations</code>；修改后从新的流程入口重新测试。</p>
+<h3 id="9-9-重复邀请与邮件未送达">9.9 重复邀请与邮件未送达</h3>
+<p><strong>Q：再次输入邮箱提示重复邀请，但收件箱没有邮件，是否应删除邀请重新创建？</strong></p>
+<p><strong>A：</strong> 策略先保存邀请，再提交邮件任务，邮件失败时会保留邀请。因此先到邀请页核对有效记录，再查看后台任务和 SMTP 结果，必要时使用重发操作。返回 True 表示提交发送成功，不代表最终投递；重复请求被拒绝也不能证明第一次邮件已经收到。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/install-config/email/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Finstall-config%2Femail%2F">全局邮件配置</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/email/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fflows-stages%2Fstages%2Femail%2F">Email Stage 与模板</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/sys-mgmt/events/notifications/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fsys-mgmt%2Fevents%2Fnotifications%2F">Authentik 通知规则</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/users-sources/sources/social-logins/entra-id/oauth/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fusers-sources%2Fsources%2Fsocial-logins%2Fentra-id%2Foauth%2F">Authentik Entra ID 身份源</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/entra/identity-platform/msal-client-application-configuration" class="external-link" data-redirect="https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fentra%2Fidentity-platform%2Fmsal-client-application-configuration">Microsoft Authority 与账号类型</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/users-sources/sources/social-logins/google/cloud/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fusers-sources%2Fsources%2Fsocial-logins%2Fgoogle%2Fcloud%2F">Google OAuth 身份源</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/users-sources/sources/protocols/oauth/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fusers-sources%2Fsources%2Fprotocols%2Foauth%2F">OAuth Source 与账号绑定</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/MetaCubeX/metacubexd#3-all-in-one-server-docker" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FMetaCubeX%2Fmetacubexd%233-all-in-one-server-docker">MetaCubeXD 完整服务端</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/58243/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/58243/">https://www.doratiger.top/2026/11/58243/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/58244/"><span>服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/58242/"><span>服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

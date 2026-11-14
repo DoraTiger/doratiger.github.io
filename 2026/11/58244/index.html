@@ -1,0 +1,695 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证【DoraTiger 的异次元】</title><meta name="description" content="前言 前面已经配置好 Authentik 的登录流程，这次接入一个实际应用：TrueNAS 上的 qBittorrent。它原本通过 Nginx Proxy Manager 提供 HTTPS，打开页面后还需要输入自己的 WebUI 密码。我希望沿用现有域名，通过 Authentik 登录后直接进入下载列表。 本文使用 "><meta name="keywords" content="docker,qbittorrent,truenas,authentik,nginx"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证【DoraTiger 的异次元】"><meta property="og:description" content="前言 前面已经配置好 Authentik 的登录流程，这次接入一个实际应用：TrueNAS 上的 qBittorrent。它原本通过 Nginx Proxy Manager 提供 HTTPS，打开页面后还需要输入自己的 WebUI 密码。我希望沿用现有域名，通过 Authentik 登录后直接进入下载列表。 本文使用 "><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/58244/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/58244/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-14T17:00:00.000Z","dateModified":"2026-11-14T17:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/58244/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%8E%A5%E5%85%A5%E7%BB%93%E6%9E%84%E4%B8%8E%E8%AE%A4%E8%AF%81%E5%85%B3%E7%B3%BB"><span class="toc-text">一、接入结构与认证关系</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Provider%E3%80%81%E5%BA%94%E7%94%A8%E4%B8%8E-Outpost"><span class="toc-text">1.1 Provider、应用与 Outpost</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%8D%95%E5%BA%94%E7%94%A8-Forward-Auth"><span class="toc-text">1.2 单应用 Forward Auth</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E4%B8%A4%E5%B1%82%E8%AE%A4%E8%AF%81%E4%B8%8E%E8%B4%A6%E5%8F%B7%E8%8C%83%E5%9B%B4"><span class="toc-text">1.3 两层认证与账号范围</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%83%A8%E7%BD%B2%E5%87%86%E5%A4%87"><span class="toc-text">二、部署准备</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%A4%BA%E4%BE%8B%E5%8F%82%E6%95%B0"><span class="toc-text">2.1 示例参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-NPM-%E7%BD%91%E7%BB%9C%E4%B8%8E%E5%90%8E%E7%AB%AF%E8%AE%A4%E8%AF%81"><span class="toc-text">2.2 NPM 网络与后端认证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%AE%BF%E9%97%AE%E7%BB%84%E4%B8%8E%E5%90%8E%E7%AB%AF%E5%87%AD%E6%8D%AE"><span class="toc-text">三、访问组与后端凭据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%88%9B%E5%BB%BA%E5%BA%94%E7%94%A8%E8%AE%BF%E9%97%AE%E7%BB%84"><span class="toc-text">3.1 创建应用访问组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E9%85%8D%E7%BD%AE%E7%BB%84%E5%B1%9E%E6%80%A7"><span class="toc-text">3.2 配置组属性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Proxy-Provider-%E4%B8%8E%E5%BA%94%E7%94%A8"><span class="toc-text">四、Proxy Provider 与应用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86%E6%8F%90%E4%BE%9B%E8%80%85"><span class="toc-text">4.1 创建代理提供者</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%88%9B%E5%BB%BA%E5%BA%94%E7%94%A8%E5%B9%B6%E5%85%B3%E8%81%94-Provider"><span class="toc-text">4.2 创建应用并关联 Provider</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E7%BB%91%E5%AE%9A%E8%AE%BF%E9%97%AE%E7%BB%84"><span class="toc-text">4.3 绑定访问组</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81TrueNAS-Proxy-Outpost"><span class="toc-text">五、TrueNAS Proxy Outpost</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%9C%A8-Authentik-%E5%88%9B%E5%BB%BA-Outpost"><span class="toc-text">5.1 在 Authentik 创建 Outpost</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%88%9B%E5%BB%BA-TrueNAS-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BA%94%E7%94%A8"><span class="toc-text">5.2 创建 TrueNAS 自定义应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%AA%8C%E8%AF%81-Outpost"><span class="toc-text">5.3 验证 Outpost</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81NPM-%E8%AE%A4%E8%AF%81%E9%85%8D%E7%BD%AE"><span class="toc-text">六、NPM 认证配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%8E%9F%E4%BB%A3%E7%90%86%E7%AB%99%E7%82%B9"><span class="toc-text">6.1 原代理站点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-Advanced%EF%BC%9AOutpost-%E8%B7%AF%E7%94%B1%E4%B8%8E%E7%99%BB%E5%BD%95%E8%B7%B3%E8%BD%AC"><span class="toc-text">6.2 Advanced：Outpost 路由与登录跳转</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-Custom-Locations%EF%BC%9A%E4%BF%9D%E6%8A%A4%E5%BA%94%E7%94%A8%E4%B8%8E%E8%BD%AC%E5%8F%91%E5%87%AD%E6%8D%AE"><span class="toc-text">6.3 Custom Locations：保护应用与转发凭据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E4%BF%9D%E5%AD%98%E4%B8%8E%E6%8C%81%E4%B9%85%E5%8C%96"><span class="toc-text">6.4 保存与持久化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81qBittorrent-%E5%90%8E%E7%AB%AF%E8%AE%A4%E8%AF%81"><span class="toc-text">七、qBittorrent 后端认证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%85%B3%E9%97%AD%E5%85%8D%E8%AE%A4%E8%AF%81%E4%BE%8B%E5%A4%96"><span class="toc-text">7.1 关闭免认证例外</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E5%85%B6%E4%BB%96%E5%AE%89%E5%85%A8%E8%AE%BE%E7%BD%AE"><span class="toc-text">7.2 其他安全设置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%AA%8C%E8%AF%81%E4%B8%8E%E7%BB%B4%E6%8A%A4"><span class="toc-text">八、验证与维护</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C"><span class="toc-text">8.1 验证结果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%87%AD%E6%8D%AE%E4%B8%8E%E7%89%88%E6%9C%AC%E7%BB%B4%E6%8A%A4"><span class="toc-text">8.2 凭据与版本维护</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E5%9B%9E%E9%80%80"><span class="toc-text">8.3 回退</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">九、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-TrueNAS-%E6%98%BE%E7%A4%BA-5-0-4-%E5%B7%B2%E6%98%AF%E6%9C%80%E6%96%B0%E7%89%88"><span class="toc-text">9.1 TrueNAS 显示 5.0.4 已是最新版</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-NPM-%E6%B2%A1%E6%9C%89%E6%96%B0%E7%9A%84%E8%AE%A4%E8%AF%81%E9%85%8D%E7%BD%AE%E9%A1%B9"><span class="toc-text">9.2 NPM 没有新的认证配置项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E9%80%9A%E8%BF%87-Authentik-%E5%90%8E%E4%BB%8D%E8%A6%81%E6%B1%82%E8%BE%93%E5%85%A5-qBittorrent-%E5%AF%86%E7%A0%81"><span class="toc-text">9.3 通过 Authentik 后仍要求输入 qBittorrent 密码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-4-%E9%85%8D%E7%BD%AE%E6%9C%89%E7%99%BD%E5%90%8D%E5%8D%95%EF%BC%8C%E5%AE%9E%E9%99%85%E4%BB%8D%E9%9C%80%E8%A6%81%E5%AF%86%E7%A0%81"><span class="toc-text">9.4 配置有白名单，实际仍需要密码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-5-Nginx-%E9%87%8D%E8%BD%BD%E6%8F%90%E7%A4%BA-Operation-not-permitted"><span class="toc-text">9.5 Nginx 重载提示 Operation not permitted</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-6-Basic-%E8%AF%B7%E6%B1%82%E5%8F%8D%E5%A4%8D%E5%88%9B%E5%BB%BA%E4%BC%9A%E8%AF%9D"><span class="toc-text">9.6 Basic 请求反复创建会话</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color1"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color0"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">74</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">142</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（15）Authentik 接入 qBittorrent 与 NPM 统一认证</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/qbittorrent/">qbittorrent</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/truenas/">truenas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nginx/">nginx</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">11886 字 · 约 40 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>前面已经配置好 Authentik 的登录流程，这次接入一个实际应用：TrueNAS 上的 qBittorrent。它原本通过 Nginx Proxy Manager 提供 HTTPS，打开页面后还需要输入自己的 WebUI 密码。我希望沿用现有域名，通过 Authentik 登录后直接进入下载列表。</p>
+<p>本文使用 qBittorrent <code>5.3.0</code>、Nginx Proxy Manager（下文简称 NPM）<code>2.14.0</code>、TrueNAS <code>25.10.8</code>，Authentik 与新增 Outpost 均为 <code>2026.8.5</code>。配置采用 Proxy Provider、局域网独立 Outpost 和 HTTP Basic 凭据转发，域名、地址、账号均使用示例。</p>
+<span id="more"></span>
+<p>Authentik 的部署见 <a href="/2026/11/58241/" title="服务器操作指北（12）Authentik 基本概念、默认配置与部署">服务器操作指北（12）Authentik 基本概念、默认配置与部署</a>，本文复用的 DoraTiger 登录与应用授权流程见 <a href="/2026/11/58242/" title="服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理">服务器操作指北（13）Authentik DoraTiger 自建流程与默认配置清理</a>。已绑定 Google、Microsoft 的账号也可以沿用原来的登录入口，不需要为 qBittorrent 再创建身份源。</p>
+<h2 id="一、接入结构与认证关系">一、接入结构与认证关系</h2>
+<h3 id="1-1-Provider、应用与-Outpost">1.1 Provider、应用与 Outpost</h3>
+<p>这次涉及的对象分布在三个管理界面中：</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>配置位置</th>
+<th>作用及关联</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Application 应用</td>
+<td>Authentik → 应用程序</td>
+<td>用户看到的 qBittorrent 入口，关联 Provider，并绑定访问组</td>
+</tr>
+<tr>
+<td>Proxy Provider 代理提供者</td>
+<td>Authentik → 提供者</td>
+<td>保存应用域名、认证模式、流程及后端 Basic 凭据属性名</td>
+</tr>
+<tr>
+<td>访问组</td>
+<td>Authentik → 目录 → 组</td>
+<td>指定哪些用户能进入应用，并保存本应用使用的后端凭据</td>
+</tr>
+<tr>
+<td>Proxy Outpost 前哨</td>
+<td>Authentik 中创建，TrueNAS 中部署</td>
+<td>获取 Provider 配置，处理 NPM 发来的认证检查与登录回调</td>
+</tr>
+<tr>
+<td>Proxy Host 代理站点</td>
+<td>NPM</td>
+<td>终止 HTTPS，检查认证结果，再转发到 qBittorrent</td>
+</tr>
+<tr>
+<td>WebUI 认证</td>
+<td>qBittorrent</td>
+<td>验证自己的用户名和密码，建立应用会话</td>
+</tr>
+</tbody>
+</table>
+<p>Provider 是配置对象，Outpost 是运行组件。只创建 Provider，不部署或关联可用的 Outpost，NPM 就没有可以调用的认证服务。一个 Proxy Outpost 可以服务多个应用，但每个应用的 Provider 和访问绑定仍分别配置。</p>
+<p>本次在 TrueNAS 部署独立 Outpost，服务账号和令牌由 Authentik 为它生成；云端继续管理用户、流程和授权。Outpost 不另建一套用户库，也不能作为云端不可达时仍能完成新登录的保证。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/outposts/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Foutposts%2F">Outpost 机制</a></p>
+<h3 id="1-2-单应用-Forward-Auth">1.2 单应用 Forward Auth</h3>
+<p>选择 <code>Forward auth (single application)</code>，即单应用前置认证。NPM 保留现有反向代理职责，普通应用请求仍直接送到 qBittorrent；只有认证检查及 <code>/outpost.goauthentik.io</code> 路径进入 Outpost。每个应用可以有独立的访问规则。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/forward_auth/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fforward_auth%2F">Forward Auth 模式</a></p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">浏览器 ──HTTPS──&gt; NPM ──HTTP + Basic 凭据──&gt; qBittorrent
+                   │
+                   └──认证检查──&gt; TrueNAS Proxy Outpost
+                                       │
+                                       └──配置、登录授权──&gt; 云端 Authentik</code></div></pre>
+<p>应用流量不绕行云服务器。浏览器需要能访问 Authentik 和应用域名，Outpost 也需要能访问云端 Authentik；域名解析和证书必须正常。</p>
+<h3 id="1-3-两层认证与账号范围">1.3 两层认证与账号范围</h3>
+<p>Authentik 验证用户身份，并判断这个用户是否属于允许访问的组。通过后，Outpost 生成 qBittorrent 的 Basic 认证头，由 NPM 发送给后端。浏览器不需要再填写一次 qBittorrent 密码。</p>
+<p>这里用的是同一组 qBittorrent 管理凭据。多个 Authentik 用户获准进入后，仍操作同一个下载器，不能据此获得独立任务空间或不同的下载权限。用户名、组等身份头也不会自动把 qBittorrent 改造成多用户系统。</p>
+<p>qBittorrent 从 5.2 开始支持 Basic Authentication，本篇实际验证的是 5.3.0。<a target="_blank" rel="noopener" href="https://github.com/qbittorrent/qBittorrent/releases" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fqbittorrent%2FqBittorrent%2Freleases">版本记录</a> Authentik 的 HTTP Basic 转发可以从用户或组属性中取值，本次使用专用组属性。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/header_authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fheader_authentication%2F">凭据转发说明</a></p>
+<h2 id="二、部署准备">二、部署准备</h2>
+<h3 id="2-1-示例参数">2.1 示例参数</h3>
+<p>全文使用下面这组示例，部署时统一替换：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentik 域名</td>
+<td><code>https://auth.example.com</code></td>
+</tr>
+<tr>
+<td>qBittorrent 域名</td>
+<td><code>https://qb.example.com</code></td>
+</tr>
+<tr>
+<td>TrueNAS 内网地址</td>
+<td><code>192.0.2.10</code>，仅用于文档示例</td>
+</tr>
+<tr>
+<td>qBittorrent WebUI 端口</td>
+<td><code>30024</code></td>
+</tr>
+<tr>
+<td>NPM 已有 Docker 网络</td>
+<td><code>ix-nginx-proxy-manager_default</code>，以本机检查结果为准</td>
+</tr>
+<tr>
+<td>Outpost 网络别名</td>
+<td><code>doratiger-authentik-outpost</code></td>
+</tr>
+<tr>
+<td>Authentik 示例管理员</td>
+<td><code>admin-user</code></td>
+</tr>
+</tbody>
+</table>
+<p>qBittorrent 已经运行，NPM 也已经能把 <code>qb.example.com</code> 转发到 <code>http://192.0.2.10:30024</code>。本文只添加认证组件，不重建下载器。</p>
+<p>操作前备份 Authentik 数据库、NPM 站点配置和 qBittorrent 配置目录。保留一个已登录的 Authentik 管理员窗口，确认知道 qBittorrent 当前用户名和密码。WebUI 配置中的密码哈希不能直接作为 Basic 密码使用。</p>
+<h3 id="2-2-NPM-网络与后端认证">2.2 NPM 网络与后端认证</h3>
+<p>在 TrueNAS 的 Shell 中查找 NPM 容器名及其网络：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">docker ps --format '&#123;&#123;.Names&#125;&#125;\t&#123;&#123;.Image&#125;&#125;'
+docker inspect NPM_CONTAINER_NAME \
+  --format '&#123;&#123;range $name, $config := .NetworkSettings.Networks&#125;&#125;&#123;&#123;$name&#125;&#125;&#123;&#123;println&#125;&#125;&#123;&#123;end&#125;&#125;'</code></div></pre>
+<p>将 <code>NPM_CONTAINER_NAME</code> 替换为实际容器名。记下网络名称，后面的 Outpost Compose 要加入同一个网络。网络名并不保证所有 TrueNAS 安装都一样，也不要另建一个同名但未连接 NPM 的网络。</p>
+<p>切换前从原 HTTPS 入口验证后端认证。以下命令在能够访问该域名的终端执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">curl -s -o /dev/null -w '%&#123;http_code&#125;\n' \
+  https://qb.example.com/api/v2/app/version
+
+# 只填写用户名，curl 会交互式询问密码，避免密码进入命令历史
+curl --user QBIT_USERNAME \
+  https://qb.example.com/api/v2/app/version</code></div></pre>
+<p>本次匿名请求返回 <code>403</code>，Basic 请求返回 <code>v5.3.0</code>。这说明原入口确实需要认证，不能只看到配置中有网段白名单，就判断当前访问者一定免密码。</p>
+<h2 id="三、访问组与后端凭据">三、访问组与后端凭据</h2>
+<p>同一种服务可能部署在不同位置，因此应用 Slug、Provider、访问组和凭据属性都包含部署位置。本文使用 <code>truenas-qbittorrent</code>；如果另有 PVE 实例，则使用 <code>pve-qbittorrent</code> 及其独立凭据。Outpost 按所在位置命名为 <code>doratiger-truenas-proxy</code>，可以关联该位置的多个应用，不必为每个应用重复部署。</p>
+<h3 id="3-1-创建应用访问组">3.1 创建应用访问组</h3>
+<p>进入 Authentik 管理员界面，“目录 → 组 → 创建”，Name 填 <code>truenas-qbittorrent-admins</code>。它只管理这个下载器的访问范围，<strong>不要启用组的超级用户权限</strong>。</p>
+<p>保存后打开组详情，在用户成员页面加入需要访问 qBittorrent 的现有账号，例如 <code>admin-user</code>。如果从用户详情操作，则编辑该用户的组成员关系，选中刚创建的组并保存。仅创建组名称还不够，用户必须实际成为成员。</p>
+<h3 id="3-2-配置组属性">3.2 配置组属性</h3>
+<p>编辑 <code>truenas-qbittorrent-admins</code>，在 Attributes 中填写：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-yaml">truenas_qbittorrent_username: 'REPLACE_WITH_QBIT_USERNAME'
+truenas_qbittorrent_password: 'REPLACE_WITH_QBIT_PASSWORD'</code></div></pre>
+<p>两项都替换为 qBittorrent 的实际凭据，不是 Authentik 管理员密码。密码中含单引号时，按 YAML 规则用两个单引号转义，保存前确认编辑器没有语法错误。</p>
+<p>属性键稍后要填进 Provider。<code>truenas_qbittorrent_username</code> 是键名，键的值才是后端账号；不能把用户名直接填到 Provider 的 Username Key 中。</p>
+<p>这两个属性是可读取的后端凭据，应限制组属性的查看、修改和导出权限。不要写进公开蓝图、博客截图、Git 仓库或 NPM 配置。用户可编辑的个人属性也不应允许随意覆盖这些敏感键。这里只分配受信任的管理员使用下载器。</p>
+<h2 id="四、Proxy-Provider-与应用">四、Proxy Provider 与应用</h2>
+<h3 id="4-1-创建代理提供者">4.1 创建代理提供者</h3>
+<p>进入“应用程序 → 提供者 → 创建”，类型选 <strong>Proxy Provider</strong>。填写：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置值及用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-truenas-qbittorrent</code>，用于后台识别</td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td><code>doratiger-authentication</code>，复用已有登录流程</td>
+</tr>
+<tr>
+<td>Authorization flow</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code>，通过访问检查后免弹出同意页</td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td><code>doratiger-provider-invalidation</code>，复用提供者退出流程</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td><code>Forward auth (single application)</code></td>
+</tr>
+<tr>
+<td>External host</td>
+<td><code>https://qb.example.com</code>，填写应用地址</td>
+</tr>
+<tr>
+<td>Cookie domain</td>
+<td>保留默认，不扩大到整个父域</td>
+</tr>
+<tr>
+<td>Unauthenticated paths</td>
+<td>留空，应用 API 也需要认证</td>
+</tr>
+</tbody>
+</table>
+<p>选择 Forward Auth 后，qBittorrent 后端地址由 NPM 管理，不在此处设置 Proxy 模式的 Internal host。External host 必须与浏览器实际使用的域名一致，不能填 <code>auth.example.com</code> 或 Outpost 容器名。</p>
+<p>在 HTTP Basic 相关设置中继续填写：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Send / Set HTTP-Basic Authentication</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>HTTP-Basic Username Key</td>
+<td><code>truenas_qbittorrent_username</code></td>
+</tr>
+<tr>
+<td>HTTP-Basic Password Key</td>
+<td><code>truenas_qbittorrent_password</code></td>
+</tr>
+<tr>
+<td>Intercept header authentication</td>
+<td>本次关闭；浏览器入口使用现有登录会话</td>
+</tr>
+</tbody>
+</table>
+<p>发送后端 Basic 凭据和接收客户端 Basic 登录是两个方向，不要混为一谈。此处的目标是让 Outpost 给 qBittorrent 提供凭据。关闭 Intercept 也不意味着跳过应用访问检查。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/header_authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fheader_authentication%2F">HTTP 头认证</a></p>
+<p>保存 Provider。若使用的仍是默认流程，须选择自己已验证可用的对应流程；不要仅照抄不存在的 <code>doratiger-</code> 名称。</p>
+<h3 id="4-2-创建应用并关联-Provider">4.2 创建应用并关联 Provider</h3>
+<p>进入“应用程序 → 应用程序”，创建时选择 <strong>with existing provider</strong>，使用刚创建的提供者：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填写内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>TrueNAS · qBittorrent</code></td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>truenas-qbittorrent</code></td>
+</tr>
+<tr>
+<td>Provider</td>
+<td><code>doratiger-truenas-qbittorrent</code></td>
+</tr>
+<tr>
+<td>Launch URL</td>
+<td><code>https://qb.example.com</code></td>
+</tr>
+</tbody>
+</table>
+<p>保存后打开应用详情，确认 Provider 已关联。Name 是用户在应用列表看到的名字，Slug 是 Authentik 内部标识，Launch URL 才是点击应用时打开的地址。</p>
+<h3 id="4-3-绑定访问组">4.3 绑定访问组</h3>
+<p>在该应用的“策略／组／用户绑定”中创建绑定，选择组 <code>truenas-qbittorrent-admins</code>，Order 填 <code>0</code>，启用绑定，Negate 保持关闭，然后保存。</p>
+<p>这里直接使用组绑定，不需要再写一条“判断是否属于组”的 Expression Policy。免确认授权流程只是不弹出同意页，应用的组限制仍需检查。组里保存凭据也不会自动限制应用访问，<strong>组成员、应用绑定和 Provider 属性引用三项都要完成</strong>。</p>
+<p>验证时使用一个组成员和一个非成员账号。成员应能访问，非成员应被拒绝；只看到应用卡片不能代替实际访问测试。</p>
+<h2 id="五、TrueNAS-Proxy-Outpost">五、TrueNAS Proxy Outpost</h2>
+<h3 id="5-1-在-Authentik-创建-Outpost">5.1 在 Authentik 创建 Outpost</h3>
+<p>进入“应用程序 → 前哨（Outposts）→ 创建”：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-truenas-proxy</code></td>
+</tr>
+<tr>
+<td>Type</td>
+<td><code>Proxy</code></td>
+</tr>
+<tr>
+<td>Integration / 服务连接</td>
+<td>留空，选择手动部署</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>选中刚创建的 <code>TrueNAS · qBittorrent</code></td>
+</tr>
+</tbody>
+</table>
+<p>在高级配置中把 <code>authentik_host</code> 设置为 <code>https://auth.example.com/</code>，证书校验保持开启，其他设置保留默认。保存后，在该 Outpost 的部署信息中查看手动部署所需的 Token。这里使用系统为此 Outpost 生成的受限令牌，不创建全局管理员 API Token。</p>
+<p>Outpost 选择应用，实际使用的是应用关联的 Provider。创建记录后还没有运行容器，需要继续部署。不要选择云端 Docker Integration，否则它可能在云服务器而不是 TrueNAS 上创建容器。</p>
+<h3 id="5-2-创建-TrueNAS-自定义应用">5.2 创建 TrueNAS 自定义应用</h3>
+<p>在 TrueNAS 的“Apps → Discover Apps”进入 <strong>Install via YAML</strong>，应用名称填 <code>authentik-outpost</code>。不同界面布局中，该入口可能位于更多操作菜单内。<a target="_blank" rel="noopener" href="https://apps.truenas.com/managing-apps/installing-custom-apps/" class="external-link" data-redirect="https%3A%2F%2Fapps.truenas.com%2Fmanaging-apps%2Finstalling-custom-apps%2F">TrueNAS 自定义应用</a></p>
+<p>在 Custom Config 中填写：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div></div><code class="language-yaml">services:
+  proxy:
+    image: ghcr.io/goauthentik/proxy:2026.8.5
+    restart: unless-stopped
+    environment:
+      AUTHENTIK_HOST: https://auth.example.com/
+      AUTHENTIK_INSECURE: 'false'
+      AUTHENTIK_TOKEN: 'REPLACE_WITH_OUTPOST_TOKEN'
+    networks:
+      npm:
+        aliases:
+          - doratiger-authentik-outpost
+
+networks:
+  npm:
+    external: true
+    name: ix-nginx-proxy-manager_default</code></div></pre>
+<p>替换域名、Token 和已核对的 NPM 网络名称，然后保存。示例镜像与本次云端 server、worker 版本一致；手动部署的 Outpost 需要随服务端维护版本。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/outposts/manual-deploy-docker-compose/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Foutposts%2Fmanual-deploy-docker-compose%2F">官方 Compose 部署说明</a></p>
+<p>这里没有 <code>ports</code>：NPM 通过共享 Docker 网络访问 Outpost 的容器端口 <code>9000</code>，不用先映射宿主端口。<code>npm</code> 是当前 Compose 文件内的网络键，<code>name</code> 才是宿主机上已有网络的名字，<code>doratiger-authentik-outpost</code> 则是 NPM 可以解析的别名。</p>
+<p>Token 将保存在 TrueNAS 应用配置中，应限制管理权限并保护配置备份。本例无需挂载 Docker socket，也不在 TrueNAS 再部署 Authentik 数据库。</p>
+<h3 id="5-3-验证-Outpost">5.3 验证 Outpost</h3>
+<p>等待 TrueNAS 安装任务成功、应用进入运行状态，再到 Authentik Outpost 页面检查连接状态。只有容器启动、没有连上云端，仍不能切换 NPM。</p>
+<p>在 TrueNAS Shell 中，从 NPM 容器检查认证端点：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">docker exec NPM_CONTAINER_NAME curl -s -o /dev/null \
+  -w '%&#123;http_code&#125;\n' \
+  -H 'Host: qb.example.com' \
+  -H 'X-Original-URL: https://qb.example.com/' \
+  http://doratiger-authentik-outpost:9000/outpost.goauthentik.io/auth/nginx</code></div></pre>
+<p>本次无会话请求返回 <code>401</code>，说明已到达认证检查接口。若名称解析失败，检查是否在同一个 Docker 网络；连接失败则检查容器、端口和 Outpost 状态。不要把 <code>401</code> 当作安装失败去关闭认证。</p>
+<h2 id="六、NPM-认证配置">六、NPM 认证配置</h2>
+<h3 id="6-1-原代理站点">6.1 原代理站点</h3>
+<p>进入 NPM 的“Hosts → Proxy Hosts”，编辑现有 <code>qb.example.com</code> 站点。Details 中仍保留：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Domain Names</td>
+<td><code>qb.example.com</code></td>
+</tr>
+<tr>
+<td>Scheme</td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>Forward Hostname / IP</td>
+<td><code>192.0.2.10</code></td>
+</tr>
+<tr>
+<td>Forward Port</td>
+<td><code>30024</code></td>
+</tr>
+</tbody>
+</table>
+<p>SSL 页继续使用原证书和 Force SSL。这里不把转发目标改为 Outpost；普通页面和 API 仍由 qBittorrent 响应。</p>
+<p>NPM 没有新增的 Authentik 开关。本次修改在同一站点的 <strong>Advanced</strong> 和 <strong>Custom Locations</strong> 两处，按<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_nginx/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_nginx%2F">官方 NPM 配置方式</a>分别填写。</p>
+<h3 id="6-2-Advanced：Outpost-路由与登录跳转">6.2 Advanced：Outpost 路由与登录跳转</h3>
+<p>在 Advanced 中加入以下配置。这是本次原站点没有其他自定义内容时采用的完整片段；已有自定义规则时先合并，不直接覆盖。</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div></div><code class="language-nginx">port_in_redirect off;
+set $ak_http_host $host;
+
+location /outpost.goauthentik.io &#123;
+    proxy_pass http://doratiger-authentik-outpost:9000;
+    proxy_set_header Host $ak_http_host;
+    proxy_set_header X-Original-URL $scheme://$ak_http_host$request_uri;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length &quot;&quot;;
+&#125;
+
+location @goauthentik_proxy_signin &#123;
+    internal;
+    add_header Set-Cookie $auth_cookie;
+    return 302 /outpost.goauthentik.io/start?rd=$scheme://$ak_http_host$request_uri;
+&#125;</code></div></pre>
+<p>第一段把应用域名下的 Outpost 路径送到局域网容器，包含认证检查、登录开始和回调。它不能再被自己的 <code>auth_request</code> 保护，否则登录入口本身也会要求先登录。</p>
+<p><code>Host</code> 和 <code>X-Original-URL</code> 告诉 Outpost 当前访问的是哪个应用及哪个地址。这里使用标准 HTTPS 443；若应用对外使用非标准端口，应按官方模板保留完整 Host，包括端口，不能照搬本例的 <code>$host</code>。</p>
+<p>第二段是 Nginx 内部命名 location，用于接收未登录结果并跳转。<code>rd</code> 保存登录后返回的应用地址。</p>
+<h3 id="6-3-Custom-Locations：保护应用与转发凭据">6.3 Custom Locations：保护应用与转发凭据</h3>
+<p>切换到 <strong>Custom Locations</strong>，新增或编辑 <code>/</code>：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Location</td>
+<td><code>/</code></td>
+</tr>
+<tr>
+<td>Scheme</td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>Forward Hostname / IP</td>
+<td><code>192.0.2.10</code></td>
+</tr>
+<tr>
+<td>Forward Port</td>
+<td><code>30024</code></td>
+</tr>
+</tbody>
+</table>
+<p>点击该行的<strong>齿轮</strong>，在自定义配置中填写：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-nginx">auth_request /outpost.goauthentik.io/auth/nginx;
+error_page 401 = @goauthentik_proxy_signin;
+
+auth_request_set $auth_cookie $upstream_http_set_cookie;
+add_header Set-Cookie $auth_cookie;
+
+auth_request_set $authentik_auth $upstream_http_authorization;
+proxy_set_header Authorization $authentik_auth;</code></div></pre>
+<p>这里不要再套 <code>location / &#123;&#125;</code>，也不写 <code>proxy_pass</code>，NPM 会根据表单生成它们。Advanced 与 Custom Locations 填写完成后一起保存，确认站点仍为 Online。若保存失败，先恢复备份，查看具体语法错误。</p>
+<p>六行配置分别负责：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>auth_request</code></td>
+<td>在访问后端前调用 Outpost</td>
+</tr>
+<tr>
+<td><code>error_page 401</code></td>
+<td>未登录时进入前面的内部跳转路由</td>
+</tr>
+<tr>
+<td><code>auth_request_set $auth_cookie</code></td>
+<td>读取认证子请求返回的 Cookie</td>
+</tr>
+<tr>
+<td><code>add_header Set-Cookie</code></td>
+<td>把需要更新的认证 Cookie 交给浏览器</td>
+</tr>
+<tr>
+<td><code>auth_request_set $authentik_auth</code></td>
+<td>读取 Outpost 返回的后端 Basic 认证头</td>
+</tr>
+<tr>
+<td><code>proxy_set_header Authorization</code></td>
+<td>用该认证头访问 qBittorrent</td>
+</tr>
+</tbody>
+</table>
+<p><code>$upstream_http_authorization</code> 来自认证子请求的响应，不是直接信任浏览器提供的头。这里只传递后端需要的凭据，没有额外发送它不会使用的用户姓名和组列表。</p>
+<p>如果站点还有其他自定义 location 直接代理 qBittorrent，也要覆盖相同认证检查。不要为 <code>/api/</code> 添加匿名例外。已有 NPM IP Access List 时，还应检查自定义 location 的继承设置，并验证认证通过也不能绕过 IP 限制。</p>
+<h3 id="6-4-保存与持久化">6.4 保存与持久化</h3>
+<p>保存后重新打开站点编辑窗口，应能在上述两个位置看到配置。NPM 根据保存的数据生成 Nginx 文件；只在容器里编辑生成文件，后续保存站点时可能被覆盖。</p>
+<p>本次通过 NPM 原生数据模型保存并调用其配置生成方法，最后完成语法检查和重载。按本文从 WebUI 操作会落在相同的配置位置，无需手工修改 SQLite 数据库。</p>
+<h2 id="七、qBittorrent-后端认证">七、qBittorrent 后端认证</h2>
+<h3 id="7-1-关闭免认证例外">7.1 关闭免认证例外</h3>
+<p>先用无痕窗口完成 Authentik 登录，确认直接进入下载列表，再调整后端认证。不要把免认证当作消除第二次密码提示的办法；本次由 Basic 转发解决该问题。</p>
+<p>在 qBittorrent 的“工具 → 选项 → Web UI”中找到认证设置，取消：</p>
+<ul>
+<li>Bypass authentication for clients on localhost：本机客户端免认证。</li>
+<li>Bypass authentication for clients in whitelisted IP subnets：白名单网段免认证。</li>
+</ul>
+<p>保存后，原白名单文本即使仍在，也不再因该开关获得免认证。对应 API 偏好键为 <code>bypass_local_auth</code> 和 <code>bypass_auth_subnet_whitelist_enabled</code>，本次均设置为 <code>false</code>。</p>
+<p>这里没有更改 qBittorrent 用户名、密码或下载目录。5.3 的配置文件已使用独立 <code>[WebUI]</code> 段，排查时不能只搜索旧版的 <code>WebUI\...</code> 键。运行时修改优先使用界面或原生 API，避免手改文件后被进程写回覆盖。</p>
+<h3 id="7-2-其他安全设置">7.2 其他安全设置</h3>
+<p>统一认证保护的是 NPM 上的 HTTPS 入口。直接通过 IP 和端口访问后端仍使用 qBittorrent 自身认证，不会自动经过 Authentik。</p>
+<p>本次没有同时修改 CSRF、Host Header 校验和可信代理范围，原实例在这些方面仍有需要收紧的配置。应在统一登录稳定后逐项核对 Host、Origin、Referer 和可信代理来源，再恢复对应校验；不能把关闭这些保护当作统一认证的必要条件。</p>
+<p>Basic 凭据本身不是加密数据，当前 NPM 到后端的 HTTP 连接仅位于受控本机网络。若把后端放到另一台不可信网络中的主机，应另行保护这段传输。</p>
+<h2 id="八、验证与维护">八、验证与维护</h2>
+<h3 id="8-1-验证结果">8.1 验证结果</h3>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>本次结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TrueNAS Outpost</td>
+<td>应用安装成功，容器 healthy</td>
+</tr>
+<tr>
+<td>NPM 配置</td>
+<td>语法校验与重载成功</td>
+</tr>
+<tr>
+<td>HTTPS 匿名访问主页、版本 API、任务 API</td>
+<td>均返回 302，最终到达 DoraTiger 登录流程</td>
+</tr>
+<tr>
+<td>应用访问组</td>
+<td>策略检查中，成员允许、非成员拒绝</td>
+</tr>
+<tr>
+<td>浏览器实际登录</td>
+<td>完成 Authentik 登录后直接进入下载列表，不再输入后端密码</td>
+</tr>
+<tr>
+<td>qBittorrent 内部匿名 API</td>
+<td>关闭免认证后返回 403</td>
+</tr>
+<tr>
+<td>后端 Basic 认证</td>
+<td>正常返回 5.3.0 版本</td>
+</tr>
+<tr>
+<td>统一退出</td>
+<td>尚未单独完成跨层会话验证</td>
+</tr>
+</tbody>
+</table>
+<p>Authentik 登录会话、Outpost 会话和 qBittorrent 会话各有生命周期，不能把“登录成功”直接写成“单点退出也成功”。退出按钮的行为需要单独验证。</p>
+<h3 id="8-2-凭据与版本维护">8.2 凭据与版本维护</h3>
+<p>修改 qBittorrent 密码后，同步更新 Authentik 组属性。Authentik 的 Basic 属性在用户向代理认证时读取，已有会话可能仍使用旧值，更新后要重新认证验证。</p>
+<p>手动部署的 Outpost 不依赖云端 Docker Integration 自动升级。维护 Authentik 时，一并检查 server、worker、Outpost 的版本及连接状态。NPM 网络改名或重建后，也要核对 Outpost 的外部网络引用。</p>
+<h3 id="8-3-回退">8.3 回退</h3>
+<p>优先恢复 NPM 原站点的 Advanced 和 Custom Locations，使 HTTPS 入口重新直接到达 qBittorrent。保留后端密码认证即可，无须重新开启网段免认证。</p>
+<p>NPM 不再调用 Outpost 后，才停止 TrueNAS 上的新增应用。需要删除 Authentik 对象时，按应用、Provider、Outpost、组的实际引用处理；不要为了撤销少量对象恢复整个身份数据库，覆盖期间的其他修改。</p>
+<h2 id="九、配置问题与解答">九、配置问题与解答</h2>
+<h3 id="9-1-TrueNAS-显示-5-0-4-已是最新版">9.1 TrueNAS 显示 5.0.4 已是最新版</h3>
+<p><strong>Q：是不是社区 App 没有继续维护？</strong></p>
+<p>本次并不是。检查时，官方目录已有 5.3.0，但本机 <code>catalog.sync</code> 曾因拉取 GitHub 仓库失败而报错。原生目录同步重试成功后，应用从“无更新”变为可更新到 <code>5.3.0 / 1.4.21</code>。刷新目录和升级应用是两项操作，目录恢复并没有自动升级下载器；确认更新后才进行升级。<a target="_blank" rel="noopener" href="https://apps.truenas.com/catalog/qbittorrent_community/" class="external-link" data-redirect="https%3A%2F%2Fapps.truenas.com%2Fcatalog%2Fqbittorrent_community%2F">TrueNAS 应用目录</a></p>
+<h3 id="9-2-NPM-没有新的认证配置项">9.2 NPM 没有新的认证配置项</h3>
+<p><strong>Q：已经接入成功，为什么 Details 页面看不到 Authentik？</strong></p>
+<p>NPM 没有专用开关。配置保存在原 Proxy Host 的 Advanced，以及 Custom Locations 中 <code>/</code> 旁边的齿轮内。刷新页面、重新进入站点编辑窗口即可检查，不需要寻找一个新建的代理站点。</p>
+<h3 id="9-3-通过-Authentik-后仍要求输入-qBittorrent-密码">9.3 通过 Authentik 后仍要求输入 qBittorrent 密码</h3>
+<p><strong>Q：登录页跳转成功，为什么还要登录一次？</strong></p>
+<p>前置身份检查和后端凭据转发是两步。检查 Provider 是否开启 Basic 转发、组属性键是否拼写一致、用户是否属于该组，以及 NPM 是否配置了读取和转发 <code>Authorization</code> 的两行。再单独验证这组凭据能否登录 qBittorrent；不要先扩大免认证网段。</p>
+<h3 id="9-4-配置有白名单，实际仍需要密码">9.4 配置有白名单，实际仍需要密码</h3>
+<p><strong>Q：配置文件启用了网段免认证，为什么浏览器仍出现登录框？</strong></p>
+<p>经过反代后，实际连接来源、转发头和可信代理判断都会影响请求身份。本次切换前的 HTTPS 匿名 API 明确返回 403，Basic 才返回 200。配置文本只能作为排查线索，最终应按实际访问路径测试。</p>
+<h3 id="9-5-Nginx-重载提示-Operation-not-permitted">9.5 Nginx 重载提示 Operation not permitted</h3>
+<p><strong>Q：容器内已经是 root，为什么不能重载？</strong></p>
+<p>本次通过命令调用 NPM 配置生成时遇到了这个问题：Nginx 主进程 UID 是 1000，容器 root 又没有向其他 UID 进程发信号所需的 capability。改用该实例的 Nginx 运行用户执行重载后成功，没有额外增加权限。不同镜像和应用配置的 UID 可能不同，不能把 1000 当作统一默认值。正常从 NPM WebUI 保存时无需额外执行这一步。</p>
+<h3 id="9-6-Basic-请求反复创建会话">9.6 Basic 请求反复创建会话</h3>
+<p><strong>Q：能登录，但为什么会话不断增加？</strong></p>
+<p>5.3.0 有上游问题记录：有效 Basic 请求如果不带可用的会话 Cookie，可能每次创建新会话。浏览器代理应正确保留后端 Cookie。不要只验证一个无 Cookie 的 curl 请求成功，就认为高频调用也正常。<a target="_blank" rel="noopener" href="https://github.com/qbittorrent/qBittorrent/issues/25199" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fqbittorrent%2FqBittorrent%2Fissues%2F25199">上游问题记录</a></p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/forward_auth/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fforward_auth%2F">Authentik Forward Auth</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/header_authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fheader_authentication%2F">Authentik Header authentication</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/outposts/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Foutposts%2F">Authentik Outposts</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/outposts/manual-deploy-docker-compose/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Foutposts%2Fmanual-deploy-docker-compose%2F">Authentik 手动部署 Proxy Outpost</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_nginx/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_nginx%2F">Authentik nginx 与 Nginx Proxy Manager 配置</a></li>
+<li><a target="_blank" rel="noopener" href="https://apps.truenas.com/managing-apps/installing-custom-apps/" class="external-link" data-redirect="https%3A%2F%2Fapps.truenas.com%2Fmanaging-apps%2Finstalling-custom-apps%2F">TrueNAS 自定义应用</a></li>
+<li><a target="_blank" rel="noopener" href="https://apps.truenas.com/catalog/qbittorrent_community/" class="external-link" data-redirect="https%3A%2F%2Fapps.truenas.com%2Fcatalog%2Fqbittorrent_community%2F">TrueNAS qBittorrent 应用目录</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/qbittorrent/qBittorrent/releases" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fqbittorrent%2FqBittorrent%2Freleases">qBittorrent 发布记录</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/58244/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/58244/">https://www.doratiger.top/2026/11/58244/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/58245/"><span>服务器操作指北（16）Authentik 接入 Gitea 统一登录与账号关联</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/58243/"><span>服务器操作指北（14）Authentik 邮件通知与外部身份源</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
