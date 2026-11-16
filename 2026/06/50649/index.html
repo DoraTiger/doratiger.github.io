@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>HEXO 开发笔记（5）自建主题：视觉系统【DoraTiger 的异次元】</title><meta name="description" content="前言 上一篇整理了主题架构，这篇记录配色、背景动画和布局的实现。 最初沿用了 的暗色风格，后来逐步把颜色和尺寸提取成配置，也尝试用 绘制星空和首页文字。"><meta name="keywords" content="hexo,主题开发,CSS,Canvas"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（5）自建主题：视觉系统【DoraTiger 的异次元】"><meta property="og:description" content="前言 上一篇整理了主题架构，这篇记录配色、背景动画和布局的实现。 最初沿用了 的暗色风格，后来逐步把颜色和尺寸提取成配置，也尝试用 绘制星空和首页文字。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/06/50649/"><link rel="canonical" href="https://www.superheaoz.top/2026/06/50649/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>HEXO 开发笔记（5）自建主题：视觉系统【DoraTiger 的异次元】</title><meta name="description" content="前言 上一篇整理了主题架构，这篇记录配色、背景动画和布局的实现。 最初沿用了 的暗色风格，后来逐步把颜色和尺寸提取成配置，也尝试用 绘制星空和首页文字。现在又补上了日间主题，并给虎头像和迎宾图接入日夜切换。"><meta name="keywords" content="hexo,主题开发,CSS,Canvas"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="HEXO 开发笔记（5）自建主题：视觉系统【DoraTiger 的异次元】"><meta property="og:description" content="前言 上一篇整理了主题架构，这篇记录配色、背景动画和布局的实现。 最初沿用了 的暗色风格，后来逐步把颜色和尺寸提取成配置，也尝试用 绘制星空和首页文字。现在又补上了日间主题，并给虎头像和迎宾图接入日夜切换。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/06/50649/"><link rel="canonical" href="https://www.superheaoz.top/2026/06/50649/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
   try {
     var appearance = window.localStorage.getItem('doratiger-appearance');
     if (appearance === 'day' || appearance === 'night') {
@@ -6,7 +6,7 @@
     }
   } catch (_) {}
 })();
-</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"HEXO 开发笔记（5）自建主题：视觉系统","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-06-19T03:00:00.000Z","dateModified":"2026-09-08T16:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/06/50649/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"HEXO 开发笔记（5）自建主题：视觉系统","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-06-19T03:00:00.000Z","dateModified":"2026-11-15T16:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/06/50649/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
 
         <script>
             window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
@@ -22,32 +22,76 @@
 <link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
 <link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
 <link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
-</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%9A%97%E8%89%B2%E4%B8%BB%E9%A2%98%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80"><span class="toc-text">一、暗色主题设计语言</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF%E6%9A%97%E8%89%B2%E4%B8%BB%E9%A2%98"><span class="toc-text">1.1 为什么是暗色主题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E9%A2%9C%E8%89%B2%E4%BD%93%E7%B3%BB"><span class="toc-text">1.2 颜色体系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%AF%9B%E7%8E%BB%E7%92%83%E6%95%88%E6%9E%9C"><span class="toc-text">1.3 毛玻璃效果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E9%9A%8F%E6%9C%BA%E8%89%B2%E6%9D%BF"><span class="toc-text">1.4 随机色板</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Canvas-%E5%8A%A8%E7%94%BB%E7%B3%BB%E7%BB%9F"><span class="toc-text">二、Canvas 动画系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%98%9F%E7%A9%BA%E8%83%8C%E6%99%AF"><span class="toc-text">2.1 星空背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Hero-%E6%96%87%E5%AD%97%E6%B8%B2%E6%9F%93"><span class="toc-text">2.2 Hero 文字渲染</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-404-%E9%A1%B5%E9%9D%A2"><span class="toc-text">2.3 404 页面</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%93%8D%E5%BA%94%E5%BC%8F%E5%B8%83%E5%B1%80"><span class="toc-text">三、响应式布局</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8-JS-%E8%80%8C%E9%9D%9E%E5%AA%92%E4%BD%93%E6%9F%A5%E8%AF%A2"><span class="toc-text">3.1 为什么用 JS 而非媒体查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E4%BE%A7%E8%BE%B9%E6%A0%8F%E6%8A%98%E5%8F%A0"><span class="toc-text">3.2 侧边栏折叠</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-Meta-%E9%A1%B9%E8%87%AA%E5%8A%A8%E6%8D%A2%E8%A1%8C"><span class="toc-text">3.3 Meta 项自动换行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%8F%AF%E5%A4%8D%E7%94%A8%E5%8A%A8%E7%94%BB-Mixin"><span class="toc-text">四、可复用动画 Mixin</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%B8%8B%E5%88%92%E7%BA%BF%E5%B1%95%E5%BC%80"><span class="toc-text">4.1 下划线展开</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%9B%9B%E8%BE%B9%E6%A1%86%E5%8A%A8%E7%94%BB"><span class="toc-text">4.2 四边框动画</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%85%89%E6%89%AB%E6%8C%89%E9%92%AE"><span class="toc-text">4.3 光扫按钮</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%AE%BE%E8%AE%A1%E4%BB%A4%E7%89%8C%E7%B3%BB%E7%BB%9F"><span class="toc-text">五、设计令牌系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">六、总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color7"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color7"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">76</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">147</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（5）自建主题：视觉系统</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-09-09</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%B8%BB%E9%A2%98%E5%BC%80%E5%8F%91/">主题开发</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/CSS/">CSS</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Canvas/">Canvas</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">5132 字 · 约 18 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
-<p>上一篇整理了主题架构，这篇记录配色、背景动画和布局的实现。<code>DoraTiger</code> 最初沿用了 <code>Fan</code> 的暗色风格，后来逐步把颜色和尺寸提取成配置，也尝试用 <code>Canvas</code> 绘制星空和首页文字。</p>
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%97%A5%E5%A4%9C%E4%B8%BB%E9%A2%98"><span class="toc-text">一、日夜主题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%BB%8E%E6%98%9F%E7%A9%BA%E5%88%B0%E6%97%A5%E9%97%B4%E8%83%8C%E6%99%AF"><span class="toc-text">1.1 从星空到日间背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E9%85%8D%E8%89%B2%E4%B8%8E%E5%88%87%E6%8D%A2"><span class="toc-text">1.2 配色与切换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%86%85%E5%AE%B9%E5%8D%A1%E7%89%87"><span class="toc-text">1.3 内容卡片</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E9%9A%8F%E6%9C%BA%E8%89%B2%E6%9D%BF"><span class="toc-text">1.4 随机色板</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Canvas-%E5%8A%A8%E7%94%BB%E7%B3%BB%E7%BB%9F"><span class="toc-text">二、Canvas 动画系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%98%9F%E7%A9%BA%E8%83%8C%E6%99%AF"><span class="toc-text">2.1 星空背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Hero-%E6%96%87%E5%AD%97%E6%B8%B2%E6%9F%93"><span class="toc-text">2.2 Hero 文字渲染</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-404-%E9%A1%B5%E9%9D%A2"><span class="toc-text">2.3 404 页面</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%93%8D%E5%BA%94%E5%BC%8F%E5%B8%83%E5%B1%80"><span class="toc-text">三、响应式布局</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%8F%AF%E7%94%A8%E5%AE%BD%E5%BA%A6%E4%B8%8E%E5%AF%BC%E8%88%AA%E5%B8%83%E5%B1%80"><span class="toc-text">3.1 可用宽度与导航布局</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E4%BE%A7%E8%BE%B9%E6%A0%8F%E6%8A%98%E5%8F%A0"><span class="toc-text">3.2 侧边栏折叠</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-Meta-%E9%A1%B9%E8%87%AA%E5%8A%A8%E6%8D%A2%E8%A1%8C"><span class="toc-text">3.3 Meta 项自动换行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%8F%AF%E5%A4%8D%E7%94%A8%E5%8A%A8%E7%94%BB-Mixin"><span class="toc-text">四、可复用动画 Mixin</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%B8%8B%E5%88%92%E7%BA%BF%E5%B1%95%E5%BC%80"><span class="toc-text">4.1 下划线展开</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%9B%9B%E8%BE%B9%E6%A1%86%E5%8A%A8%E7%94%BB"><span class="toc-text">4.2 四边框动画</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%85%89%E6%89%AB%E6%8C%89%E9%92%AE"><span class="toc-text">4.3 光扫按钮</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%A7%86%E8%A7%89%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE"><span class="toc-text">五、视觉参数配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%A4%B4%E5%83%8F%E4%B8%8E%E8%BF%8E%E5%AE%BE%E5%9B%BE"><span class="toc-text">六、头像与迎宾图</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%B8%A4%E7%A7%8D%E8%99%8E%E5%BD%A2%E8%B1%A1"><span class="toc-text">6.1 两种虎形象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E4%BE%A7%E6%A0%8F%E5%A4%B4%E5%83%8F"><span class="toc-text">6.2 侧栏头像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%85%B3%E4%BA%8E%E9%A1%B5%E5%9B%BE%E7%89%87%E5%88%87%E6%8D%A2"><span class="toc-text">6.3 关于页图片切换</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color1"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">79</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">149</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">HEXO 开发笔记（5）自建主题：视觉系统</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-06-19</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/hexo/">hexo</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/%E4%B8%BB%E9%A2%98%E5%BC%80%E5%8F%91/">主题开发</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/CSS/">CSS</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Canvas/">Canvas</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">6782 字 · 约 23 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>上一篇整理了主题架构，这篇记录配色、背景动画和布局的实现。<code>DoraTiger</code> 最初沿用了 <code>Fan</code> 的暗色风格，后来逐步把颜色和尺寸提取成配置，也尝试用 <code>Canvas</code> 绘制星空和首页文字。现在又补上了日间主题，并给虎头像和迎宾图接入日夜切换。</p>
 <span id="more"></span>
-<h2 id="一、暗色主题设计语言">一、暗色主题设计语言</h2>
-<h3 id="1-1-为什么是暗色主题">1.1 为什么是暗色主题</h3>
-<p><code>DoraTiger</code> 的暗色主题继承自 <code>Fan</code> 主题 — <code>Fan</code> 本身就采用了星空背景，整体偏暗色风格。从 <code>Fan</code> 重构时延续了这个基调，一方面视觉上已经习惯了，另一方面星空背景确实很适合 <code>Canvas</code> 动画的发挥。</p>
-<p>中间考虑过加一个亮色主题，但一直没想好亮色对应的背景该用什么。纯白太单调，渐变又容易和内容区域冲突，就搁置了。所以目前只有暗色方案。</p>
-<h3 id="1-2-颜色体系">1.2 颜色体系</h3>
-<p>所有颜色通过 <code>theme-config()</code> 从配置文件读取，支持运行时覆盖：</p>
-<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-stylus">// source/css/_variable/variable.styl
-$color-theme = theme-config('style.color.theme', 'rgba(230, 119, 0, 1)');         // 强调色（橙）
-$color-sub-theme = theme-config('style.color.sub_theme', 'rgba(7, 144, 232, 1)'); // 辅助色（蓝）
-$color-text = theme-config('style.color.text', 'rgba(255, 255, 255, 1)');         // 主文字（白）
-$color-background = theme-config('style.color.background',
-  'radial-gradient(100% 100% at 70% 120%, rgba(33, 39, 80, 1) 10%, #020409 100%)');</code></div></pre>
-<p>配色方案同样继承自 <code>Fan</code> 主题 — 橙色强调 + 蓝色辅助的组合在暗色背景下辨识度很高，一直沿用至今。亮色方案因为没找到合适的背景搭配，所以配色也没有重新调整。</p>
-<p>设计原则：</p>
-<ul>
-<li><strong>深蓝黑径向渐变</strong>背景，不是纯黑 — 径向渐变让视觉有纵深感</li>
-<li><strong>白色文字</strong> + <code>rgba</code> 透明度控制层级 — 主文字 <code>1.0</code>，次要文字 <code>0.6</code></li>
-<li><strong>橙色强调</strong>用于交互反馈（<code>hover</code>、激活态），<strong>蓝色辅助</strong>用于链接</li>
-</ul>
-<h3 id="1-3-毛玻璃效果">1.3 毛玻璃效果</h3>
-<p>内容区域使用半透明白色背景，配合边框和阴影实现毛玻璃感：</p>
-<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-stylus">$color-content-background = theme-config('style.color.content_background',
-  'rgba(255, 255, 255, 0.1)');</code></div></pre>
+<p>20261113：补充日夜主题、头像与迎宾图配置，更新配色和动画说明。</p>
+<h2 id="一、日夜主题">一、日夜主题</h2>
+<h3 id="1-1-从星空到日间背景">1.1 从星空到日间背景</h3>
+<p><code>DoraTiger</code> 最初继承了 <code>Fan</code> 的暗色风格。用了很久的星空背景已经看习惯了，重构主题时也就保留下来。早先一直没想好亮色背景该怎么做，纯白有些单调，直接换一个渐变又容易和正文抢颜色，所以第一版只有暗色方案。</p>
+<p>后来采用了偏暖的纸色作为日间底色，配深墨青文字，背景保留浅天空和太阳。夜间继续用深色星空和月亮。正文卡片、导航、代码块也一起换色，白天看长文章时就多了一个选择。</p>
+<p>右上角的日月按钮用于手动切换。没有保存过选择时，主题跟随系统；手动切换后，将选择保存在浏览器的 <code>localStorage</code> 中，下次打开仍沿用上次的模式。</p>
+<h3 id="1-2-配色与切换">1.2 配色与切换</h3>
+<p>现在的配色集中在 <code>source/css/_variable/variable.styl</code> 中。主要颜色如下：</p>
+<table>
+<thead>
+<tr>
+<th>用途</th>
+<th>日间</th>
+<th>夜间</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>页面底色</td>
+<td><code>#FDF6E3</code></td>
+<td><code>#020409</code></td>
+</tr>
+<tr>
+<td>正文</td>
+<td><code>#073642</code></td>
+<td><code>#FFFFFF</code></td>
+</tr>
+<tr>
+<td>次要文字</td>
+<td><code>#586E75</code></td>
+<td><code>#BAC5E1</code></td>
+</tr>
+<tr>
+<td>内容卡片</td>
+<td>半透明纸色</td>
+<td>半透明白色</td>
+</tr>
+</tbody>
+</table>
+<p>强调色仍保留金色和浅蓝色。金色放在纸色背景上偏浅，日间会混入深墨青，生成更深的交互颜色，避免链接和按钮看不清。</p>
+<p><code>theme-config()</code> 在构建时读取配置，浏览器中的日夜切换则通过 CSS 自定义属性完成。下面省略了边框、代码高亮等颜色：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div></div><code class="language-stylus">:root
+  --dt-canvas: #020409
+  --dt-text: #fff
+  --dt-text-muted: #bac5e1
+
+day-palette()
+  --dt-canvas: #fdf6e3
+  --dt-text: #073642
+  --dt-text-muted: #586e75
+
+html[data-appearance='day']
+  day-palette()
+
+@media (prefers-color-scheme: light)
+  html[data-appearance='system']
+    day-palette()</code></div></pre>
+<p>页面根节点上的 <code>data-appearance</code> 保存 <code>day</code>、<code>night</code> 或 <code>system</code>。组件引用同一组颜色变量，切换时就不用分别改导航、侧栏和正文的颜色。已有的 Stylus 变量也保留下来，例如 <code>$color-text</code> 指向 <code>var(--dt-text)</code>，原来的组件样式可以继续使用。</p>
+<p>Canvas 需要另外重绘。主题切换时会发出 <code>doratiger:appearancechange</code> 事件，背景等组件通过事件拿到当前是否为日间模式。</p>
+<h3 id="1-3-内容卡片">1.3 内容卡片</h3>
+<p>原来的内容区用了半透明白色背景，叠在星空上有一点毛玻璃效果。日间则改成半透明纸色，边框和阴影随配色一起调整：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-stylus">:root
+  --dt-surface: rgba(255, 255, 255, .10)
+
+html[data-appearance='day']
+  --dt-surface: rgba(253, 246, 227, .82)</code></div></pre>
+<p>这里是两种状态的示意，完整实现仍放在前面的 <code>day-palette()</code> 中，以便跟随系统时使用相同配色。</p>
 <h3 id="1-4-随机色板">1.4 随机色板</h3>
 <p>自动生成 11 个颜色 class，用于社交链接圆点等动态着色场景：</p>
 <pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-stylus">$colors = #495057 #f03e3e #ae3ec9 #7048e8 #4263eb #1098ad
@@ -57,24 +101,11 @@ for color, i in $colors &#123;
 &#125;</code></div></pre>
 <h2 id="二、Canvas-动画系统">二、Canvas 动画系统</h2>
 <h3 id="2-1-星空背景">2.1 星空背景</h3>
-<p>全屏 <code>&lt;canvas&gt;</code> 元素 <code>#universe</code>，通过 <code>requestAnimationFrame</code> 驱动三种粒子效果：</p>
-<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div></div><code class="language-javascript">// source/js/layout/background.js
-class Background &#123;
-    constructor() &#123;
-        this.canva = document.getElementById(&quot;universe&quot;);
-        this.starDensity = 0.001; // 每像素星星密度
-        this.createUniverse();
-    &#125;
-
-    createUniverse() &#123;
-        // 三种星星：
-        // 1. 巨星：大尺寸，缓慢水平漂移
-        // 2. 彗星：快速对角线划过，带拖尾
-        // 3. 普通星：随机闪烁（opacity 变化）
-    &#125;
-&#125;</code></div></pre>
-<p>画布覆盖在所有内容之下（<code>z-index: -1</code>），不影响交互。星星数量根据屏幕尺寸动态计算（<code>starDensity * width</code>），保证不同设备上都有合适的粒子密度。</p>
-<p>移动端的 <code>Canvas</code> 性能表现一般 — 粒子数量虽然会根据屏幕缩小，但在低端设备上仍然有掉帧。目前没有做更激进的降级处理（比如关闭动画），算是一个已知的体验短板。</p>
+<p>夜间的全屏 <code>&lt;canvas&gt;</code> 元素 <code>#universe</code> 通过 <code>requestAnimationFrame</code> 绘制星空，包括缓慢漂移的巨星、带拖尾的彗星和普通闪烁星星。画布放在内容下方，不拦截页面交互。</p>
+<p>星星数量按窗口宽度计算，小屏幕再减少一些：</p>
+<pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-javascript">this.starDensity = 0.216;
+this.starCount = this.width * this.starDensity * (this.width &lt; 768 ? 0.45 : 1);</code></div></pre>
+<p>补上日间主题后，星空只在夜间运行。切到日间时取消动画帧并清空画布，切回夜间再恢复。浏览器标签页隐藏时也暂停绘制；系统开启“减少动态效果”时，不启动星空动画。</p>
 <h3 id="2-2-Hero-文字渲染">2.2 Hero 文字渲染</h3>
 <p>首页顶部的标题和副标题使用 <code>Canvas</code> 渲染，配合 <code>pretext</code> 排版引擎做精确文字布局：</p>
 <pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div></div><code class="language-javascript">// source/js/layout/hero.js
@@ -110,10 +141,9 @@ class Page404 &#123;
     &#125;
 &#125;</code></div></pre>
 <h2 id="三、响应式布局">三、响应式布局</h2>
-<h3 id="3-1-为什么用-JS-而非媒体查询">3.1 为什么用 JS 而非媒体查询</h3>
-<p>最初考虑过媒体查询方案，但实际对比后选择了 <code>JS</code> 动态计算，原因有两个：</p>
-<p><strong>媒体查询的局限</strong>：断点是固定的（比如 <code>768px</code>、<code>1024px</code>），但实际布局中每个区域的可用宽度不同。<code>header</code> 的宽度不等于 <code>sidebar</code> 的宽度，用统一的断点无法精确控制每个区域的行为。</p>
-<p><strong>JS 的灵活性</strong>：通过 <code>getBoundingClientRect()</code> 获取实际可用宽度，可以精确到像素级别控制显示/隐藏。而且 <code>JS</code> 可以通过 <code>hook</code> 机制按需嵌入，媒体查询则需要在 <code>CSS</code> 中写死所有断点规则，维护成本更高。</p>
+<h3 id="3-1-可用宽度与导航布局">3.1 可用宽度与导航布局</h3>
+<p>早期的导航布局用了 <code>JS</code> 动态计算，根据各区域的实际可用宽度调整元素显示。</p>
+<p>导航和侧栏的可用空间不同，读取容器尺寸可以决定哪些元素需要收起。下面保留早期的简化示例；当前布局同时使用 CSS 媒体查询处理断点。</p>
 <pre><div class="code-header"><span class="code-header-type">javascript</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-javascript">// source/js/layout/header.js
 function autoResizeHeaderRight() &#123;
     const containerWidth = headerWrapper.getBoundingClientRect().width;
@@ -168,48 +198,63 @@ function toggleSidebar() &#123;
   &amp;:hover::before
     left 100%; transition left 0.5s ease</code></div></pre>
 <p><code>CSS</code> 的动画语法确实绕，尤其是 <code>::before</code>/<code>::after</code> 伪元素配合 <code>transition</code> 的各种组合，踩了不少坑。最终真正熟练掌握的主要是 <code>Stylus</code> 的变量、<code>Mixin</code> 和函数体系，底层 <code>CSS</code> 动画还是在实践中慢慢摸索出来的。</p>
-<h2 id="五、设计令牌系统">五、设计令牌系统</h2>
-<p>所有视觉参数通过 <code>theme-config()</code> 从配置文件读取，用户可在 <code>_config.hexo-theme-doratiger.yml</code> 中覆盖：</p>
-<table>
-<thead>
-<tr>
-<th>令牌</th>
-<th>默认值</th>
-<th>可配置</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>$color-theme</code></td>
-<td>橙色</td>
-<td>✅</td>
-</tr>
-<tr>
-<td><code>$color-background</code></td>
-<td>深蓝黑径向渐变</td>
-<td>✅</td>
-</tr>
-<tr>
-<td><code>$sidebar-width</code></td>
-<td>300px</td>
-<td>✅</td>
-</tr>
-<tr>
-<td><code>$main-content-max-width</code></td>
-<td>800px</td>
-<td>✅</td>
-</tr>
-<tr>
-<td><code>$transition-delay</code></td>
-<td>all 0.5s</td>
-<td>✅</td>
-</tr>
-</tbody>
-</table>
-<p>最初写样式的时候，颜色值直接写在各个 <code>.styl</code> 文件里：<code>post.styl</code> 里写一个 <code>rgba(230, 119, 0, 1)</code>，<code>sidebar.styl</code> 里又写一个，<code>header.styl</code> 里再来一个。后来想让主题色可配置，才发现到处都要改，费了不少功夫把十几个文件里的颜色逐一换成 <code>theme-config()</code> 引用，集中到 <code>_variable/variable.styl</code> 中管理。</p>
-<p>这意味着用户无需修改任何 <code>Stylus</code> 代码，只改配置文件就能调整整个主题的视觉风格。</p>
-<h2 id="六、总结">六、总结</h2>
-<p>写这篇时，暗色方案已经能日常使用，亮色背景还没有想好。移动端的动画性能和布局效果一般，<code>pretext</code> 在侧边栏切换时也还有排版问题。这些地方仍需要继续调整。</p>
+<h2 id="五、视觉参数配置">五、视觉参数配置</h2>
+<p>最初写样式的时候，颜色值直接散在各个 <code>.styl</code> 文件里：<code>post.styl</code> 写一个，<code>sidebar.styl</code> 再写一个。后来想让主题色可配置，才逐一整理到 <code>_variable/variable.styl</code> 中。</p>
+<p>现在常用的强调色、正文字号和布局宽度可以在博客根目录的 <code>_config.hexo-theme-doratiger.yml</code> 中覆盖：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-yaml">style:
+  accent: &quot;#E7A63A&quot;
+  accent_secondary: &quot;#73C4F5&quot;
+  typography:
+    font_size: &quot;16px&quot;
+  layout:
+    content_width: &quot;46rem&quot;
+    sidebar_width: &quot;18rem&quot;</code></div></pre>
+<p>这些配置在 Hexo 构建时生效。日夜配色的具体搭配、部分间距和动画参数仍由主题样式维护，需要改动时再调整源码。</p>
+<h2 id="六、头像与迎宾图">六、头像与迎宾图</h2>
+<h3 id="6-1-两种虎形象">6.1 两种虎形象</h3>
+<p>之前侧栏用的是蓝色外环的虎头像，关于页开头则放了一张挥手的大白。最近整理个人视觉素材时，保留了虎头的方向，分别做了虎徽和 Q 版虎：侧栏继续用虎徽，关于页换成 Q 版小虎挥手的迎宾图。</p>
+<p>两种形象都准备了日夜版本。头像的脸型、虎纹和表情保持一致，主要更换底盘和外环颜色；迎宾图则分别配太阳、云层和月亮、星空。这样切换主题时，角色还是原来的角色，背景能和页面接上。</p>
+<p>页面的大面积配色沿用现有主题，虎橙主要留在角色身上。正文继续沿用原来的章节、代码块和图表排版。</p>
+<h3 id="6-2-侧栏头像">6.2 侧栏头像</h3>
+<p>原来的主题只有一个头像地址，这次新增了两个可选配置：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">global:
+  favicon: /images/identity/favicon.svg
+  avatar: /images/identity/avatar-share.png
+
+sidebar:
+  info:
+    avatar:
+    avatar_day: /images/identity/badge-emblem-light.svg
+    avatar_night: /images/identity/badge-emblem-dark.svg</code></div></pre>
+<p>图片放在博客的 <code>source/images/identity/</code> 下。主题只提供切换能力，个人素材由博客自己保存，其他人用主题时可以换成自己的图片。</p>
+<p>某一侧没有填写时，回退到 <code>sidebar.info.avatar</code>，再沿用 <code>global.avatar</code>；两项都不填，就继续显示原来的单张头像。<code>global.avatar</code> 同时保留 PNG，供默认分享预览使用。</p>
+<p>侧栏选用了圆外透明的 SVG 徽章，日夜头像保持相同尺寸。原来鼠标放上去旋转的动画也去掉了，虎头倒着转一圈看起来不太合适。</p>
+<p>浏览器标签上的图标另用了简化虎头。完整头像缩到 16 或 32 像素后，虎纹和细环挤在一起，单独准备小图标更清楚。</p>
+<h3 id="6-3-关于页图片切换">6.3 关于页图片切换</h3>
+<p>关于页的迎宾图直接写在页面正文中。两张图片放进同一个容器，由主题 CSS 控制显示：</p>
+<pre><div class="code-header"><span class="code-header-type">html</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-html">&lt;div class=&quot;appearance-image about-welcome&quot;&gt;
+  &lt;img class=&quot;appearance-image-day&quot;
+       src=&quot;/images/identity/welcome-light.webp&quot;
+       width=&quot;720&quot; height=&quot;720&quot; alt=&quot;小虎挥手欢迎你&quot;&gt;
+  &lt;img class=&quot;appearance-image-night&quot;
+       src=&quot;/images/identity/welcome-dark.webp&quot;
+       width=&quot;720&quot; height=&quot;720&quot; alt=&quot;小虎挥手欢迎你&quot;&gt;
+&lt;/div&gt;</code></div></pre>
+<p><code>appearance-image</code> 负责日夜切换，<code>about-welcome</code> 负责居中和展示尺寸。它们复用页面已有的 <code>data-appearance</code> 和系统配色媒体查询，不需要额外写一段图片切换脚本。</p>
+<p>迎宾原图每张约 1.6–1.8MB，网页上用不到这么大，另存成 720×720 的 WebP 后，两张分别约 64KB 和 76KB。原图继续保留，页面中的显示宽度限制为 240px。</p>
+<p>这里还踩了一个 Stylus 的坑。最初想让图片不超过容器，同时限制最大宽度，写成了：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-stylus">width min(100%, 240px)</code></div></pre>
+<p>结果构建后只剩下 <code>width: 100%</code>。Stylus 提前计算了 <code>min()</code>，没有把它原样交给浏览器。手机竖屏时内容区本来就窄，看起来还算正常，桌面横屏下图片却直接铺满了正文宽度。</p>
+<p>最后拆成两个属性：</p>
+<pre><div class="code-header"><span class="code-header-type">stylus</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-stylus">.appearance-image.about-welcome
+  width 240px
+  max-width 100%
+  margin 0 auto 1rem
+  &gt; img
+    width 100%
+    height auto
+    margin 0</code></div></pre>
+<p>这样宽屏下是 240px，容器更窄时再随容器缩小。改完分别检查了两个站点的桌面和手机页面，日夜切换时图片尺寸保持一致，个人介绍也能留在首屏里。</p>
 <h2 id="参考">参考</h2>
 <ul>
 <li><a target="_blank" rel="noopener" href="https://www.stylus-lang.cn/" title="Stylus 中文文档" class="external-link" data-redirect="https%3A%2F%2Fwww.stylus-lang.cn%2F">Stylus 中文文档</a></li>

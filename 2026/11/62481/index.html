@@ -1,0 +1,625 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（7）Authentik 接入 Lucky 统一登录与管理员授权【DoraTiger 的异次元】</title><meta name="description" content="前言 TrueNAS 上的应用陆续接入 Authentik 后，继续处理 iStoreOS 上的 Lucky。原来使用独立的管理员账号密码，希望增加 DoraTiger Auth 登录，同时保留原登录方式作为维护入口。 目前 Lucky 已升级到 ，使用原生 OIDC，HTTPS 入口继续由 Nginx Proxy M"><meta name="keywords" content="lucky,authentik,oidc,nginx,openwrt"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（7）Authentik 接入 Lucky 统一登录与管理员授权【DoraTiger 的异次元】"><meta property="og:description" content="前言 TrueNAS 上的应用陆续接入 Authentik 后，继续处理 iStoreOS 上的 Lucky。原来使用独立的管理员账号密码，希望增加 DoraTiger Auth 登录，同时保留原登录方式作为维护入口。 目前 Lucky 已升级到 ，使用原生 OIDC，HTTPS 入口继续由 Nginx Proxy M"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62481/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62481/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（7）Authentik 接入 Lucky 统一登录与管理员授权","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-15T02:00:00.000Z","dateModified":"2026-11-15T16:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62481/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%AE%A4%E8%AF%81%E7%BB%93%E6%9E%84"><span class="toc-text">一、认证结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Lucky-%E5%8E%9F%E7%94%9F-OIDC"><span class="toc-text">1.1 Lucky 原生 OIDC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E7%A4%BA%E4%BE%8B%E5%9C%B0%E5%9D%80%E4%B8%8E%E5%91%BD%E5%90%8D"><span class="toc-text">1.2 示例地址与命名</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Lucky-%E5%8D%87%E7%BA%A7%E4%B8%8E%E5%85%A5%E5%8F%A3%E5%87%86%E5%A4%87"><span class="toc-text">二、Lucky 升级与入口准备</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%BA%94%E7%94%A8%E5%95%86%E5%BA%97%E5%AE%89%E8%A3%85"><span class="toc-text">2.1 应用商店安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%9B%BF%E6%8D%A2%E6%A0%B8%E5%BF%83"><span class="toc-text">2.2 替换核心</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-NPM-HTTPS-%E7%AE%A1%E7%90%86%E5%85%A5%E5%8F%A3"><span class="toc-text">2.3 NPM HTTPS 管理入口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Authentik-%E5%BA%94%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">三、Authentik 应用配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%BA%94%E7%94%A8%E8%AE%BF%E9%97%AE%E7%BB%84"><span class="toc-text">3.1 应用访问组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-OAuth2-OpenID-Connect-Provider"><span class="toc-text">3.2 OAuth2&#x2F;OpenID Connect Provider</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%BA%94%E7%94%A8%E4%B8%8E%E7%BB%84%E7%BB%91%E5%AE%9A"><span class="toc-text">3.3 应用与组绑定</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Lucky-OAuth-%E5%9B%9E%E8%B0%83%E6%9C%8D%E5%8A%A1"><span class="toc-text">四、Lucky OAuth 回调服务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%86%85%E9%83%A8-TLS-%E8%AF%81%E4%B9%A6"><span class="toc-text">4.1 内部 TLS 证书</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-Web-%E6%9C%8D%E5%8A%A1%E4%B8%BB%E8%A7%84%E5%88%99"><span class="toc-text">4.2 Web 服务主规则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-OAuth-%E5%AD%90%E8%A7%84%E5%88%99"><span class="toc-text">4.3 OAuth 子规则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-NPM-%E5%9B%9E%E8%B0%83%E8%B7%AF%E5%BE%84"><span class="toc-text">4.4 NPM 回调路径</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%AC%AC%E4%B8%89%E6%96%B9%E8%BA%AB%E4%BB%BD%E4%B8%8E%E7%AE%A1%E7%90%86%E5%91%98%E7%99%BB%E5%BD%95%E5%90%8D%E5%8D%95"><span class="toc-text">五、第三方身份与管理员登录名单</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-OIDC-%E5%85%AC%E5%85%B1%E5%8F%82%E6%95%B0"><span class="toc-text">5.1 OIDC 公共参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E7%99%BB%E8%AE%B0%E6%8E%88%E6%9D%83%E7%94%A8%E6%88%B7"><span class="toc-text">5.2 登记授权用户</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E5%90%8E%E5%8F%B0%E7%99%BB%E5%BD%95%E5%90%8D%E5%8D%95"><span class="toc-text">5.3 后台登录名单</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E7%99%BB%E5%BD%95%E9%AA%8C%E8%AF%81"><span class="toc-text">5.4 登录验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">六、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E8%8E%B7%E5%8F%96%E4%B8%B4%E6%97%B6%E7%A0%81%E5%A4%B1%E8%B4%A5"><span class="toc-text">6.1 获取临时码失败</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-OAuth-%E4%BB%A4%E7%89%8C%E6%97%A0%E6%95%88"><span class="toc-text">6.2 OAuth 令牌无效</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E4%B8%BB%E8%A7%84%E5%88%99%E6%AD%A3%E5%B8%B8%EF%BC%8C%E5%9B%9E%E8%B0%83%E4%BB%8D%E4%B8%8D%E5%8F%AF%E7%94%A8"><span class="toc-text">6.3 主规则正常，回调仍不可用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E5%81%9C%E6%AD%A2%E6%9C%8D%E5%8A%A1%E6%97%B6%E7%BB%B4%E6%8A%A4%E5%91%BD%E4%BB%A4%E4%B8%AD%E6%96%AD"><span class="toc-text">6.4 停止服务时维护命令中断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-5-%E5%9B%9E%E8%B0%83%E8%BF%94%E5%9B%9E-503"><span class="toc-text">6.5 回调返回 503</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-6-%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%8F%90%E7%A4%BA%E5%AF%86%E7%A0%81%E9%94%99%E8%AF%AF"><span class="toc-text">6.6 自动化登录提示密码错误</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E9%AA%8C%E8%AF%81%E4%B8%8E%E7%BB%B4%E6%8A%A4"><span class="toc-text">七、验证与维护</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color2"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">79</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">149</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（7）Authentik 接入 Lucky 统一登录与管理员授权</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/lucky/">lucky</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/oidc/">oidc</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nginx/">nginx</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/openwrt/">openwrt</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">7597 字 · 约 26 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>TrueNAS 上的应用陆续接入 Authentik 后，继续处理 iStoreOS 上的 Lucky。原来使用独立的管理员账号密码，希望增加 DoraTiger Auth 登录，同时保留原登录方式作为维护入口。</p>
+<p>目前 Lucky 已升级到 <code>3.8.1</code>，使用原生 OIDC，HTTPS 入口继续由 Nginx Proxy Manager（NPM）管理。环境为 iStoreOS <code>24.10.6</code>、Authentik <code>2026.8.5</code> 和 NPM <code>2.14.0</code>。</p>
+<span id="more"></span>
+<p>本文复用 <a href="/2026/11/58242/" title="统一认证实践（2）Authentik DoraTiger 自建流程与默认配置清理">统一认证实践（2）Authentik DoraTiger 自建流程与默认配置清理</a> 中已经测试的登录、授权和 Provider 退出流程。关于 OIDC 应用与本地用户的关系，也可以参考 <a href="/2026/11/58245/" title="统一认证实践（5）Authentik 接入 Gitea 统一登录与账号关联">统一认证实践（5）Authentik 接入 Gitea 统一登录与账号关联</a>。</p>
+<h2 id="一、认证结构">一、认证结构</h2>
+<h3 id="1-1-Lucky-原生-OIDC">1.1 Lucky 原生 OIDC</h3>
+<p>Lucky 支持原生 OIDC。这里先将应用商店安装的核心升级到 <code>3.8.1</code>，再配置 Authentik 登录。</p>
+<p>Lucky 的接入分为三个配置位置：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web 服务中的 OAuth 子规则</td>
+<td>提供回调接口，保存客户端密钥，处理令牌交换</td>
+</tr>
+<tr>
+<td>第三方认证管理</td>
+<td>配置授权端点、Client ID、回调 URI，并登记授权用户</td>
+</tr>
+<tr>
+<td>设置中的第三方后台登录</td>
+<td>决定哪些已登记用户可以登录管理后台</td>
+</tr>
+</tbody>
+</table>
+<p>只填 OIDC 参数，并不等于已经授予后台管理权限。授权用户保存成功以后，还需要加入后台登录名单。</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-text">浏览器 → NPM → Lucky 管理页面
+                  ↓ 发起 OIDC 登录
+             云端 Authentik
+                  ↓ 登录、MFA、应用访问组检查
+浏览器 → NPM 的 /oauth/callback → Lucky OAuth 子规则
+                                      ↓ 换取令牌、识别用户
+                               Lucky 管理员登录名单
+                                      ↓
+                                  管理后台</code></div></pre>
+<p>Lucky 原生处理 OIDC，不使用 Proxy Outpost。NPM 在这里负责 HTTPS 和路径转发，没有为 Lucky 配置 <code>auth_request</code>。浏览器和 Lucky 服务端都需要能访问云端 Authentik；后台的临时码生成还依赖配置的回调服务可达。</p>
+<h3 id="1-2-示例地址与命名">1.2 示例地址与命名</h3>
+<p>以下 <code>192.0.2.0/24</code> 地址仅用于文档示例，部署时替换为实际局域网地址。</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>云端身份服务</td>
+<td><code>https://auth.example.com</code></td>
+</tr>
+<tr>
+<td>NPM 所在主机</td>
+<td><code>192.0.2.10</code></td>
+</tr>
+<tr>
+<td>iStoreOS 主机</td>
+<td><code>192.0.2.20</code></td>
+</tr>
+<tr>
+<td>Lucky HTTPS 入口</td>
+<td><code>https://lucky.example.com/lucky/</code></td>
+</tr>
+<tr>
+<td>Lucky 管理端口与安全入口</td>
+<td><code>16601</code>、<code>/lucky</code></td>
+</tr>
+<tr>
+<td>OAuth 回调监听端口</td>
+<td><code>16602</code>，本次选用的空闲端口</td>
+</tr>
+<tr>
+<td>完整回调 URI</td>
+<td><code>https://lucky.example.com/oauth/callback</code></td>
+</tr>
+<tr>
+<td>Authentik 应用 Slug</td>
+<td><code>istoreos-site-a-lucky</code></td>
+</tr>
+<tr>
+<td>应用访问组</td>
+<td><code>istoreos-site-a-lucky-admins</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>site-a</code> 用于区分部署位置，实际可替换为自己的命名。服务运行在 iStoreOS，NPM 部署在另一台主机；应用命名仍按服务所在位置划分。</p>
+<h2 id="二、Lucky-升级与入口准备">二、Lucky 升级与入口准备</h2>
+<h3 id="2-1-应用商店安装">2.1 应用商店安装</h3>
+<p>先在 iStoreOS 应用商店安装 Lucky，装好后在管理界面停止服务，确认处于停止状态，再替换核心文件。这样可以沿用应用商店安装的管理界面和启动服务。</p>
+<p>如果已经用过 Lucky，先导出配置，并保留旧二进制，方便需要时恢复。这台设备是 ARM64，从 <a target="_blank" rel="noopener" href="https://github.com/gdy666/lucky/releases" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fgdy666%2Flucky%2Freleases">Lucky 官方 Releases</a> 下载对应架构的安装包，解压出 <code>lucky</code> 二进制；这里使用的版本是 <code>3.8.1</code>。</p>
+<h3 id="2-2-替换核心">2.2 替换核心</h3>
+<p>通过 SSH 登录 iStoreOS，查找 Lucky 的文件位置：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">which lucky</code></div></pre>
+<p>这台设备返回的是：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">/usr/bin/lucky</code></div></pre>
+<p>保持服务停止，将解压出的新版 <code>lucky</code> 上传到 <code>/usr/bin/lucky</code>，替换原文件。上传完成后，在 iStoreOS 终端赋予执行权限：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">chmod 755 /usr/bin/lucky</code></div></pre>
+<p>随后回到 iStoreOS 的 Lucky 管理界面，启动或重启服务。打开 Lucky 后台，确认核心版本为 <code>3.8.1</code>，再检查原账号、Web 服务规则和监听端口。</p>
+<p>直接替换二进制后，应用商店或 opkg 中的包版本可能仍是旧值，运行版本以 Lucky 后台显示的核心版本为准。以后通过应用商店更新时，也留意核心文件是否被覆盖。</p>
+<h3 id="2-3-NPM-HTTPS-管理入口">2.3 NPM HTTPS 管理入口</h3>
+<p>先将 <code>lucky.example.com</code> 解析到 NPM 主机，并准备覆盖该域名的证书。在 NPM 的“Hosts → Proxy Hosts”中新建站点：</p>
+<table>
+<thead>
+<tr>
+<th>Details 字段</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Domain Names</td>
+<td><code>lucky.example.com</code></td>
+</tr>
+<tr>
+<td>Scheme</td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>Forward Hostname / IP</td>
+<td><code>192.0.2.20</code></td>
+</tr>
+<tr>
+<td>Forward Port</td>
+<td><code>16601</code></td>
+</tr>
+<tr>
+<td>Websockets Support</td>
+<td>开启</td>
+</tr>
+</tbody>
+</table>
+<p>SSL 中选择对应证书并开启 Force SSL。保存后访问 <code>https://lucky.example.com/lucky/</code>，应能使用原账号密码登录。</p>
+<p>本例的 <code>/lucky</code> 是既有安全入口。若希望裸域名也能打开，在此站点 Advanced 中加入：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-nginx">location = / &#123;
+    return 302 /lucky/;
+&#125;</code></div></pre>
+<p>已有 Advanced 内容时合并保存，不覆盖其他规则。仅重定向根路径，不移除 Lucky 的安全入口。</p>
+<h2 id="三、Authentik-应用配置">三、Authentik 应用配置</h2>
+<h3 id="3-1-应用访问组">3.1 应用访问组</h3>
+<p>在 Authentik 的“目录 → 组”中创建 <code>istoreos-site-a-lucky-admins</code>，不启用组的超级用户权限。保存后打开成员管理，将准备使用 Lucky 的现有 Authentik 管理员身份加入，例如 <code>admin-user</code>。</p>
+<p>这个组控制谁能使用 Lucky 的 OIDC 应用，Lucky 自己的后台登录名单还要单独配置。两处都通过，才能使用该身份进入管理后台。</p>
+<h3 id="3-2-OAuth2-OpenID-Connect-Provider">3.2 OAuth2/OpenID Connect Provider</h3>
+<p>进入“应用程序 → 提供者 → 创建”，类型选择 <strong>OAuth2/OpenID Connect</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置与作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-istoreos-site-a-lucky</code></td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td><code>doratiger-authentication</code>，已有登录及 MFA 流程</td>
+</tr>
+<tr>
+<td>Authorization flow</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code>，免逐次同意页面</td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td><code>doratiger-provider-invalidation</code></td>
+</tr>
+<tr>
+<td>Client type</td>
+<td><code>Confidential</code>，由 Lucky 服务端保存密钥</td>
+</tr>
+<tr>
+<td>Client ID / Client Secret</td>
+<td>使用生成值，分别保存供后续填写</td>
+</tr>
+<tr>
+<td>Grant types</td>
+<td><code>Authorization code</code></td>
+</tr>
+<tr>
+<td>Signing key</td>
+<td>选择已有签名证书</td>
+</tr>
+<tr>
+<td>Subject mode</td>
+<td>本次保留 <code>hashed_user_id</code></td>
+</tr>
+</tbody>
+</table>
+<p>在 Redirect URIs 新增一条，匹配方式选 <code>Strict</code>，URI 类型选 <code>Authorization</code>，地址填写：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://lucky.example.com/oauth/callback</code></div></pre>
+<p>Scope mappings 选择提供 <code>openid</code>、<code>email</code>、<code>profile</code> 的标准映射，保存 Provider。已经绑定身份后，不要随意修改 Subject mode，否则应用看到的用户标识可能改变。</p>
+<h3 id="3-3-应用与组绑定">3.3 应用与组绑定</h3>
+<p>在“应用程序 → 应用程序”中新建，选择 <strong>with existing provider</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>iStoreOS Site A · Lucky</code></td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>istoreos-site-a-lucky</code></td>
+</tr>
+<tr>
+<td>Provider</td>
+<td><code>doratiger-istoreos-site-a-lucky</code></td>
+</tr>
+<tr>
+<td>Launch URL</td>
+<td><code>https://lucky.example.com/lucky/</code></td>
+</tr>
+</tbody>
+</table>
+<p>保存后，在该应用的“策略／组／用户绑定”中创建绑定：选择 <code>istoreos-site-a-lucky-admins</code>，Order 为 <code>0</code>，启用绑定，Negate 关闭，然后保存。</p>
+<p>应用建立后，发现文档地址为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/application/o/istoreos-site-a-lucky/.well-known/openid-configuration</code></div></pre>
+<p>这里的路径包含应用 Slug。授权端点则为 <code>https://auth.example.com/application/o/authorize/</code>，两者用途不同。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/oauth2/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Foauth2%2F">Authentik OAuth2 Provider</a></p>
+<h2 id="四、Lucky-OAuth-回调服务">四、Lucky OAuth 回调服务</h2>
+<h3 id="4-1-内部-TLS-证书">4.1 内部 TLS 证书</h3>
+<p>Lucky 的 OAuth Web 服务要求启用 TLS，因此浏览器到 NPM、NPM 到 Lucky 回调端口这两段连接都使用 HTTPS。</p>
+<p>本次为这段内部连接使用独立自签名证书，并在 NPM 显式信任它，不关闭后端证书校验。浏览器仍使用 NPM 原有的公开证书。</p>
+<p>在有 OpenSSL 的可信管理环境中生成证书，目录只允许管理员访问：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">umask 077
+mkdir -p lucky-oidc-tls
+openssl req -x509 -newkey rsa:2048 -sha256 -nodes -days 1095 \
+  -keyout lucky-oidc-tls/oidc-key.pem \
+  -out lucky-oidc-tls/oidc-cert.pem \
+  -subj &quot;/CN=lucky.example.com&quot; \
+  -addext &quot;subjectAltName=DNS:lucky.example.com&quot; \
+  -addext &quot;basicConstraints=critical,CA:TRUE,pathlen:0&quot; \
+  -addext &quot;extendedKeyUsage=serverAuth&quot;</code></div></pre>
+<p>生成前替换 CN 和 SAN 中的域名。把私钥和证书通过受保护连接传入 iStoreOS 的 <code>/etc/lucky/tls/</code>，目录设为 700、文件设为 600。</p>
+<p>在 Lucky“SSL 证书”中添加证书，来源选择路径，证书路径填 <code>/etc/lucky/tls/oidc-cert.pem</code>，私钥路径填 <code>/etc/lucky/tls/oidc-key.pem</code>，备注可填 <code>DoraTiger OIDC internal TLS</code>，保存并启用。确认域名覆盖回调地址。</p>
+<p>另外只把<strong>公开证书</strong>复制到 NPM 持久化 <code>/data</code> 中的 <code>/data/custom_ssl/lucky-oidc-ca.pem</code>，供 Nginx 读取并校验后端。路径以容器内视角为准；不要把私钥复制到 NPM。证书到期前需要更换 Lucky 端证书与 NPM 信任文件，并重新验证登录。</p>
+<h3 id="4-2-Web-服务主规则">4.2 Web 服务主规则</h3>
+<p>在 Lucky 的“Web 服务”中新建主规则。本文保留原有规则，单独创建回调监听：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>名称</td>
+<td><code>DoraTiger Auth OIDC</code></td>
+</tr>
+<tr>
+<td>网络</td>
+<td><code>tcp4</code></td>
+</tr>
+<tr>
+<td>监听 IP</td>
+<td><code>192.0.2.20</code>，替换为 iStoreOS 的实际 LAN 地址</td>
+</tr>
+<tr>
+<td>监听端口</td>
+<td><code>16602</code>，先确认未被占用</td>
+</tr>
+<tr>
+<td>TLS</td>
+<td>开启，使用前面导入的内部证书</td>
+</tr>
+<tr>
+<td>自动防火墙操作</td>
+<td>本次关闭，不为回调开放 WAN 入站</td>
+</tr>
+<tr>
+<td>主规则开关</td>
+<td>开启</td>
+</tr>
+</tbody>
+</table>
+<p>NPM 位于另一台主机，不能把监听地址填成 <code>127.0.0.1</code>。本例回调端口使用 HTTPS，NPM 校验证书和域名。不要把回调端口映射到公网。</p>
+<h3 id="4-3-OAuth-子规则">4.3 OAuth 子规则</h3>
+<p>在刚创建的主规则内添加子规则，服务类型选择 <strong>OAuth</strong>，OAuth 类型选择 <strong>OIDC</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填写内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前端域名／路径</td>
+<td><code>lucky.example.com/oauth/callback</code></td>
+</tr>
+<tr>
+<td>OIDC 配置地址</td>
+<td><code>https://auth.example.com/application/o/istoreos-site-a-lucky/.well-known/openid-configuration</code></td>
+</tr>
+<tr>
+<td>Client ID</td>
+<td>前面 Provider 生成的 Client ID</td>
+</tr>
+<tr>
+<td>Client Secret</td>
+<td>同一 Provider 的 Client Secret</td>
+</tr>
+<tr>
+<td>Redirect URL</td>
+<td><code>https://lucky.example.com/oauth/callback</code></td>
+</tr>
+<tr>
+<td>接口调用代理</td>
+<td>本次不启用，服务端可直接访问 Authentik</td>
+</tr>
+<tr>
+<td>子规则开关</td>
+<td>开启</td>
+</tr>
+</tbody>
+</table>
+<p>保存后返回规则列表，分别确认主规则和子规则都已启用。这里使用显式匹配域名及路径的子规则，不将 OAuth 配置填到默认规则后便结束。</p>
+<p>客户端密钥只保存在回调服务端配置，不写入 NPM 配置或公开页面。回调接口本身不能再要求先通过第三方登录，否则授权过程无法开始。</p>
+<h3 id="4-4-NPM-回调路径">4.4 NPM 回调路径</h3>
+<p>编辑前面的 Lucky Proxy Host，在 <strong>Custom Locations</strong> 中增加：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Location</td>
+<td><code>/oauth/callback</code></td>
+</tr>
+<tr>
+<td>Scheme</td>
+<td><code>https</code></td>
+</tr>
+<tr>
+<td>Forward Hostname / IP</td>
+<td><code>192.0.2.20</code></td>
+</tr>
+<tr>
+<td>Forward Port</td>
+<td><code>16602</code></td>
+</tr>
+</tbody>
+</table>
+<p>点击该行齿轮，填写内部 TLS 校验配置：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-nginx">proxy_ssl_server_name on;
+proxy_ssl_name $host;
+proxy_ssl_verify on;
+proxy_ssl_trusted_certificate /data/custom_ssl/lucky-oidc-ca.pem;</code></div></pre>
+<p><code>proxy_ssl_name</code> 使握手和校验使用外部域名，而不是后端 IP；信任文件使用前面复制的公开证书。该行不增加 <code>auth_request</code>，不添加路径重写。保存后确认 Proxy Host 在线。</p>
+<p>主站仍转发到 <code>16601</code>，只有回调路径进入 <code>16602</code>。浏览器看到的始终是同一个 HTTPS 域名，因此 Authentik 中注册的回调 URI 不带内部端口。</p>
+<h2 id="五、第三方身份与管理员登录名单">五、第三方身份与管理员登录名单</h2>
+<h3 id="5-1-OIDC-公共参数">5.1 OIDC 公共参数</h3>
+<p>进入 Lucky 的“第三方认证管理”，打开配置，填写 OIDC 部分：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OIDC 授权端点</td>
+<td><code>https://auth.example.com/application/o/authorize/</code></td>
+</tr>
+<tr>
+<td>OIDC Client ID</td>
+<td>与 Web 服务子规则相同</td>
+</tr>
+<tr>
+<td>OIDC 回调 URI</td>
+<td><code>https://lucky.example.com/oauth/callback</code></td>
+</tr>
+</tbody>
+</table>
+<p>保存后，Lucky 用这组参数发起登录，回调服务使用前面配置的 Client Secret 交换令牌。</p>
+<h3 id="5-2-登记授权用户">5.2 登记授权用户</h3>
+<p>仍使用原管理员账号登录 Lucky，在“第三方认证管理”中添加用户：</p>
+<ol>
+<li>备注填写 <code>DoraTiger Auth</code>，类型选择 <code>OIDC</code>，用户开关开启。</li>
+<li>点击“点击授权”，允许浏览器打开授权窗口。</li>
+<li>在 Authentik 中使用已加入应用访问组的身份完成登录及 MFA。</li>
+<li>回到 Lucky，确认姓名等资料已返回，再保存用户。</li>
+<li>返回用户列表，确认该 OIDC 记录存在且处于启用状态。</li>
+</ol>
+<p>授权由本人完成，避免把其他人的 Authentik 身份误登记为后台管理员。不要复制完整回调 URL 到聊天或工单，其中可能带有短期授权码。</p>
+<h3 id="5-3-后台登录名单">5.3 后台登录名单</h3>
+<p>进入 Lucky“设置”，找到第三方登录相关配置：</p>
+<table>
+<thead>
+<tr>
+<th>设置</th>
+<th>本次选择</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>开启第三方认证登录</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>允许所有第三方用户</td>
+<td>关闭</td>
+</tr>
+<tr>
+<td>第三方登录用户列表</td>
+<td>选中刚保存的 OIDC 用户</td>
+</tr>
+</tbody>
+</table>
+<p>保存后重新打开设置，确认名单中确实有该用户。API 中对应的是 <code>EnableThirdAuthLogin</code>、<code>AllowAllThirdAuthUsers</code> 和 <code>ThirdAuthLoginUserList</code>，最后一项引用已保存用户的 Key；从界面操作直接选择用户即可，不需要手填 Key。</p>
+<p>名单里的用户可以管理 Lucky 后台，因此这里只加入指定管理员。</p>
+<h3 id="5-4-登录验证">5.4 登录验证</h3>
+<p>使用无痕窗口打开 <code>https://lucky.example.com/lucky/</code>，在登录页选择 OIDC，完成 Authentik 授权后检查能否进入后台。</p>
+<p>登记用户时使用的授权与后台登录是不同操作。测试后台登录时从登录页重新发起，不继续使用此前登记窗口里的临时令牌。</p>
+<h2 id="六、配置问题与解答">六、配置问题与解答</h2>
+<h3 id="6-1-获取临时码失败">6.1 获取临时码失败</h3>
+<p><strong>Q：点击授权后出现 <code>get tmp code error</code>，还没有跳转到 Authentik。</strong></p>
+<p>本次接口返回的具体错误为 <code>http status code:403</code>。检查发现 Web 服务主规则已启用，但 OAuth 子规则实际仍为禁用状态。通过 Lucky 的子规则启用操作打开后，临时码接口恢复，能够生成指向 Authentik 的授权链接。</p>
+<p>排查时先确认主规则和子规则的开关，再检查回调域名解析、NPM 路径、监听端口及访问限制。修改后重新点击授权，检查能否跳转。</p>
+<h3 id="6-2-OAuth-令牌无效">6.2 OAuth 令牌无效</h3>
+<p><strong>Q：用户已经授权并保存，后台登录却提示 <code>OAuth令牌无效(008)</code>。</strong></p>
+<p>本次出现该提示时，后台允许名单尚为空。将已保存的 OIDC 用户加入名单，并从登录页重新发起授权后，登录成功。</p>
+<p>如果名单已有用户仍然出现 <code>008</code>，继续检查临时令牌是否过期、授权和登录是否使用同一类型及配置，以及回调交换结果。</p>
+<h3 id="6-3-主规则正常，回调仍不可用">6.3 主规则正常，回调仍不可用</h3>
+<p><strong>Q：16602 已监听，为什么回调请求还是失败？</strong></p>
+<p>继续检查 OAuth 子规则是否存在、是否启用，域名和路径是否匹配，以及 NPM 是否把该路径送到了 16602。修改后从登录页发起一次完整授权。</p>
+<h3 id="6-4-停止服务时维护命令中断">6.4 停止服务时维护命令中断</h3>
+<p><strong>Q：升级时停止 Lucky，为什么连执行替换的 SSH 命令也中断了？</strong></p>
+<p>本次启动脚本通过 <code>pgrep -f /usr/bin/lucky</code> 匹配进程，而维护命令行恰好也包含这个完整路径，导致执行命令的进程被误匹配。随后将停止服务与二进制替换分开执行，完成升级并恢复服务。</p>
+<p>遇到类似中断，可以先检查启动脚本如何匹配进程。</p>
+<h3 id="6-5-回调返回-503">6.5 回调返回 503</h3>
+<p><strong>Q：创建 OAuth 临时码失败，回调接口返回 503。</strong></p>
+<p>检查 OAuth 规则的初始化信息。如果提示“OAuth 服务需要启用 TLS”，说明内部回调服务仍在使用 HTTP。按第四节配置内部证书、启用规则 TLS，并将 NPM 回调 location 改为 HTTPS，然后重新初始化服务。</p>
+<h3 id="6-6-自动化登录提示密码错误">6.6 自动化登录提示密码错误</h3>
+<p><strong>Q：浏览器可以登录，维护脚本却提示密码错误。</strong></p>
+<p>Lucky 3.x 前端先获取登录挑战，再加密提交登录数据，直接提交账号密码的旧版 JSON 请求会报错。维护脚本需要适配当前登录协议；更新核心后，浏览器也应刷新页面，加载新版前端资源。</p>
+<h2 id="七、验证与维护">七、验证与维护</h2>
+<p>以后更新核心，仍按第二节的方法停止服务、备份并替换二进制。更新后用原账号确认后台可用，再从无痕窗口走一次 OIDC 登录，同时检查非成员访问限制和退出行为。</p>
+<p>增加管理员时，依次配置 Authentik 访问组、Lucky 用户登记和后台登录名单。撤销权限时，也要处理 Lucky 中已有的登录会话。</p>
+<p>回退时关闭 Lucky 第三方后台登录，停用新增 OAuth Web 服务规则，并删除 NPM 回调 location，原账号密码入口可继续使用。若需要回退核心，连同该旧版本生成的配置备份一起恢复，避免旧核心读取新版配置时出错。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/gdy666/lucky/releases" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fgdy666%2Flucky%2Freleases">Lucky 官方发布包</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/oauth2/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Foauth2%2F">Authentik OAuth2 Provider</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62481/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62481/">https://www.doratiger.top/2026/11/62481/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/62482/"><span>统一认证实践（8）Authentik 接入 AdGuard Home 统一认证与 NPM 代理</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/58246/"><span>统一认证实践（6）Authentik 接入 Immich 统一登录与账号关联</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

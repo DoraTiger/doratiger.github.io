@@ -1,0 +1,490 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（8）Authentik 接入 AdGuard Home 统一认证与 NPM 代理【DoraTiger 的异次元】</title><meta name="description" content="前言 AdGuard Home 部署在 iStoreOS 上，日常通过管理页面查看查询记录、维护过滤规则和 DNS 重写。这次将管理入口接入 DoraTiger Auth，希望完成一次统一认证后直接进入后台，不再额外输入 AdGuard Home 的密码。 本次使用 AdGuard Home 、iStoreOS 、Au"><meta name="keywords" content="truenas,authentik,nginx,openwrt,adguard"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（8）Authentik 接入 AdGuard Home 统一认证与 NPM 代理【DoraTiger 的异次元】"><meta property="og:description" content="前言 AdGuard Home 部署在 iStoreOS 上，日常通过管理页面查看查询记录、维护过滤规则和 DNS 重写。这次将管理入口接入 DoraTiger Auth，希望完成一次统一认证后直接进入后台，不再额外输入 AdGuard Home 的密码。 本次使用 AdGuard Home 、iStoreOS 、Au"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62482/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62482/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（8）Authentik 接入 AdGuard Home 统一认证与 NPM 代理","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-15T03:00:00.000Z","dateModified":"2026-11-15T16:00:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62482/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%AE%A4%E8%AF%81%E7%BB%93%E6%9E%84"><span class="toc-text">一、认证结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Forward-Auth-%E4%B8%8E-Basic-%E5%87%AD%E6%8D%AE%E8%BD%AC%E5%8F%91"><span class="toc-text">1.1 Forward Auth 与 Basic 凭据转发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E7%A4%BA%E4%BE%8B%E7%BD%91%E7%BB%9C%E4%B8%8E%E5%AF%B9%E8%B1%A1"><span class="toc-text">1.2 示例网络与对象</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%8E%A5%E5%85%A5%E5%87%86%E5%A4%87"><span class="toc-text">二、接入准备</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-DNS-%E4%B8%8E-HTTPS"><span class="toc-text">2.1 DNS 与 HTTPS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%90%8E%E7%AB%AF%E8%B4%A6%E5%8F%B7%E4%B8%8E%E5%A4%87%E4%BB%BD"><span class="toc-text">2.2 后端账号与备份</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%AE%BF%E9%97%AE%E7%BB%84%E4%B8%8E%E5%90%8E%E7%AB%AF%E5%87%AD%E6%8D%AE"><span class="toc-text">三、访问组与后端凭据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%88%9B%E5%BB%BA%E7%AE%A1%E7%90%86%E5%91%98%E8%AE%BF%E9%97%AE%E7%BB%84"><span class="toc-text">3.1 创建管理员访问组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%B7%BB%E5%8A%A0%E7%BB%84%E5%B1%9E%E6%80%A7"><span class="toc-text">3.2 添加组属性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Proxy-Provider%E3%80%81%E5%BA%94%E7%94%A8%E4%B8%8E%E5%89%8D%E5%93%A8"><span class="toc-text">四、Proxy Provider、应用与前哨</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%88%9B%E5%BB%BA-Proxy-Provider"><span class="toc-text">4.1 创建 Proxy Provider</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%88%9B%E5%BB%BA%E5%BA%94%E7%94%A8%E5%B9%B6%E7%BB%91%E5%AE%9A%E7%BB%84"><span class="toc-text">4.2 创建应用并绑定组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%A4%8D%E7%94%A8%E7%8E%B0%E6%9C%89-Outpost"><span class="toc-text">4.3 复用现有 Outpost</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81NPM-%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE"><span class="toc-text">五、NPM 代理配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%88%9B%E5%BB%BA-HTTPS-%E7%AB%99%E7%82%B9"><span class="toc-text">5.1 创建 HTTPS 站点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-Advanced%EF%BC%9A%E8%AE%A4%E8%AF%81%E8%B7%AF%E5%BE%84%E4%B8%8E%E7%99%BB%E5%BD%95%E8%B7%B3%E8%BD%AC"><span class="toc-text">5.2 Advanced：认证路径与登录跳转</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-Custom-Locations%EF%BC%9A%E9%A1%B5%E9%9D%A2%E4%BF%9D%E6%8A%A4%E4%B8%8E-Basic-%E8%BD%AC%E5%8F%91"><span class="toc-text">5.3 Custom Locations：页面保护与 Basic 转发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E4%BF%9D%E5%AD%98%E4%B8%8E%E6%A3%80%E6%9F%A5"><span class="toc-text">5.4 保存与检查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%99%BB%E5%BD%95%E9%AA%8C%E8%AF%81%E4%B8%8E%E7%BB%B4%E6%8A%A4"><span class="toc-text">六、登录验证与维护</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C"><span class="toc-text">6.1 验证结果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E7%AE%A1%E7%90%86%E5%85%A5%E5%8F%A3%E4%B8%8E-DNS-%E6%9C%8D%E5%8A%A1"><span class="toc-text">6.2 管理入口与 DNS 服务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%87%AD%E6%8D%AE%E7%BB%B4%E6%8A%A4%E4%B8%8E%E5%9B%9E%E9%80%80"><span class="toc-text">6.3 凭据维护与回退</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">七、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E9%80%9A%E8%BF%87-Authentik-%E5%90%8E%E4%BB%8D%E5%87%BA%E7%8E%B0%E5%90%8E%E7%AB%AF%E7%99%BB%E5%BD%95%E9%A1%B5"><span class="toc-text">7.1 通过 Authentik 后仍出现后端登录页</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E5%BA%94%E7%94%A8%E5%9C%A8-iStoreOS%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E5%89%8D%E5%93%A8%E5%9C%A8-TrueNAS"><span class="toc-text">7.2 应用在 iStoreOS，为什么前哨在 TrueNAS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E6%96%B0%E5%A2%9E%E7%94%A8%E6%88%B7%E4%B8%8E%E5%90%8E%E5%8F%B0%E6%9D%83%E9%99%90"><span class="toc-text">7.3 新增用户与后台权限</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E9%9C%80%E8%A6%81%E5%9C%A8-NPM-%E6%96%B0%E5%BB%BA-Authentik-%E6%8F%92%E4%BB%B6%E5%90%97"><span class="toc-text">7.4 需要在 NPM 新建 Authentik 插件吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color3"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color3"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">79</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">149</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（8）Authentik 接入 AdGuard Home 统一认证与 NPM 代理</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/truenas/">truenas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nginx/">nginx</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/openwrt/">openwrt</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/adguard/">adguard</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">6441 字 · 约 22 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>AdGuard Home 部署在 iStoreOS 上，日常通过管理页面查看查询记录、维护过滤规则和 DNS 重写。这次将管理入口接入 DoraTiger Auth，希望完成一次统一认证后直接进入后台，不再额外输入 AdGuard Home 的密码。</p>
+<p>本次使用 AdGuard Home <code>v0.107.79</code>、iStoreOS <code>24.10.6</code>、Authentik <code>2026.8.5</code> 和 Nginx Proxy Manager（NPM）<code>2.14.0</code>。HTTPS 入口统一放在 NPM，复用 TrueNAS 上已有的 Proxy Outpost。</p>
+<span id="more"></span>
+<p>前哨部署见 <a href="/2026/11/58244/" title="统一认证实践（4）Authentik 接入 qBittorrent 与 NPM 统一认证">统一认证实践（4）Authentik 接入 qBittorrent 与 NPM 统一认证</a>。接入前，先确认 NPM 能通过共享 Docker 网络访问这个前哨。</p>
+<h2 id="一、认证结构">一、认证结构</h2>
+<h3 id="1-1-Forward-Auth-与-Basic-凭据转发">1.1 Forward Auth 与 Basic 凭据转发</h3>
+<p>本次使用 AdGuard Home 已支持的 HTTP Basic 认证。浏览器先经过 Authentik 的应用访问检查，再由代理向 AdGuard Home 提供后端凭据。<a target="_blank" rel="noopener" href="https://github.com/AdguardTeam/AdGuardHome/blob/master/openapi/README.md#authentication" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FAdguardTeam%2FAdGuardHome%2Fblob%2Fmaster%2Fopenapi%2FREADME.md%23authentication">AdGuard Home API 认证说明</a></p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">浏览器 → NPM 的 AdGuard HTTPS 入口
+           ↓ auth_request
+      TrueNAS Proxy Outpost ↔ 云端 Authentik 登录与 MFA
+           ↓ 认证通过，返回后端 Basic 认证头
+         NPM → iStoreOS 上的 AdGuard Home 管理服务</code></div></pre>
+<p>Outpost 只处理认证子请求及相关登录路径，AdGuard Home 页面和管理 API 仍由 NPM 转发到 iStoreOS。DNS 查询继续按 AdGuard Home 原来的配置处理。</p>
+<p>Authentik 识别访问者，AdGuard Home 接收现有后台账号的凭据。因此，这种方式不为每个 Authentik 用户建立独立的 AdGuard Home 账号；允许访问的用户最终使用同一个后端管理身份。本次只向受信任的管理员开放。</p>
+<h3 id="1-2-示例网络与对象">1.2 示例网络与对象</h3>
+<p>以下 IP 为文档示例地址，使用时替换为自己的 LAN 地址。</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>云端身份服务</td>
+<td><code>https://auth.example.com</code></td>
+</tr>
+<tr>
+<td>NPM 所在主机</td>
+<td><code>192.0.2.10</code></td>
+</tr>
+<tr>
+<td>iStoreOS 主机</td>
+<td><code>192.0.2.20</code></td>
+</tr>
+<tr>
+<td>AdGuard 管理端口</td>
+<td><code>3000</code>，以实际配置为准</td>
+</tr>
+<tr>
+<td>对外管理入口</td>
+<td><code>https://adguard.example.com</code></td>
+</tr>
+<tr>
+<td>应用 Slug</td>
+<td><code>istoreos-site-a-adguard</code></td>
+</tr>
+<tr>
+<td>Provider</td>
+<td><code>doratiger-istoreos-site-a-adguard</code></td>
+</tr>
+<tr>
+<td>访问组</td>
+<td><code>istoreos-site-a-adguard-admins</code></td>
+</tr>
+<tr>
+<td>已有前哨</td>
+<td><code>doratiger-truenas-proxy</code></td>
+</tr>
+<tr>
+<td>NPM 网络内的前哨别名</td>
+<td><code>doratiger-authentik-outpost</code></td>
+</tr>
+</tbody>
+</table>
+<p>服务运行在 iStoreOS，因此应用和组按 iStoreOS 部署位置命名。前哨仍按实际运行位置命名，两者不必使用相同前缀。</p>
+<h2 id="二、接入准备">二、接入准备</h2>
+<h3 id="2-1-DNS-与-HTTPS">2.1 DNS 与 HTTPS</h3>
+<p>将 <code>adguard.example.com</code> 解析到 NPM 所在主机，而不是直接指向 iStoreOS。检查证书覆盖这个域名，并确认 NPM 可以访问 <code>192.0.2.20:3000</code>。</p>
+<p>这里已有通配 DNS 重写覆盖管理域名。尚未配置解析时，可以在 AdGuard Home 的 DNS 重写中添加域名到 NPM 地址的记录。</p>
+<h3 id="2-2-后端账号与备份">2.2 后端账号与备份</h3>
+<p>先确认原 AdGuard Home 管理账号可以登录，保存当前 AdGuard Home 配置，并备份相关 NPM 站点及 Authentik 配置。备份应限制读取权限。</p>
+<p>这里需要后端账号的明文密码。AdGuard Home 配置中的密码哈希不能直接放进 Basic 认证头，也不能作为 Authentik 的属性值使用。凭据保存在受限位置，不放进公开配置或截图。</p>
+<p>接入前可在能够访问后端的终端测试 Basic 认证：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">curl --user 'ADGUARD_USERNAME' \
+  http://192.0.2.20:3000/control/status</code></div></pre>
+<p>只在命令里填写用户名，让 curl 交互式询问密码，避免写进 shell 历史。本次原凭据访问状态接口返回 HTTP 200。该命令仅适用于示例中的受控局域网；Basic 认证的编码不提供传输加密。</p>
+<h2 id="三、访问组与后端凭据">三、访问组与后端凭据</h2>
+<h3 id="3-1-创建管理员访问组">3.1 创建管理员访问组</h3>
+<p>在 Authentik 的“目录 → 组 → 创建”中填写名称 <code>istoreos-site-a-adguard-admins</code>，不启用组的超级用户权限。保存后进入成员管理，将允许访问该 AdGuard Home 的现有账号加入，例如 <code>admin-user</code>。</p>
+<p>单独使用管理员访问组，避免把所有能够登录身份中心的账号都放行到 DNS 管理后台。</p>
+<h3 id="3-2-添加组属性">3.2 添加组属性</h3>
+<p>编辑该组的 Attributes，填写：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-yaml">istoreos_site_a_adguard_username: 'REPLACE_WITH_ADGUARD_USERNAME'
+istoreos_site_a_adguard_password: 'REPLACE_WITH_ADGUARD_PASSWORD'</code></div></pre>
+<p>替换为 AdGuard Home 的实际后台账号密码后保存。键名供 Provider 引用，不能把实际用户名误填到 Provider 的 Username Key 字段中。</p>
+<p>Authentik 支持从用户或其所属组的属性获取后端 Basic 凭据。这里放在专用组中，便于集中维护。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/header_authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fheader_authentication%2F">Authentik Header authentication</a></p>
+<p>组属性包含可读取的后端凭据，需要限制查看、修改和导出权限。不要允许普通用户通过可编辑个人属性覆盖这些键，也不要将它们写进公共蓝图或 Git 仓库。</p>
+<h2 id="四、Proxy-Provider、应用与前哨">四、Proxy Provider、应用与前哨</h2>
+<h3 id="4-1-创建-Proxy-Provider">4.1 创建 Proxy Provider</h3>
+<p>在“应用程序 → 提供者 → 创建”中选择 <strong>Proxy Provider</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-istoreos-site-a-adguard</code></td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td><code>doratiger-authentication</code></td>
+</tr>
+<tr>
+<td>Authorization flow</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code></td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td><code>doratiger-provider-invalidation</code></td>
+</tr>
+<tr>
+<td>Mode</td>
+<td><code>Forward auth (single application)</code></td>
+</tr>
+<tr>
+<td>External host</td>
+<td><code>https://adguard.example.com</code></td>
+</tr>
+<tr>
+<td>Cookie domain</td>
+<td>保留默认</td>
+</tr>
+<tr>
+<td>Unauthenticated paths</td>
+<td>留空</td>
+</tr>
+</tbody>
+</table>
+<p>三个流程分别负责登录与 MFA、应用授权和 Provider 退出。这里沿用前文创建的流程，名称不同时选择自己的对应流程。</p>
+<p>继续配置 HTTP Basic：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Send / Set HTTP-Basic Authentication</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>HTTP-Basic Username Key</td>
+<td><code>istoreos_site_a_adguard_username</code></td>
+</tr>
+<tr>
+<td>HTTP-Basic Password Key</td>
+<td><code>istoreos_site_a_adguard_password</code></td>
+</tr>
+<tr>
+<td>Intercept header authentication</td>
+<td>关闭</td>
+</tr>
+</tbody>
+</table>
+<p>保存 Provider。这里开启的是向后端发送 Basic 凭据；浏览器仍使用 Authentik 的正常登录流程。后端地址由 NPM 管理，不填成云端身份服务地址。</p>
+<h3 id="4-2-创建应用并绑定组">4.2 创建应用并绑定组</h3>
+<p>在“应用程序 → 应用程序”中选择 <strong>with existing provider</strong> 创建应用：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>iStoreOS Site A · AdGuard Home</code></td>
+</tr>
+<tr>
+<td>Slug</td>
+<td><code>istoreos-site-a-adguard</code></td>
+</tr>
+<tr>
+<td>Provider</td>
+<td><code>doratiger-istoreos-site-a-adguard</code></td>
+</tr>
+<tr>
+<td>Launch URL</td>
+<td><code>https://adguard.example.com/</code></td>
+</tr>
+</tbody>
+</table>
+<p>保存后打开应用的“策略／组／用户绑定”，创建组绑定，选择 <code>istoreos-site-a-adguard-admins</code>，Order 填 <code>0</code>，启用绑定，Negate 关闭，然后保存。</p>
+<p>组成员关系、应用绑定、Provider 属性引用分别解决访问身份、授权条件和后端凭据来源，三处都需要配置。</p>
+<h3 id="4-3-复用现有-Outpost">4.3 复用现有 Outpost</h3>
+<p>进入“应用程序 → 前哨”，编辑 <code>doratiger-truenas-proxy</code>。在应用列表中增加刚创建的 AdGuard Home 应用，保留原来关联的其他应用，保存后检查前哨连接状态。</p>
+<p>无需在 iStoreOS 上再部署一份 Outpost。NPM 向现有前哨发起认证子请求，再把业务请求转发到另一台主机上的 AdGuard Home。NPM 与前哨的 Docker 网络及别名必须保持可用。</p>
+<h2 id="五、NPM-代理配置">五、NPM 代理配置</h2>
+<h3 id="5-1-创建-HTTPS-站点">5.1 创建 HTTPS 站点</h3>
+<p>在 NPM 的“Hosts → Proxy Hosts”中新建：</p>
+<table>
+<thead>
+<tr>
+<th>Details 字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Domain Names</td>
+<td><code>adguard.example.com</code></td>
+</tr>
+<tr>
+<td>Scheme</td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>Forward Hostname / IP</td>
+<td><code>192.0.2.20</code></td>
+</tr>
+<tr>
+<td>Forward Port</td>
+<td><code>3000</code></td>
+</tr>
+<tr>
+<td>Websockets Support</td>
+<td>本次开启</td>
+</tr>
+</tbody>
+</table>
+<p>SSL 中选择覆盖该域名的证书，开启 Force SSL。以下认证配置分别位于 Advanced 和 Custom Locations。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_nginx/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_nginx%2F">Authentik NPM 配置说明</a></p>
+<h3 id="5-2-Advanced：认证路径与登录跳转">5.2 Advanced：认证路径与登录跳转</h3>
+<p>在该站点 Advanced 中填写：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div></div><code class="language-nginx">port_in_redirect off;
+set $ak_http_host $host;
+
+location /outpost.goauthentik.io &#123;
+    proxy_pass http://doratiger-authentik-outpost:9000;
+    proxy_set_header Host $ak_http_host;
+    proxy_set_header X-Original-URL $scheme://$ak_http_host$request_uri;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length &quot;&quot;;
+&#125;
+
+location @goauthentik_proxy_signin &#123;
+    internal;
+    add_header Set-Cookie $auth_cookie;
+    return 302 /outpost.goauthentik.io/start?rd=$scheme://$ak_http_host$request_uri;
+&#125;</code></div></pre>
+<p><code>/outpost.goauthentik.io</code> 交给前哨处理，包含认证检查和登录所需的路径。它不能再次被自己的认证子请求保护。命名 location 处理未登录结果，并保留返回地址。</p>
+<p>本例对外使用标准 HTTPS 443，因此采用 <code>$host</code>。非标准端口部署应按官方模板保留包含端口的外部 Host。前哨别名也要替换为自己的实际网络名称。</p>
+<h3 id="5-3-Custom-Locations：页面保护与-Basic-转发">5.3 Custom Locations：页面保护与 Basic 转发</h3>
+<p>在 Custom Locations 新增 <code>/</code>：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Location</td>
+<td><code>/</code></td>
+</tr>
+<tr>
+<td>Scheme</td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>Forward Hostname / IP</td>
+<td><code>192.0.2.20</code></td>
+</tr>
+<tr>
+<td>Forward Port</td>
+<td><code>3000</code></td>
+</tr>
+</tbody>
+</table>
+<p>点击该行齿轮，在自定义配置中填写：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-nginx">auth_request /outpost.goauthentik.io/auth/nginx;
+error_page 401 = @goauthentik_proxy_signin;
+
+auth_request_set $auth_cookie $upstream_http_set_cookie;
+add_header Set-Cookie $auth_cookie;
+
+auth_request_set $authentik_auth $upstream_http_authorization;
+proxy_set_header Authorization $authentik_auth;</code></div></pre>
+<p>不再外包一层 <code>location / &#123;&#125;</code>，也不重复填写 <code>proxy_pass</code>，这些由 NPM 根据表单生成。</p>
+<p>前两行要求请求先通过前哨检查；中间两行处理认证 Cookie；最后两行读取前哨响应中的 Basic 认证头并交给 AdGuard Home。这里的 <code>Authorization</code> 来自认证子请求，不能直接信任浏览器随意提供的身份头。</p>
+<h3 id="5-4-保存与检查">5.4 保存与检查</h3>
+<p>保存整个 Proxy Host，确认状态为 Online。重新打开编辑界面，检查 Advanced 和 <code>/</code> 自定义 location 的配置仍在。</p>
+<p>通过 NPM 界面保存配置，避免直接修改容器中会被重新生成的文件。</p>
+<p>管理 API 也应受相同认证检查，不为 <code>/control/</code> 创建匿名例外。若另有自定义 location 直连同一管理后端，需要逐项检查是否绕过根路径的保护。</p>
+<h2 id="六、登录验证与维护">六、登录验证与维护</h2>
+<h3 id="6-1-验证结果">6.1 验证结果</h3>
+<p>配置完成后，用无痕窗口访问 <code>https://adguard.example.com/</code>，先跳转到 Authentik，完成登录和 MFA 后直接进入 AdGuard Home，没有再出现第二次密码输入。原来的 DNS 查询正常，过滤和重写配置保持原样。</p>
+<p>非成员访问和单点退出还没有单独测试，后续再检查前哨与后端会话的退出情况。</p>
+<h3 id="6-2-管理入口与-DNS-服务">6.2 管理入口与 DNS 服务</h3>
+<p>NPM 的 HTTPS 入口保护的是管理页面和管理 API。普通 DNS 查询仍按 AdGuard Home 原配置工作；本次也未把 DoH 等其他入口纳入这一代理站点。</p>
+<p>直接访问 iStoreOS 的管理 IP 和端口时，仍由 AdGuard Home 要求输入原账号密码。</p>
+<h3 id="6-3-凭据维护与回退">6.3 凭据维护与回退</h3>
+<p>修改 AdGuard Home 后台密码后，同步修改 Authentik 组属性，并重新认证验证。属性在向代理认证时读取，已有会话可能继续使用旧值。</p>
+<p>回退时先移除 NPM 的认证配置，恢复直接代理管理页，此时继续由 AdGuard Home 要求输入原账号密码。再从共享前哨中移除这个应用，保留其他应用关联，不停掉仍被其他服务使用的 Outpost。</p>
+<h2 id="七、配置问题与解答">七、配置问题与解答</h2>
+<h3 id="7-1-通过-Authentik-后仍出现后端登录页">7.1 通过 Authentik 后仍出现后端登录页</h3>
+<p><strong>Q：统一认证已经成功，为什么还要输入 AdGuard Home 密码？</strong></p>
+<p>检查 Provider 的 Basic 发送开关、用户名和密码属性键、当前用户的组成员关系，以及 NPM 转发 <code>Authorization</code> 的两行配置。再用原凭据单独测试后端 Basic 认证。只有身份检查成功，而没有向后端提供可用凭据，就无法消除第二次登录。</p>
+<h3 id="7-2-应用在-iStoreOS，为什么前哨在-TrueNAS">7.2 应用在 iStoreOS，为什么前哨在 TrueNAS</h3>
+<p><strong>Q：前哨必须与被保护的服务装在同一台主机吗？</strong></p>
+<p>本例 NPM 与前哨在同一 Docker 网络，方便认证子请求调用；NPM 通过局域网访问 iStoreOS 后端。前哨所在位置不决定应用所在位置，关键是代理到前哨、代理到后端、前哨到身份服务的网络均可达。</p>
+<h3 id="7-3-新增用户与后台权限">7.3 新增用户与后台权限</h3>
+<p><strong>Q：Authentik 新增用户，会自动创建 AdGuard Home 用户吗？</strong></p>
+<p>本方案不做用户同步或自动注册。Authentik 应用组控制谁能访问，代理使用组属性中的既有 AdGuard Home 管理账号。增加组成员相当于允许其使用这个后台管理身份，应按管理员权限处理。</p>
+<h3 id="7-4-需要在-NPM-新建-Authentik-插件吗">7.4 需要在 NPM 新建 Authentik 插件吗</h3>
+<p><strong>Q：NPM 界面里找不到 Authentik 开关。</strong></p>
+<p>无需插件。配置位于 Proxy Host 的 Advanced，以及 Custom Locations 的 <code>/</code> 齿轮内。站点 Details 仍填写 AdGuard Home 的后端地址，不能为了接入认证把普通业务转发目标改为云端 Authentik。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/AdguardTeam/AdGuardHome/blob/master/openapi/README.md#authentication" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FAdguardTeam%2FAdGuardHome%2Fblob%2Fmaster%2Fopenapi%2FREADME.md%23authentication">AdGuard Home API 认证说明</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/header_authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fheader_authentication%2F">Authentik Header authentication</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_nginx/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_nginx%2F">Authentik Nginx / NPM 配置</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62482/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62482/">https://www.doratiger.top/2026/11/62482/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/52783/"><span>服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/62481/"><span>统一认证实践（7）Authentik 接入 Lucky 统一登录与管理员授权</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
