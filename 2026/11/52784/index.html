@@ -1,0 +1,501 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度【DoraTiger 的异次元】</title><meta name="description" content="前言 实验室服务器升级到 Ubuntu 26.04 后，继续检查了显卡驱动和 CUDA 环境。三台机器的驱动小版本不同，原来的 CUDA 12.6 在新系统上编译程序时又遇到了头文件冲突，因此把驱动、CUDA 和 NCCL 一起进行了统一。 这几台服务器都有 Tesla T4 和 InfiniBand 网卡，除了确认单"><meta name="keywords" content="k3s,ubuntu,rdma,cuda,nvidia"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度【DoraTiger 的异次元】"><meta property="og:description" content="前言 实验室服务器升级到 Ubuntu 26.04 后，继续检查了显卡驱动和 CUDA 环境。三台机器的驱动小版本不同，原来的 CUDA 12.6 在新系统上编译程序时又遇到了头文件冲突，因此把驱动、CUDA 和 NCCL 一起进行了统一。 这几台服务器都有 Tesla T4 和 InfiniBand 网卡，除了确认单"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/52784/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/52784/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-15T13:30:00.000Z","dateModified":"2026-11-16T07:17:27.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/52784/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%8E%AF%E5%A2%83%E4%B8%8E%E7%89%88%E6%9C%AC"><span class="toc-text">一、环境与版本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%A9%B1%E5%8A%A8%E4%B8%8E-CUDA"><span class="toc-text">二、驱动与 CUDA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%89%E8%A3%85%E5%87%86%E5%A4%87"><span class="toc-text">2.1 安装准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-NVIDIA-%E8%BD%AF%E4%BB%B6%E6%BA%90"><span class="toc-text">2.2 NVIDIA 软件源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%A9%B1%E5%8A%A8%E5%8C%85%E5%86%B2%E7%AA%81"><span class="toc-text">2.3 驱动包冲突</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-Toolkit-%E4%B8%8E%E9%BB%98%E8%AE%A4%E7%89%88%E6%9C%AC"><span class="toc-text">2.4 Toolkit 与默认版本</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81NCCL-%E4%B8%8E-RDMA"><span class="toc-text">三、NCCL 与 RDMA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-NCCL-%E7%89%88%E6%9C%AC%E7%BB%9F%E4%B8%80"><span class="toc-text">3.1 NCCL 版本统一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E9%94%81%E9%A1%B5%E5%86%85%E5%AD%98"><span class="toc-text">3.2 锁页内存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E4%B8%BB%E6%9C%BA%E5%86%85%E5%AD%98%E9%80%9A%E4%BF%A1"><span class="toc-text">3.3 主机内存通信</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-GPU-%E9%80%9A%E4%BF%A1%E8%B7%AF%E5%BE%84"><span class="toc-text">3.4 GPU 通信路径</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81K3s-%E8%AE%BE%E5%A4%87%E8%B0%83%E5%BA%A6"><span class="toc-text">四、K3s 设备调度</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%AE%B9%E5%99%A8%E8%BF%90%E8%A1%8C%E6%97%B6"><span class="toc-text">4.1 容器运行时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E8%AE%BE%E5%A4%87%E6%8F%92%E4%BB%B6"><span class="toc-text">4.2 设备插件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%AE%B9%E5%99%A8%E9%80%9A%E4%BF%A1%E9%AA%8C%E8%AF%81"><span class="toc-text">五、容器通信验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%B5%8B%E8%AF%95%E9%95%9C%E5%83%8F"><span class="toc-text">5.1 测试镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%B5%8B%E8%AF%95-Pod"><span class="toc-text">5.2 测试 Pod</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-AllReduce"><span class="toc-text">5.3 AllReduce</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E4%BD%BF%E7%94%A8%E4%B8%8E%E7%BB%B4%E6%8A%A4"><span class="toc-text">六、使用与维护</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color1"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color3"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">76</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">147</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/k3s/">k3s</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ubuntu/">ubuntu</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/rdma/">rdma</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/cuda/">cuda</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nvidia/">nvidia</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">12736 字 · 约 43 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>实验室服务器升级到 Ubuntu 26.04 后，继续检查了显卡驱动和 CUDA 环境。三台机器的驱动小版本不同，原来的 CUDA 12.6 在新系统上编译程序时又遇到了头文件冲突，因此把驱动、CUDA 和 NCCL 一起进行了统一。</p>
+<p>这几台服务器都有 Tesla T4 和 InfiniBand 网卡，除了确认单机 CUDA 能运行，还需要检查 GPU 之间的跨机通信。此前 K3s 只管理普通容器，没有分配 GPU 和 RDMA 设备，这次也一并接入，后续计算任务可以通过资源声明申请设备。</p>
+<p>系统升级过程见 <a href="/2026/11/52783/" title="服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配">服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配</a>。本篇记录升级后的计算环境维护，以及接入 K3s 时遇到的几个问题。</p>
+<span id="more"></span>
+<h2 id="一、环境与版本">一、环境与版本</h2>
+<p>三台主机均为 Ubuntu 26.04.1，每台有两张 Tesla T4、一块 ConnectX-3，使用系统自带的 mlx4 驱动。InfiniBand 端口以 56 Gb/s 连接。K3s 采用单控制节点，控制节点同时运行有本地数据卷的业务，另外两台为工作节点。</p>
+<p>下文以 <code>host-a</code>、<code>host-b</code>、<code>host-c</code> 表示三台主机，节点名称为 <code>host-a.lab.example.com</code> 等，IPoIB 网卡统一写作 <code>ib0</code>。这些都是示例，实际网卡名称用 <code>ip -br address</code> 和 <code>ibstat</code> 查询。宿主机操作在各节点执行，<code>kubectl</code> 命令在控制节点执行。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">组件</th>
+<th style="text-align:left">维护后的版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">NVIDIA 驱动</td>
+<td style="text-align:left">615.71.09，开放内核模块</td>
+</tr>
+<tr>
+<td style="text-align:left">CUDA Toolkit</td>
+<td style="text-align:left">13.4.3，nvcc 13.4.92</td>
+</tr>
+<tr>
+<td style="text-align:left">NCCL</td>
+<td style="text-align:left">2.32.3，对应 CUDA 13.4</td>
+</tr>
+<tr>
+<td style="text-align:left">NVIDIA Container Toolkit</td>
+<td style="text-align:left">1.20.1</td>
+</tr>
+<tr>
+<td style="text-align:left">K3s</td>
+<td style="text-align:left">v1.37.0+k3s1</td>
+</tr>
+</tbody>
+</table>
+<p>T4 属于 Turing，计算能力为 7.5，仍在这次 CUDA 工具链的支持范围内。测试分别编译了 <code>sm_75</code> 原生代码和 <code>compute_75</code> PTX，两种形式都在六张卡上完成计算和回读校验。</p>
+<p><code>nvidia-smi</code> 显示的 CUDA Version 是驱动支持的 CUDA 版本，不能用来判断安装了哪个 Toolkit。工具链检查需要同时看 <code>nvcc --version</code> 和 <code>/usr/local/cuda</code> 的实际指向。项目自己的 Conda、PyTorch 等环境还可能携带另一套运行库，本次没有修改这些用户环境。</p>
+<h2 id="二、驱动与-CUDA">二、驱动与 CUDA</h2>
+<h3 id="2-1-安装准备">2.1 安装准备</h3>
+<p>驱动更新涉及内核模块，需要重启。先检查用户会话、GPU 和计算任务，安排维护窗口；本次按 <code>host-c</code>、<code>host-b</code>、<code>host-a</code> 的顺序处理，每台恢复后再继续。控制节点上的业务和数据备份沿用系统升级时的安排，不通过强制排空把本地卷业务迁到其他机器。</p>
+<p>在目标节点保存软件包和源配置，备份目录仅允许管理员访问：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">nvidia-smi
+nvcc --version
+readlink -f /usr/local/cuda
+who
+sudo install -d -m 700 /root/cuda-maintenance
+sudo sh -c 'dpkg-query -W &gt; /root/cuda-maintenance/packages-before.txt'
+sudo cp -a /etc/apt /root/cuda-maintenance/apt-before
+sudo apt update
+sudo apt install build-essential dkms linux-headers-$(uname -r) ca-certificates curl</code></div></pre>
+<p>备份命令按首次维护执行，已有同名目录时另选目录，避免把不同时间的配置混在一起。保留旧内核和旧 Toolkit，确认新环境可用前不执行 <code>autoremove</code>。</p>
+<h3 id="2-2-NVIDIA-软件源">2.2 NVIDIA 软件源</h3>
+<p>使用 NVIDIA 为 Ubuntu 26.04 提供的软件源，安装官方 keyring：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">curl -fL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2604/x86_64/cuda-keyring_1.1-1_all.deb \
+  -o /tmp/cuda-keyring.deb
+sudo dpkg -i /tmp/cuda-keyring.deb
+sudo apt update
+apt-cache policy nvidia-driver-615-open cuda-toolkit-13-4</code></div></pre>
+<p>keyring 包会创建对应源文件，不需要再手工添加一份相同的源。本次旧 keyring 缺少新的仓库签名密钥，更新 keyring 后恢复；没有关闭 APT 签名校验。若已有手工添加的 CUDA 源，先检查是否重复。</p>
+<h3 id="2-3-驱动包冲突">2.3 驱动包冲突</h3>
+<p>旧环境采用 NVIDIA 仓库的 R580 驱动，新驱动使用 Ubuntu 的 <code>nvidia-driver-615-open</code>。切换时遇到了 EGL 文件重复：旧包把 xcb、xlib 部分拆成独立包，新包则将这些文件包含在 <code>libnvidia-gl-615</code> 中。</p>
+<p>以下是本次旧包组合对应的处理。先模拟删除，确认只影响旧 NVIDIA 驱动组件，再执行；其他机器应按自己的包清单调整，尤其不能直接照搬版本号删除现有桌面依赖。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo apt-get -s remove cuda-drivers-580 nvidia-driver-pinning-580 \
+  libnvidia-gl-580:amd64 libnvidia-gl-580:i386 \
+  libnvidia-egl-xcb1:amd64 libnvidia-egl-xcb1:i386 \
+  libnvidia-egl-xlib1:amd64 libnvidia-egl-xlib1:i386</code></div></pre>
+<p>确认模拟结果后，再执行实际删除和安装。删除旧驱动后保持 SSH 或控制台连接，完成新驱动安装前不要重启：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">sudo apt-get remove cuda-drivers-580 nvidia-driver-pinning-580 \
+  libnvidia-gl-580:amd64 libnvidia-gl-580:i386 \
+  libnvidia-egl-xcb1:amd64 libnvidia-egl-xcb1:i386 \
+  libnvidia-egl-xlib1:amd64 libnvidia-egl-xlib1:i386
+sudo apt install nvidia-driver-615-open
+sudo dpkg --audit
+dkms status</code></div></pre>
+<p>第一台机器已经进入安装中断状态，当时旧 GL 包已被移除，处理剩余四个冲突的 EGL 包后，再执行 <code>sudo apt-get --fix-broken install</code> 才完成安装。后两台先处理旧包，再装新驱动。没有使用 <code>--force-overwrite</code> 掩盖文件归属冲突。</p>
+<p>安装前以 <code>apt-cache policy nvidia-driver-615-open</code> 确认候选包来源及版本；本文记录的是当时 Ubuntu 仓库的 615.71.09，后续同一包名可能已有更新。若 APT 模拟安装还会替换其他驱动分支，先检查 <code>/etc/apt/preferences.d/</code> 中的旧 pin。</p>
+<p>DKMS 会为保留的多个内核构建模块，安装耗时较长。需要等包管理和模块构建完成，再安排重启。</p>
+<h3 id="2-4-Toolkit-与默认版本">2.4 Toolkit 与默认版本</h3>
+<p>旧 CUDA 12.6 在新系统的 glibc 头文件上出现 <code>cospi</code>、<code>sinpi</code>、<code>rsqrt</code> 等函数异常声明冲突。升级到 CUDA 13.4 后，简单 CUDA 内核能够正常编译。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo apt install cuda-toolkit-13-4
+update-alternatives --display cuda
+sudo update-alternatives --set cuda /usr/local/cuda-13.4</code></div></pre>
+<p>这里安装的是 Toolkit 包；驱动版本由上一节单独管理。机器上原来的 <code>/usr/local/cuda-12.6</code> 保留，需要旧版本的项目仍可显式指定路径。</p>
+<p>统一登录环境使用的默认入口。已有同名文件时先备份并检查内容，再合并；项目若自行设置 CUDA 路径，应同步检查其环境，避免混用不同版本的编译器和运行库：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo tee /etc/profile.d/cuda.sh &gt;/dev/null &lt;&lt;'EOF'
+export PATH=/usr/local/cuda/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64$&#123;LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH&#125;
+EOF</code></div></pre>
+<p>完成安装后重启当前节点，重新登录检查：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo reboot</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">nvidia-smi
+cat /proc/driver/nvidia/version
+nvcc --version
+readlink -f /usr/local/cuda
+sudo dpkg --audit
+systemctl --failed</code></div></pre>
+<p>仅升级磁盘上的驱动包不会替换已加载的内核模块，因此重启前后都要看驱动版本。控制节点还需要检查 <code>sudo k3s kubectl get nodes</code>、业务 Pod 和数据盘挂载。</p>
+<h2 id="三、NCCL-与-RDMA">三、NCCL 与 RDMA</h2>
+<h3 id="3-1-NCCL-版本统一">3.1 NCCL 版本统一</h3>
+<p>CUDA 编译通过后，跨机通信测试又发现 NCCL 版本不一致：两台为 <code>2.31.2+cuda13.4</code>，另一台为 <code>2.32.6+cuda13.5</code>。最终统一为仓库中与 CUDA 13.4 配套的 <code>2.32.3</code>。</p>
+<p>在三台主机分别执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash">apt-cache policy libnccl2 libnccl-dev
+sudo apt-get install --allow-downgrades \
+  libnccl2=2.32.3-1+cuda13.4 libnccl-dev=2.32.3-1+cuda13.4
+sudo tee /etc/apt/preferences.d/nccl-cuda13-4 &gt;/dev/null &lt;&lt;'EOF'
+Package: libnccl2 libnccl-dev
+Pin: version 2.32.3-1+cuda13.4
+Pin-Priority: 1001
+EOF
+dpkg-query -W libnccl2 libnccl-dev</code></div></pre>
+<p><code>--allow-downgrades</code> 用于版本较高的那台节点。固定版本是为了避免三台各自更新后再次分叉；后续升级 NCCL 时，应一起调整 pin、任务镜像和验证环境。</p>
+<h3 id="3-2-锁页内存">3.2 锁页内存</h3>
+<p>RDMA 注册主机内存时，需要将相应页面锁定，避免被换出。普通 SSH 会话原来的 memlock 上限只有 8 MiB，NCCL 初始化缓冲区时出现：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">ibv_reg_mr_iova2 failed with error Cannot allocate memory</code></div></pre>
+<p>这个错误不能直接按“物理内存不足”处理。先检查 <code>ulimit -Sl</code> 和 <code>ulimit -Hl</code>。本次将普通登录会话的软、硬上限统一为 1 GiB，配置值以 KiB 为单位：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo tee /etc/security/limits.d/99-rdma-memlock.conf &gt;/dev/null &lt;&lt;'EOF'
+* soft memlock 1048576
+* hard memlock 1048576
+root soft memlock 1048576
+root hard memlock 1048576
+EOF</code></div></pre>
+<p>关闭旧 SSH 会话后重新连接，再运行 <code>ulimit -Sl</code>、<code>ulimit -Hl</code>，两项应为 <code>1048576</code>。这不是提前分配 1 GiB 内存，也不是整个账号所有进程合计的配额。若没有生效，检查登录链路是否通过 PAM 加载 <code>pam_limits.so</code>，不要只修改当前 Shell 的软限制。</p>
+<h3 id="3-3-主机内存通信">3.3 主机内存通信</h3>
+<p>安装测试工具，确认 HCA 名称、端口状态和 IPoIB 地址：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo apt install perftest infiniband-diags ibverbs-utils
+ibstat
+ibv_devices
+ip -br address</code></div></pre>
+<p>两台机器之间测试，服务端先启动，客户端再连接。下面的 <code>$PEER_IB_IP</code> 替换成服务端 IPoIB 地址，测试端口仅用于相互可达的内网。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash"># 服务端
+ib_write_bw -p 19451 -s 65536 -n 1000 --report_gbits</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash"># 客户端
+PEER_IB_IP=YOUR_PEER_IB_IP
+ib_write_bw -p 19451 -s 65536 -n 1000 --report_gbits &quot;$PEER_IB_IP&quot;</code></div></pre>
+<p>将两端命令同时改为 <code>ib_read_bw</code>、<code>ib_send_bw</code>，分别测试 Read 和 Send/Receive；一次结束后再开始下一项。三对节点的短时测试结果如下，单位为 Gb/s：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">节点对</th>
+<th style="text-align:right">Write</th>
+<th style="text-align:right">Read</th>
+<th style="text-align:right">Send/Receive</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">host-a — host-b</td>
+<td style="text-align:right">49.98</td>
+<td style="text-align:right">50.07</td>
+<td style="text-align:right">48.78</td>
+</tr>
+<tr>
+<td style="text-align:left">host-a — host-c</td>
+<td style="text-align:right">50.03</td>
+<td style="text-align:right">48.93</td>
+<td style="text-align:right">48.92</td>
+</tr>
+<tr>
+<td style="text-align:left">host-b — host-c</td>
+<td style="text-align:right">49.10</td>
+<td style="text-align:right">47.41</td>
+<td style="text-align:right">47.24</td>
+</tr>
+</tbody>
+</table>
+<p>这些是 64 KiB、1000 次传输的连通性测试，不是持续压力测试。主机内存 RDMA 正常，只能说明网卡可以操作已注册的 RAM，GPU 显存还要单独验证。</p>
+<h3 id="3-4-GPU-通信路径">3.4 GPU 通信路径</h3>
+<p>本次 CUDA 显存直接注册为 RDMA MR 失败，DMA-BUF 能导出，但 mlx4 的 <code>ibv_reg_dmabuf_mr</code> 返回 <code>Operation not supported</code>。<code>nvidia-peermem</code> 也因为当前内核缺少所需的 PeerDirect 接口而无法加载。</p>
+<p>ConnectX-3 历史上可以搭配旧 OFED 实现 GPUDirect，但本次 Ubuntu 26.04、系统 mlx4 与新驱动的组合不能直接沿用。没有为了这个功能安装旧 OFED 或修改内核。当前验证通过的 NCCL 路径为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">本机 GPU 显存 → 本机 RAM → InfiniBand → 对端 RAM → 对端 GPU 显存</code></div></pre>
+<p>因此，现有硬件仍可用于多机 GPU 通信，但数据经过主机内存中转。NCCL 测试显式设置 <code>NCCL_NET=IB</code>，确保没有退回 Socket 数据传输；<code>NCCL_NET_GDR_LEVEL=LOC</code> 禁用当前不可用的 GPUDirect。具体测试放在后面的容器验收中。</p>
+<p>另外，控制节点上运行 OpenSM 并不意味着其他节点的数据要经它中转。OpenSM 负责管理 IB 子网。本次重启控制节点时，备用节点确实接任了 Master，但切换过程中出现过超时和一次建连失败，收敛后复测正常，不能按无缝切换安排计算任务。</p>
+<h2 id="四、K3s-设备调度">四、K3s 设备调度</h2>
+<h3 id="4-1-容器运行时">4.1 容器运行时</h3>
+<p>原来的集群虽然有 <code>nvidia</code> RuntimeClass，却没有 NVIDIA Container Toolkit 和 GPU device plugin。仅看到 RuntimeClass 名称，不能证明容器已经可以申请显卡。</p>
+<p>三台主机分别安装工具包：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo apt install nvidia-container-toolkit=1.20.1-1
+nvidia-container-runtime --version</code></div></pre>
+<p>K3s 服务另行配置锁页限制，不依赖 SSH 的 PAM 配置。工作节点使用 <code>k3s-agent</code>，控制节点使用 <code>k3s</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-bash"># 工作节点；控制节点改成 unit=k3s
+unit=k3s-agent
+sudo mkdir -p &quot;/etc/systemd/system/$unit.service.d&quot;
+sudo tee &quot;/etc/systemd/system/$unit.service.d/30-rdma-memlock.conf&quot; &gt;/dev/null &lt;&lt;'EOF'
+[Service]
+LimitMEMLOCK=infinity
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart &quot;$unit&quot;
+systemctl show &quot;$unit&quot; -p LimitMEMLOCK</code></div></pre>
+<p>服务重启逐台执行，确认节点重新 Ready 后继续，控制节点放在最后。K3s 会自动发现 <code>nvidia-container-runtime</code> 并生成配置，不要直接编辑自动生成的 <code>config.toml</code>。检查生成文件中是否有 <code>nvidia</code> runtime 及 <code>/usr/bin/nvidia-container-runtime</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo grep -A6 nvidia /var/lib/rancher/k3s/agent/etc/containerd/config.toml</code></div></pre>
+<p>K3s 服务的锁页上限放开后，计算 Pod 仍需设置内存资源限额。本文任务模板只为需要锁页的计算容器增加 <code>IPC_LOCK</code>，没有将业务容器设为 privileged。</p>
+<h3 id="4-2-设备插件">4.2 设备插件</h3>
+<p>GPU 使用 NVIDIA device plugin <code>v0.20.1</code>，RDMA 使用 shared device plugin <code>v1.5.4</code>。驱动仍由宿主机 APT 管理，没有再引入 GPU Operator 接管驱动。</p>
+<p>完整部署文件：<a href="/2026/11/52784/devices.yaml.txt" title="设备插件配置">设备插件配置</a>。附件使用 <code>.txt</code> 后缀避免被博客引擎解析，下载后重命名为 <code>devices.yaml</code>，放在控制节点。先检查其中的网卡和选择条件：</p>
+<pre><div class="code-header"><span class="code-header-type">json</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div></div><code class="language-json">&#123;
+  &quot;resourceName&quot;: &quot;ib&quot;,
+  &quot;resourcePrefix&quot;: &quot;rdma&quot;,
+  &quot;rdmaHcaMax&quot;: 2,
+  &quot;selectors&quot;: &#123;
+    &quot;vendors&quot;: [&quot;15b3&quot;],
+    &quot;deviceIDs&quot;: [&quot;1003&quot;],
+    &quot;ifNames&quot;: [&quot;ib0&quot;]
+  &#125;
+&#125;</code></div></pre>
+<p><code>15b3:1003</code> 对应这批 ConnectX-3；<code>ifNames</code> 是 IPoIB 网络接口名称，不能填成 HCA 名称。<code>rdmaHcaMax: 2</code> 表示每台允许分配两个共享使用名额，不会生成两块网卡，也不保证每个任务获得一半带宽。</p>
+<p>附件还配置了 NVIDIA runtime、设备插件挂载目录，以及控制节点 <code>dedicated=control:NoSchedule</code> 污点的 toleration。RDMA 插件自身采用官方模板的 privileged 和设备目录挂载，这是节点级插件权限；计算任务不需要照抄。</p>
+<p>在控制节点给三台目标节点加标签，然后应用：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">sudo k3s kubectl label nodes \
+  host-a.lab.example.com host-b.lab.example.com host-c.lab.example.com \
+  lab.example.com/accelerator=true --overwrite
+sudo k3s kubectl apply -f devices.yaml
+sudo k3s kubectl rollout status daemonset/nvidia-device-plugin-daemonset -n kube-system
+sudo k3s kubectl rollout status daemonset/rdma-shared-dp-ds -n kube-system
+sudo k3s kubectl describe nodes</code></div></pre>
+<p>三台节点的 Capacity、Allocatable 中都应出现 <code>nvidia.com/gpu: 2</code> 和 <code>rdma/ib: 2</code>。这时调度器才能根据任务申请分配设备。</p>
+<h2 id="五、容器通信验证">五、容器通信验证</h2>
+<h3 id="5-1-测试镜像">5.1 测试镜像</h3>
+<p>为了让测试不依赖宿主机临时库，把固定版本的 NCCL、CUDA 运行库、verbs 和 mlx4 provider 放进同一个镜像。</p>
+<p>下载 <a href="/2026/11/52784/nccl-check.cu" title="测试源码">测试源码</a> 和 <a href="/2026/11/52784/Dockerfile" title="Dockerfile">Dockerfile</a> 到同一构建目录。下面命令都在该目录执行，保留文件名 <code>nccl-check.cu</code>、<code>Dockerfile</code>。程序执行两个进程的 AllReduce，每端输入分别为 1 和 2，检查 1,048,576 个 float 的结果是否全部为 3。它用于结果校验，没有计时和训练吞吐测试。</p>
+<p>在已安装 Toolkit 的节点构建，Docker 仅用于生成镜像，运行仍由 K3s 的 containerd 负责：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">/usr/local/cuda/bin/nvcc -arch=sm_75 nccl-check.cu -lnccl -o nccl-check
+curl -fL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2604/x86_64/cuda-keyring_1.1-1_all.deb \
+  -o cuda-keyring.deb
+sudo docker build -t lab/rdma-gpu-check:20261115 .
+sudo docker save lab/rdma-gpu-check:20261115 -o rdma-gpu-check.tar
+sudo k3s ctr images import rdma-gpu-check.tar</code></div></pre>
+<p>镜像归档通常由 root 创建。先让执行复制的管理员可读，再传到其余节点；下例假定 SSH 已配置好这两台的登录方式：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">sudo chown &quot;$(id -u):$(id -g)&quot; rdma-gpu-check.tar
+scp rdma-gpu-check.tar host-b:/tmp/rdma-gpu-check.tar
+scp rdma-gpu-check.tar host-c:/tmp/rdma-gpu-check.tar
+ssh host-b 'sudo k3s ctr images import /tmp/rdma-gpu-check.tar'
+ssh host-c 'sudo k3s ctr images import /tmp/rdma-gpu-check.tar'</code></div></pre>
+<p>这里没有使用远程镜像仓库，所以测试 Pod 设置 <code>imagePullPolicy: Never</code>；每个目标节点必须先导入同一份镜像。构建工具 Docker 需已安装，服务器只用 containerd 时也可以在另一台有 Docker、相同 CPU 架构且具备本文 CUDA/NCCL 编译环境的机器构建，再导入。</p>
+<p>镜像构建时先安装 <code>ca-certificates</code>，再访问 NVIDIA 的 HTTPS 软件源。基础镜像缺少 CA 时会发生证书校验失败，不能用关闭 TLS 校验的方式处理。</p>
+<h3 id="5-2-测试-Pod">5.2 测试 Pod</h3>
+<p>将下面内容保存为 <code>gpu-rdma-test.yaml</code>。示例先在 <code>host-b</code> 创建一个测试 Pod，另复制一份，将名称和节点改为 <code>gpu-rdma-c</code>、<code>host-c.lab.example.com</code>。两端分别申请两张 GPU 和一个 RDMA 名额。</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div><div class="line-numbers-item">20</div><div class="line-numbers-item">21</div><div class="line-numbers-item">22</div><div class="line-numbers-item">23</div><div class="line-numbers-item">24</div><div class="line-numbers-item">25</div><div class="line-numbers-item">26</div><div class="line-numbers-item">27</div><div class="line-numbers-item">28</div><div class="line-numbers-item">29</div><div class="line-numbers-item">30</div><div class="line-numbers-item">31</div><div class="line-numbers-item">32</div><div class="line-numbers-item">33</div><div class="line-numbers-item">34</div><div class="line-numbers-item">35</div><div class="line-numbers-item">36</div><div class="line-numbers-item">37</div><div class="line-numbers-item">38</div></div><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-rdma-b
+spec:
+  runtimeClassName: nvidia
+  nodeSelector:
+    kubernetes.io/hostname: host-b.lab.example.com
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  containers:
+    - name: check
+      image: docker.io/lab/rdma-gpu-check:20261115
+      imagePullPolicy: Never
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+          add: [IPC_LOCK]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: '2'
+          memory: 2Gi
+          nvidia.com/gpu: 2
+          rdma/ib: 1
+      volumeMounts:
+        - name: shm
+          mountPath: /dev/shm
+  volumes:
+    - name: shm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 1Gi</code></div></pre>
+<p>这是受信任的实验室任务，使用 <code>hostNetwork</code> 让程序看到宿主机的 IPoIB 网络。它共享宿主机网络边界，不适用于需要严格网络隔离的租户。需要独立 Pod 地址时再考虑 Multus/IPoIB，原有业务 CNI 无需替换。</p>
+<p>默认 <code>/dev/shm</code> 只有 64 MiB，首次容器测试在创建约 65 MiB 的 NCCL 共享缓冲区时失败。这里挂载 1 GiB 的 memory emptyDir，实际使用量计入 Pod 内存限制。即使显卡和网卡都已注入，这项配置遗漏仍会导致通信失败。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">sudo k3s kubectl create namespace accelerator-test
+sudo k3s kubectl apply -n accelerator-test -f gpu-rdma-test.yaml
+# 另一份保存为 gpu-rdma-test-c.yaml
+sudo k3s kubectl apply -n accelerator-test -f gpu-rdma-test-c.yaml
+sudo k3s kubectl wait -n accelerator-test --for=condition=Ready pod --all --timeout=120s
+sudo k3s kubectl exec -n accelerator-test gpu-rdma-b -- nvidia-smi -L
+sudo k3s kubectl exec -n accelerator-test gpu-rdma-b -- ls /dev/infiniband</code></div></pre>
+<p>使用控制节点的 GPU 时，另建对应 Pod，并在 <code>spec</code> 下加入与实际污点匹配的配置：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-yaml">tolerations:
+  - key: dedicated
+    operator: Equal
+    value: control
+    effect: NoSchedule</code></div></pre>
+<p>保留原有污点，可以避免普通计算任务无意间进入承载主要业务的控制节点。三节点测试时依次选择不同的两个 Pod 运行下一节命令，其他测试 Pod 只等待，不启动计算。</p>
+<h3 id="5-3-AllReduce">5.3 AllReduce</h3>
+<p>在控制节点打开两个终端。每轮开始前，确认上一轮的两端进程都已退出，再清除旧通信 ID，避免第二个终端读到上次测试留下的文件：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl exec -n accelerator-test gpu-rdma-b -- rm -f /tmp/nccl-test.id
+sudo k3s kubectl exec -n accelerator-test gpu-rdma-c -- rm -f /tmp/nccl-test.id</code></div></pre>
+<p>第一个终端启动 rank 0，程序写出通信 ID 后等待另一端连接。网卡名按实际替换：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo k3s kubectl exec -n accelerator-test gpu-rdma-b -- \
+  timeout 120 env NCCL_DEBUG=INFO NCCL_NET=IB NCCL_IB_DISABLE=0 \
+  NCCL_NET_GDR_LEVEL=LOC NCCL_SOCKET_IFNAME=ib0 \
+  nccl-check 0 /tmp/nccl-test.id 0</code></div></pre>
+<p>第二个终端先确认通信 ID 已写出，再复制到另一端并启动 rank 1。必须保持 rank 0 进程运行，不能单独生成 ID 后退出；如果启动失败，先处理第一端日志，再重新开始两端测试：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div></div><code class="language-bash"># 若文件尚未生成，等待第一端初始化后重试，不继续执行复制
+sudo k3s kubectl exec -n accelerator-test gpu-rdma-b -- test -s /tmp/nccl-test.id
+# 上一条成功后再执行；管道任一端失败则不要启动 rank 1
+set -o pipefail
+sudo k3s kubectl exec -n accelerator-test gpu-rdma-b -- cat /tmp/nccl-test.id | \
+  sudo k3s kubectl exec -i -n accelerator-test gpu-rdma-c -- \
+  sh -c 'cat &gt; /tmp/nccl-test.id'
+sudo k3s kubectl exec -n accelerator-test gpu-rdma-c -- \
+  timeout 120 env NCCL_DEBUG=INFO NCCL_NET=IB NCCL_IB_DISABLE=0 \
+  NCCL_NET_GDR_LEVEL=LOC NCCL_SOCKET_IFNAME=ib0 \
+  nccl-check 1 /tmp/nccl-test.id 0</code></div></pre>
+<p>命令最后一个 <code>0</code> 是容器内 GPU 编号，改为 <code>1</code> 后重新启动两端，测试第二张卡。日志应同时出现 <code>Using network IB</code> 和 <code>ALLREDUCE_PASS</code>。NCCL 的启动协调仍会使用 Socket，判断数据通路要看 <code>NET/IB</code>，不能因为日志里出现 Socket 就认定没有使用 RDMA。</p>
+<p>本次三对节点、两组 GPU 共六组 AllReduce 全部通过。全部显卡被测试 Pod 占用时，额外申请 GPU 的 Pod 因 <code>Insufficient nvidia.com/gpu</code> 进入等待，调度器没有重复分配设备。</p>
+<p>测试结束后删除专门创建的测试命名空间，释放设备：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo k3s kubectl delete namespace accelerator-test
+sudo k3s kubectl get nodes
+sudo k3s kubectl get pods -A</code></div></pre>
+<h2 id="六、使用与维护">六、使用与维护</h2>
+<p>后续计算任务可以同时申请 <code>nvidia.com/gpu</code> 和 <code>rdma/ib</code>。镜像中仍需提供匹配的 CUDA、NCCL 和应用环境；设备插件不会把普通程序自动改成分布式程序，多节点任务还需要自己的进程启动和同步方式。</p>
+<p>当前按整卡分配，没有启用时间切片。直接在宿主机通过 SSH 启动的 GPU 进程不受 K3s 调度器管理，因此任务入口需要逐步统一，否则仍可能与容器占用同一张卡。RDMA 共享名额同样不提供硬件级带宽隔离。</p>
+<p>后续升级时，分别检查驱动、Toolkit、NCCL、容器运行时和镜像版本，不能只看 <code>nvidia-smi</code>。本次普通 CUDA、主机内存 RDMA、Pod 内 NCCL 分别验证后，再检查了原有业务的内外网访问，未发现维护引入的访问异常。</p>
+<p>如果需要撤销设备调度，先停止使用设备的任务，再执行 <code>sudo k3s kubectl delete -f devices.yaml</code>。撤销锁页策略时删除本次新增的 limits 文件和对应 systemd drop-in，执行 <code>systemctl daemon-reload</code>，逐台重启 K3s 服务并重新登录。删除 NCCL pin 只恢复 APT 的版本选择，不会自动恢复旧库。驱动回退需要按备份的包清单和可用版本处理，不能把 <code>/usr/local/cuda</code> 链接改回旧目录就视为驱动已经回退。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.nvidia.com/cuda/cuda-installation-guide-linux/" class="external-link" data-redirect="https%3A%2F%2Fdocs.nvidia.com%2Fcuda%2Fcuda-installation-guide-linux%2F">CUDA 安装说明</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.nvidia.com/deploy/cuda-compatibility/latest/minor-version-compatibility.html" class="external-link" data-redirect="https%3A%2F%2Fdocs.nvidia.com%2Fdeploy%2Fcuda-compatibility%2Flatest%2Fminor-version-compatibility.html">CUDA 小版本兼容</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html" class="external-link" data-redirect="https%3A%2F%2Fdocs.nvidia.com%2Fdeeplearning%2Fnccl%2Fuser-guide%2Fdocs%2Fenv.html">NCCL 环境变量</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.nvidia.com/cuda/gpudirect-rdma/" class="external-link" data-redirect="https%3A%2F%2Fdocs.nvidia.com%2Fcuda%2Fgpudirect-rdma%2F">GPUDirect RDMA</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.k3s.io/advanced#nvidia-container-runtime-support" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Fadvanced%23nvidia-container-runtime-support">K3s NVIDIA 运行时</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/NVIDIA/k8s-device-plugin" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FNVIDIA%2Fk8s-device-plugin">NVIDIA device plugin</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Mellanox/k8s-rdma-shared-dev-plugin" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FMellanox%2Fk8s-rdma-shared-dev-plugin">RDMA shared device plugin</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/52784/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/52784/">https://www.doratiger.top/2026/11/52784/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/52783/"><span>服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

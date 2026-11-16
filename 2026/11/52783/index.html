@@ -1,0 +1,610 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配【DoraTiger 的异次元】</title><meta name="description" content="前言 实验室有同学遇到了 FreeIPA 账号认证失败的问题，排查发现服务器此前发生过 OOM，导致 SSSD 等相关服务启动失败。修复认证问题后，正好三台服务器都处于空闲状态，便安排了这次系统升级。 服务器原来使用 Ubuntu 24.04，账号和 sudo 权限由 FreeIPA 统一管理，容器业务运行在 K3s "><meta name="keywords" content="k3s,freeipa,ubuntu,rdma,guacamole"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配【DoraTiger 的异次元】"><meta property="og:description" content="前言 实验室有同学遇到了 FreeIPA 账号认证失败的问题，排查发现服务器此前发生过 OOM，导致 SSSD 等相关服务启动失败。修复认证问题后，正好三台服务器都处于空闲状态，便安排了这次系统升级。 服务器原来使用 Ubuntu 24.04，账号和 sudo 权限由 FreeIPA 统一管理，容器业务运行在 K3s "><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/52783/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/52783/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-15T05:30:00.000Z","dateModified":"2026-11-16T07:17:27.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/52783/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%8D%87%E7%BA%A7%E5%AE%89%E6%8E%92"><span class="toc-text">一、升级安排</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%B7%A5%E4%BD%9C%E8%8A%82%E7%82%B9%E7%BB%B4%E6%8A%A4"><span class="toc-text">1.1 工作节点维护</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%8E%A7%E5%88%B6%E8%8A%82%E7%82%B9%E7%BB%B4%E6%8A%A4"><span class="toc-text">1.2 控制节点维护</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%B3%BB%E7%BB%9F%E5%8D%87%E7%BA%A7"><span class="toc-text">二、系统升级</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%B3%BB%E7%BB%9F%E6%A3%80%E6%9F%A5%E4%B8%8E%E5%A4%87%E4%BB%BD"><span class="toc-text">2.1 系统检查与备份</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%BD%AF%E4%BB%B6%E6%BA%90%E9%85%8D%E7%BD%AE"><span class="toc-text">2.2 软件源配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%8F%91%E8%A1%8C%E7%89%88%E5%8D%87%E7%BA%A7"><span class="toc-text">2.3 发行版升级</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-SSH-%E7%9B%91%E5%90%AC%E6%81%A2%E5%A4%8D"><span class="toc-text">2.4 SSH 监听恢复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-OpenSSH-%E4%B8%8E-OpenSSL"><span class="toc-text">2.5 OpenSSH 与 OpenSSL</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%BD%AF%E4%BB%B6%E9%80%82%E9%85%8D"><span class="toc-text">三、软件适配</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-FreeIPA-%E4%B8%8E-sudo"><span class="toc-text">3.1 FreeIPA 与 sudo</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-K3s-%E8%BF%90%E8%A1%8C%E6%97%B6%E4%B8%8E%E6%9C%8D%E5%8A%A1"><span class="toc-text">3.2 K3s 运行时与服务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-GNOME-%E4%B8%8E-Guacamole"><span class="toc-text">3.3 GNOME 与 Guacamole</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-Alloy-%E4%B8%8E-node-exporter"><span class="toc-text">3.4 Alloy 与 node-exporter</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%8D%87%E7%BA%A7%E9%AA%8C%E8%AF%81"><span class="toc-text">四、升级验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%B8%BB%E6%9C%BA%E4%B8%8E%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81"><span class="toc-text">4.1 主机与集群状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E7%BD%91%E7%BB%9C%E3%80%81%E4%B8%9A%E5%8A%A1%E4%B8%8E%E6%8C%81%E4%B9%85%E5%8C%96"><span class="toc-text">4.2 网络、业务与持久化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-GPU-%E4%B8%8E-RDMA"><span class="toc-text">4.3 GPU 与 RDMA</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color6"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color2"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">76</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">147</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">服务器操作指北（12）Ubuntu 26.04 升级与 FreeIPA、K3s、远程桌面适配</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-15</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/k3s/">k3s</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/freeipa/">freeipa</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ubuntu/">ubuntu</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/rdma/">rdma</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/guacamole/">guacamole</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">19727 字 · 约 66 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>实验室有同学遇到了 FreeIPA 账号认证失败的问题，排查发现服务器此前发生过 OOM，导致 SSSD 等相关服务启动失败。修复认证问题后，正好三台服务器都处于空闲状态，便安排了这次系统升级。</p>
+<p>服务器原来使用 Ubuntu 24.04，账号和 sudo 权限由 FreeIPA 统一管理，容器业务运行在 K3s 中，远程桌面通过 Guacamole 连接。考虑到 Ubuntu 26.04 LTS 已经发布了一段时间，稳定性应该相对成熟，我决定利用这次空闲期升级。为了保证升级可靠性，采用逐台升级、逐台验证的方式，避免批量升级导致多台服务器同时出现问题。</p>
+<p>之前在 <a href="/2023/05/34807/" title="服务器操作指北（5）编译安装 openssh 9.3p1 with openssl3.1.0">服务器操作指北（5）编译安装 openssh 9.3p1 with openssl3.1.0</a> 中记录过 Ubuntu 20.04 升到 22.04 后，重新编译 OpenSSH、OpenSSL 的处理。这次除了系统升级，还涉及 FreeIPA 授权、GNOME 远程桌面和 K3s 容器，因此把 Ubuntu 24.04.5 升至 26.04.1 的过程和相关适配一起整理。</p>
+<span id="more"></span>
+<h2 id="一、升级安排">一、升级安排</h2>
+<p>这次升级涉及三台服务器，每台有两张 Tesla T4 和 InfiniBand 网卡，K3s 保留单控制节点架构。文中的主机、账号、域名和路径均为示例，数据盘挂载点统一写作 <code>/srv/data</code>。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">节点</th>
+<th style="text-align:left">角色</th>
+<th style="text-align:left">升级时的主要影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">host-a</td>
+<td style="text-align:left">K3s 控制节点，运行 FreeIPA、Gitea、Nextcloud 和主要监控服务</td>
+<td style="text-align:left">API 和主要业务短暂停机，本地卷业务无法直接迁到其他节点</td>
+</tr>
+<tr>
+<td style="text-align:left">host-b、host-c</td>
+<td style="text-align:left">K3s 工作节点，运行计算任务</td>
+<td style="text-align:left">暂停或转移该节点的任务，控制面继续运行</td>
+</tr>
+</tbody>
+</table>
+<p>升级顺序为 <code>host-c</code> → <code>host-b</code> → <code>host-a</code>。每台先完成本节对应的停机准备，再执行第二节的系统升级，处理第三节中适用的软件问题，验证通过后才升级下一台。普通单机可以直接按第二节操作；集群节点需要先安排任务和业务停机。</p>
+<p><code>sudo k3s kubectl</code> 命令均在控制节点执行，宿主机命令在正在升级的那台机器执行。工作节点运行的是 <code>k3s-agent</code>，控制节点运行的是 <code>k3s</code>，本次不升级 K3s 本身。</p>
+<h3 id="1-1-工作节点维护">1.1 工作节点维护</h3>
+<p>工作节点上除了普通用户进程，还有 KubeRay 管理的两个 RayCluster。维护前检查登录会话、进程、GPU 和 Ray 作业，确认没有计算任务运行，再暂停应用。模型常驻显存不一定正在推理，GPU 空闲时也可能有 CPU 任务。</p>
+<p>在目标节点执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">who
+w
+nvidia-smi
+systemctl --failed
+findmnt /srv/data</code></div></pre>
+<p>在控制节点检查调度情况。未安装 KubeRay 的集群跳过 RayCluster 查询和后面的暂停、恢复步骤：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo k3s kubectl get nodes -o wide
+sudo k3s kubectl get pods -A -o wide
+sudo k3s kubectl get rayclusters -A
+sudo k3s kubectl get pvc -A</code></div></pre>
+<p>RayCluster 的 Kubernetes 配置、Ray Serve 应用配置和容器内的文件需要分别保存。CR 能描述 head、worker 的资源和副本数，但手工向 Dashboard 提交的 Serve 配置未必在 CR 中；容器可写层里的程序和数据，也不会因为保留了 CR 就自动回来。</p>
+<p>这次保存了两组 RayCluster 配置、Serve 应用配置和应用文件归档。下面的名称需要替换为自己的集群名：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash"># 在控制节点执行，备份目录仅允许管理员访问
+sudo install -d -m 700 /root/upgrade-backup
+sudo sh -c 'k3s kubectl get raycluster -n ray demo-ray -o yaml &gt; /root/upgrade-backup/demo-ray.yaml'
+
+# 确认应用已备份且没有任务运行后，再暂停和排空节点
+sudo k3s kubectl patch raycluster demo-ray -n ray \
+  --type merge -p '&#123;&quot;spec&quot;:&#123;&quot;suspend&quot;:true&#125;&#125;'
+sudo k3s kubectl cordon host-c.lab.example.com
+sudo k3s kubectl drain host-c.lab.example.com --ignore-daemonsets</code></div></pre>
+<p>如果 drain 提示本地临时数据或 PodDisruptionBudget 限制，应先检查相应工作负载。不要为了让命令通过直接加 <code>--force</code> 或删除本地数据。</p>
+<p>完成节点维护后，在工作节点检查 <code>systemctl status k3s-agent</code>，在控制节点确认该节点恢复 Ready。随后解除 cordon；暂停过的 RayCluster 还要解除暂停并恢复 Serve 应用配置：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash"># 在控制节点执行；节点名称和 RayCluster 名称按实际替换
+sudo k3s kubectl uncordon host-c.lab.example.com
+sudo k3s kubectl patch raycluster demo-ray -n ray \
+  --type merge -p '&#123;&quot;spec&quot;:&#123;&quot;suspend&quot;:false&#125;&#125;'</code></div></pre>
+<p><code>spec.suspend</code> 暂停的是整个 RayCluster，可能影响其他节点上的同一应用；只做节点排空时，不应顺手暂停其他仍在使用的集群。本文的 Ray 命令仅适用于这两组已确认空闲、已经备份的应用。Serve 若由 Dashboard 提交，恢复时也需要使用原先的应用配置。</p>
+<h3 id="1-2-控制节点维护">1.2 控制节点维护</h3>
+<p>轮到 <code>host-a</code> 前，另外保存了 Gitea、Nextcloud 的数据库与业务文件、FreeIPA 完整备份，以及 K3s 的 SQLite 数据库和配置。备份同步到另一台服务器并做了校验，没有在升级期间裁剪旧备份。</p>
+<p>数据库使用自己的备份方式，文件归档与数据库备份处于同一个维护窗口；FreeIPA 使用其完整备份，K3s 则按当前使用的 SQLite 数据存储保存恢复材料。仅复制应用目录，无法代替这些备份。数据盘留在原位置，也不能代替备份。</p>
+<p>对于本文使用的 SQLite，可以在维护窗口停止 K3s 后保存整个数据库目录及 token。以下是冷备份示例，执行期间控制面不可用；它只备份 K3s 状态，不包含业务卷中的数据库和文件：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">sudo install -d -m 700 /root/upgrade-backup
+sudo systemctl stop k3s
+sudo tar -czf /root/upgrade-backup/k3s-state.tar.gz \
+  -C /var/lib/rancher/k3s/server db token
+sudo tar -tzf /root/upgrade-backup/k3s-state.tar.gz &gt;/dev/null
+sudo systemctl start k3s
+sudo k3s kubectl get --raw=/readyz</code></div></pre>
+<p>逐条确认归档和检查命令成功。若归档失败，先检查空间与错误日志，恢复 K3s 服务后再处理，不带着不完整备份进入系统升级。<code>/etc/rancher/k3s/</code> 和 systemd 配置包含在后面的 <code>/etc</code> 归档中；另将 <code>/var/lib/rancher/k3s/server/manifests/</code> 中自行维护的清单一起保存。完成后把受限备份复制到另一台主机并核对校验和。外部数据库或 embedded etcd 不能套用这组 SQLite 命令。</p>
+<p>控制节点上还有固定本地卷的 Pod，工作节点没有对应数据。第一次重启前将控制节点 cordon 后，FreeIPA 重建时一直 Pending，恢复调度才重新启动。后面的重启保留了该节点的可调度状态，停机前确认备份，启动后检查服务恢复，没有强行把本地卷业务迁到其他机器。</p>
+<p>这套集群使用 SQLite，控制节点重启期间没有第二个 API Server 接管。工作节点上已经运行的容器可能继续运行，但无法依靠控制面重新调度。FreeIPA 也运行在这台机器上，因此维护前必须确认本地管理员或 IPMI 控制台可用，不能把恢复入口完全依赖于域账号。</p>
+<p>控制节点完成业务备份后安排整机停机，保留可调度状态，由系统正常停止和启动服务。重启后先在控制台检查数据盘和 K3s：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">findmnt /srv/data
+systemctl status k3s
+sudo k3s kubectl get nodes
+sudo k3s kubectl get pods -A -o wide
+sudo k3s kubectl get pvc -A</code></div></pre>
+<p>如果该节点此前被 cordon，在确认数据盘挂载正常后执行 <code>sudo k3s kubectl uncordon host-a.lab.example.com</code>。FreeIPA 和数据库恢复后，再验证域用户登录及业务访问。按 <a target="_blank" rel="noopener" href="https://docs.k3s.io/datastore/backup-restore" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Fdatastore%2Fbackup-restore">K3s 备份说明</a>，还要保存 <code>/var/lib/rancher/k3s/server/token</code>，与数据存储及配置文件一起放入受限备份。SQLite 备份应使用一致性备份方式，不能在服务写入时只复制一个数据库文件，也不适用 etcd snapshot 命令。</p>
+<h2 id="二、系统升级">二、系统升级</h2>
+<p>以下流程在每台待升级的 Ubuntu 24.04 主机上执行。发行版升级包含交互确认，命令按段运行；每次重启后重新登录，再继续后面的步骤。</p>
+<h3 id="2-1-系统检查与备份">2.1 系统检查与备份</h3>
+<p>确认没有活动任务、备份目录有足够空间后，在目标节点保存 <code>/etc</code>、软件包清单、网卡地址、路由、磁盘挂载和硬件状态。备份内容可能包含主机 keytab、服务密码或私钥，不能放进公开仓库。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash">sudo install -d -m 700 /root/upgrade-backup
+sudo tar -czf /root/upgrade-backup/etc-before.tar.gz /etc
+sudo sh -c 'dpkg-query -W &gt; /root/upgrade-backup/packages.txt'
+sudo sh -c 'ip address &gt; /root/upgrade-backup/ip-address.txt'
+sudo sh -c 'ip route show table all &gt; /root/upgrade-backup/routes.txt'
+sudo sh -c 'findmnt &gt; /root/upgrade-backup/mounts.txt'
+nvidia-smi
+ibstat</code></div></pre>
+<p>以上使用固定备份文件名，已有同名归档时应另选目录，避免覆盖上次维护材料。这份归档只用于配置恢复。需要整机回退时，应另做磁盘镜像或系统快照；跨发行版升级不能靠把 APT 源改回旧版本来降级。</p>
+<p>还要保留 SSH 以外的入口，例如 IPMI 控制台。本次升级中 SSH 服务确实短暂停止过，后来恢复了 <code>/run/sshd</code> 并重新启动 SSH。遇到类似情况，应先在控制台执行 <code>sshd -t</code>、检查日志，确认是运行目录或服务状态问题，再处理，不要直接覆盖 SSH 配置。</p>
+<p>备份还要复制到另一台机器，确认能够读取。升级前保留一个已验证可用的本地管理员入口；FreeIPA 用户在新版 sudo 下可能暂时无法提权，处理方式见第三节。后文的 root tmux 会话用于安装期间维护，主机重启后仍需重新登录。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">cat /etc/os-release
+df -h / /boot /srv/data
+sudo dpkg --audit</code></div></pre>
+<p>检查旧系统版本、根分区和启动分区剩余空间。<code>dpkg --audit</code> 应没有输出，已有的软件包错误应在发行版升级前处理。</p>
+<h3 id="2-2-软件源配置">2.2 软件源配置</h3>
+<p>服务器依靠 IPv6 访问外网。原来使用 CERNET 联合镜像入口，但当时分配到的吉林大学镜像出现 IPv6 HTTPS 超时，IPv4 则可以连接。换源前先直接验证目标文件：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">curl -6 -fL --connect-timeout 5 --max-time 20 \
+  -o /dev/null -w '%&#123;http_code&#125; %&#123;remote_ip&#125;\n' \
+  https://mirrors.tuna.tsinghua.edu.cn/ubuntu/dists/resolute/InRelease</code></div></pre>
+<p>清华、中科大、北外的索引测试均通过，第一台工作节点最终使用清华镜像。后续升级另外两台时，升级器没有识别清华源，改用了北外镜像；三台最终的索引下载都验证了 IPv6 连通性。升级前仍应使用 <code>noble</code>，由发行版升级器完成到 <code>resolute</code> 的转换，不要提前把全部源中的发行版名称替换掉。</p>
+<p>Ubuntu 使用 deb822 源时，在 <code>/etc/apt/sources.list.d/ubuntu.sources</code> 中修改 <code>URIs</code>，保留原有组件和签名配置。第一台节点升级完成后的主要字段如下，另外两台的 <code>URIs</code> 使用 <code>https://mirrors.bfsu.edu.cn/ubuntu/</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">Types: deb
+URIs: https://mirrors.tuna.tsinghua.edu.cn/ubuntu/
+Suites: resolute resolute-updates resolute-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg</code></div></pre>
+<p>安全更新另一个段落的 <code>Suites</code> 为 <code>resolute-security</code>。如果原文件分为多个段落，应逐段检查，不要遗漏安全源。</p>
+<p>Docker 源也切到了清华的对应发行版仓库；Grafana 保留其独立软件源。修改源不会立即替换已安装的软件包，后续复查仍看到部分 Docker 包带有 <code>ubuntu24.04~noble</code> 后缀，对应的 <code>resolute</code> 包尚待维护窗口更新。旧 CUDA 源仍指向 <code>ubuntu2404</code>，本次将它禁用，没有把旧发行版仓库硬接到新系统上。已安装的 NVIDIA 驱动保留，重启后再验证。</p>
+<p>软件源确认可达后，日常保持系统默认的双栈选择，不写入全局强制 IPv6 配置。</p>
+<h3 id="2-3-发行版升级">2.3 发行版升级</h3>
+<p>升级分为旧系统更新和发行版升级两个阶段，中间需要重启。发行版升级器会计算软件包变更、下载安装并询问配置处理方式，不能启动后就一直放着不管。本次只有旧系统补丁阶段采用非交互执行，后续 <code>resolute</code> 升级器仍使用文本交互界面。</p>
+<p>先在待升级主机上更新 Ubuntu 24.04。以下保留交互确认，便于检查软件包删除和配置变更：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo apt update
+sudo apt full-upgrade
+sudo apt install tmux update-manager-core curl gnupg
+sudo dpkg --audit</code></div></pre>
+<p>实际维护时，旧系统补丁脚本使用 <code>DEBIAN_FRONTEND=noninteractive</code>、<code>apt-get -y</code> 和 <code>--force-confold</code> 保留已有配置。这里列出交互式命令，便于核对变更。逐条确认执行成功，<code>dpkg --audit</code> 没有异常后再重启。</p>
+<p>确认旧系统的软件包更新完成后，单独执行第一次重启：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo reboot</code></div></pre>
+<p>重连后确认系统、挂载和远程入口正常，再建立独立的 root tmux 会话：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">cat /etc/os-release
+uname -r
+systemctl --failed
+findmnt /srv/data
+sudo tmux new -s release-upgrade</code></div></pre>
+<p>进入会话后执行 <code>id -u</code>，应返回 <code>0</code>。下面的升级器命令都在这个 root 会话中执行。常规入口是 <code>do-release-upgrade</code>，由它下载并调用升级器，操作说明见 <a target="_blank" rel="noopener" href="https://ubuntu.com/server/docs/how-to/software/upgrade-your-release/" class="external-link" data-redirect="https%3A%2F%2Fubuntu.com%2Fserver%2Fdocs%2Fhow-to%2Fsoftware%2Fupgrade-your-release%2F">Ubuntu 官方文档</a>。本次直接下载镜像站上的官方 <code>resolute</code> 升级器，验签后运行。两种入口选一种，不需要先运行 <code>do-release-upgrade</code>，再重复执行解压出的升级器。</p>
+<p>以北外镜像为例，先建立仅管理员可访问的工作目录，下载压缩包和对应签名：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">install -d -m 700 /root/upgrade-backup/upgrader
+cd /root/upgrade-backup/upgrader
+upgrade_url=https://mirrors.bfsu.edu.cn/ubuntu/dists/resolute-updates/main/dist-upgrader-all/current
+curl -fLO &quot;$upgrade_url/resolute.tar.gz&quot; &amp;&amp; \
+  curl -fLO &quot;$upgrade_url/resolute.tar.gz.gpg&quot; &amp;&amp; \
+  gpgv --keyring /usr/share/keyrings/ubuntu-archive-keyring.gpg \
+  resolute.tar.gz.gpg resolute.tar.gz</code></div></pre>
+<p>确认 <code>gpgv</code> 验签成功、退出码为 0 后再解压。下载失败或验签失败时停止，不跳过验证：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">tar -xzf resolute.tar.gz
+export LC_ALL=C.UTF-8
+./resolute --frontend DistUpgradeViewText
+upgrade_rc=$?
+printf '%s\n' &quot;$upgrade_rc&quot; &gt; /root/upgrade-backup/release-upgrade.exit</code></div></pre>
+<p>升级器启动后，需要查看软件包变更摘要，确认下载量、剩余磁盘空间及将被删除的软件包，再同意开始安装。第三方源可能被禁用，升级后要按新发行版支持情况逐项恢复，不把旧源直接全部打开。</p>
+<p>安装期间的配置文件提示也需要处理。这次保留了 LDAP、auditd 和 Chrony 的已有配置；出现差异时先查看内容，不能统一回答“使用维护者版本”。NVIDIA 驱动还会涉及新内核的 DKMS 构建，应等安装过程结束并确认没有错误。最后的旧包清理本次暂时跳过，留待新系统和业务验证后再检查。结束时若提示立即重启，先选择暂不重启，回到 shell 检查退出码和安装状态。</p>
+<p>tmux 用于保留升级会话，SSH 断开不会因此结束 tmux 内的进程，但它不能防止 SSH 服务本身停止。临时离开会话按 <code>Ctrl+B</code> 后按 <code>D</code>；需要回来时，在同一主机执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo tmux attach -t release-upgrade</code></div></pre>
+<p>如果安装界面长时间没有变化，先回到该会话确认是否等待输入，不另外启动第二个 apt 或升级器。另一个终端可以查看日志：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo tail -n 60 /var/log/dist-upgrade/main.log
+sudo tail -n 60 /var/log/dist-upgrade/apt.log
+sudo tail -n 60 /var/log/dist-upgrade/term.log</code></div></pre>
+<p>升级器结束后先检查退出码和软件包状态，再安排重启。本次三台发行版升级退出码均为 0，没有在升级脚本末尾直接串接自动重启：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash"># 在保留的 root 会话中执行
+cat /root/upgrade-backup/release-upgrade.exit
+dpkg --audit
+sshd -t
+systemctl status ssh.socket ssh.service</code></div></pre>
+<p>确认退出码为 0、安装没有未处理错误，并且控制台恢复入口可用后，在 root 会话中执行第二次重启：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">reboot</code></div></pre>
+<p>重新连接后检查：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">cat /etc/os-release
+uname -r
+systemctl --failed
+sudo dpkg --audit
+findmnt /srv/data</code></div></pre>
+<p>若升级后域用户无法执行 <code>sudo</code>，通过本地管理员、控制台或 <code>sudo.ws</code> 继续维护，按第三节处理集中授权。系统版本和新内核正常后，再恢复该节点的业务；本次最终为 Ubuntu 26.04.1、内核 <code>7.0.0-43-generic</code>。</p>
+<h3 id="2-4-SSH-监听恢复">2.4 SSH 监听恢复</h3>
+<p>后两台升级期间，软件包安装停止了 SSH 监听，其中一次又停在 LDAP 配置确认界面。K3s 节点仍然 Ready，新 SSH 连接却进不去。此时不能把连接失败当作升级已经停止，更不能直接重启机器。</p>
+<p>这次在 tmux 中保留了升级终端。已有 root 会话可用时，通过另一个 tmux 窗口恢复 SSH socket；另一台则临时借助仍在线的 K3s 创建节点维护 Pod，恢复 SSH 后立即删除。维护 Pod 具有宿主机权限，只用于这次救援，日常仍应准备好 IPMI 控制台。</p>
+<p>在保留的 root 终端或控制台检查：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">sshd -t
+systemctl status ssh.socket ssh.service
+journalctl -u ssh.socket -u ssh.service -b --no-pager
+# 若 sshd -t 明确提示缺少 /run/sshd，先恢复运行目录
+install -d -m 0755 /run/sshd
+sshd -t &amp;&amp; systemctl start ssh.socket
+ss -lntp | grep ':22 '</code></div></pre>
+<p>这里对应 Ubuntu 当前的 socket activation 配置；若安装环境仍由 <code>ssh.service</code> 直接监听，应按原有启动方式恢复。保持升级进程继续运行，处理完配置文件提示后，再从新的终端验证连接。LDAP、审计和时间同步等已有配置需要逐项比较，没有直接用新包配置覆盖。</p>
+<h3 id="2-5-OpenSSH-与-OpenSSL">2.5 OpenSSH 与 OpenSSL</h3>
+<p>以前的系统曾手工编译 OpenSSH 和 OpenSSL，升级后还需要确认实际运行的是哪一份。只看 <code>dpkg-query</code> 的版本不够：软件包已经安装，服务仍可能指向 <code>/usr/local</code> 下的旧程序，或者系统路径中的文件曾被手工安装覆盖。</p>
+<p>在每台主机检查启动配置、运行进程和包文件：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash">systemctl show ssh.service -p ExecStart
+for pid in $(pgrep -x sshd); do
+  sudo readlink &quot;/proc/$pid/exe&quot;
+done
+command -v ssh sshd openssl
+dpkg-query -W openssh-server openssh-client openssl
+sudo dpkg -V openssh-server openssh-client openssl libssl3t64
+ldd /usr/sbin/sshd | grep -E 'ssl|crypto'</code></div></pre>
+<p>本次三台运行的都是 <code>/usr/sbin/sshd</code>，OpenSSH 包版本为 <code>1:10.2p1-2ubuntu3.8</code>，OpenSSL 为 <code>3.5.5-1ubuntu3.7</code>。包文件校验没有差异，sshd 链接系统的 <code>libcrypto.so.3</code>，检查常见安装目录也没有找到旧手工版本。用户 Conda 环境中的 OpenSSL 属于各自的运行环境，保留即可。</p>
+<p>这次沿用 APT 管理的版本，后续通过发行版安全更新维护，无需再按旧文章重新编译。遇到安全公告时核对 Ubuntu 包的完整版本号及修复状态，不能只比较上游版本号。已有 SSH 配置和 FreeIPA 的 PAM 认证继续保留，更新后用新的连接验证个人账号登录，再关闭维护会话。</p>
+<h2 id="三、软件适配">三、软件适配</h2>
+<p>本节记录这套环境升级后实际遇到的问题。按已安装的软件和具体症状处理，不需要在每台 Ubuntu 主机上执行全部修复。</p>
+<h3 id="3-1-FreeIPA-与-sudo">3.1 FreeIPA 与 sudo</h3>
+<p>升级后个人账号可以通过 SSH 登录，<code>id</code> 也能看到 FreeIPA 的管理员组，却不能执行 sudo。</p>
+<p>先比较同一账号在两种 sudo 实现中的授权结果：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-bash">sudo --version
+readlink -f /usr/bin/sudo
+grep '^sudoers:' /etc/nsswitch.conf
+id alice
+
+# 在本地管理员已提权的 root shell 中执行
+sudo.ws -l -U alice
+sudo -l -U alice</code></div></pre>
+<p>当时系统默认是 <code>sudo-rs 0.2.13</code>。<code>nsswitch.conf</code> 中已有 <code>sudoers: files sss</code>，传统 sudo 能读到 <code>(ALL : ALL) ALL</code>，sudo-rs 却返回用户无权。</p>
+<p>FreeIPA 用户认证与集中 sudo 规则读取是两条不同的链路。sudo-rs 能通过 PAM 验证域用户的密码，并不代表它能消费 SSSD 提供的 sudo 规则。上游较新的版本增加了实验性 <code>@socket</code> 接口，但对应的 SSSD 对接还不能直接用于这套部署，单独升级 sudo-rs 不能解决问题。<a target="_blank" rel="noopener" href="https://github.com/trifectatechfoundation/sudo-rs/issues/1548" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ftrifectatechfoundation%2Fsudo-rs%2Fissues%2F1548">上游讨论</a> 中记录了这部分进展。</p>
+<p>为保留 FreeIPA 集中授权，通过已有本地管理员使用 <code>sudo.ws</code> 切换实现；也可以在控制台的 root shell 中直接运行 <code>update-alternatives</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo.ws update-alternatives --set sudo /usr/bin/sudo.ws
+readlink -f /usr/bin/sudo
+sudo visudo -c
+sudo -l -U alice</code></div></pre>
+<p>alternatives 会进入手动选择模式，相关的 visudo 和手册链接也随之切换。没有卸载 sudo-rs，也没有另外添加一份本地管理员组授权。</p>
+<p>验证时重新用个人账号登录，清除旧凭据缓存后实际执行一次提权：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo -k
+sudo id
+sudo -k</code></div></pre>
+<p>本次返回 <code>uid=0(root)</code>，集中授权恢复。该规则需要输入个人密码；不能因为允许执行所有命令，就把它理解成免密规则。</p>
+<p>SSSD 还遇到过 PAC 响应器重复启动的问题：主进程已负责启动 PAC，新的 <code>sssd-pac.socket</code> 又尝试管理它。确认日志和启动方式后，停用了重复 socket：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo systemctl disable --now sssd-pac.socket
+sudo systemctl restart sssd
+systemctl status sssd</code></div></pre>
+<p>这一步针对本次实际冲突，不是所有 SSSD 升级都应执行的固定步骤。</p>
+<h3 id="3-2-K3s-运行时与服务">3.2 K3s 运行时与服务</h3>
+<h4 id="3-2-1-容器启动异常">3.2.1 容器启动异常</h4>
+<p>控制节点升级后，K3s 能启动，节点也是 Ready，但 PostgreSQL、MariaDB 和 FreeIPA 没有正常恢复。数据库入口中的 <code>gosu</code> 在 <code>sched_yield</code> 中忙等，FreeIPA 的 <code>journald</code>、<code>sd-mkuserns</code> 也出现卡住的情况。</p>
+<p>查看内核审计记录，发现同一容器内的信号和 ptrace 操作被拒绝，进程标签变成了下面这种叠加形式：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">cri-containerd.apparmor.d//&amp;unconfined</code></div></pre>
+<p>在宿主机检查 AppArmor 和运行时路径：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">sudo journalctl -k -b --no-pager | grep 'apparmor=&quot;DENIED&quot;'
+sudo aa-status
+sudo head -n 30 /etc/apparmor.d/runc
+sudo find /var/lib/rancher/k3s/data -path '*/bin/runc' -type f
+sysctl kernel.apparmor_restrict_unprivileged_unconfined
+sysctl kernel.apparmor_restrict_unprivileged_userns</code></div></pre>
+<p>本机 Ubuntu 的 <code>runc</code> profile 只匹配 <code>/usr/bin/runc</code>、<code>/usr/sbin/runc</code>，而 K3s 使用自己数据目录中的二进制。这条路径没有匹配到预期 profile，在新系统的限制下产生了异常的标签叠加。containerd 的<a target="_blank" rel="noopener" href="https://github.com/containerd/containerd/issues/14485" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fcontainerd%2Fcontainerd%2Fissues%2F14485">上游问题记录</a>也描述了同类现象。</p>
+<h4 id="3-2-2-runc-路径修正">3.2.2 runc 路径修正</h4>
+<p>最终在三台宿主机上扩展 Ubuntu 已有的 <code>runc</code> profile，只增加 K3s 的二进制路径，保留 profile 名称和其余规则。修改前先备份：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo cp -a /etc/apparmor.d/runc /root/upgrade-backup/runc.apparmor.before
+sudoedit /etc/apparmor.d/runc</code></div></pre>
+<p>将原文件的 profile 声明行改为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">profile runc /&#123;usr/&#123;bin,sbin&#125;/runc,var/lib/rancher/k3s/data/*/bin/runc&#125; flags=(unconfined) &#123;</code></div></pre>
+<p>这只是声明行，后面的 <code>userns</code>、路径规则、local include 和闭合括号均保留，不要用这一行覆盖整个文件。校验并重新加载：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo apparmor_parser --skip-kernel-load /etc/apparmor.d/runc
+sudo apparmor_parser -r /etc/apparmor.d/runc</code></div></pre>
+<p>排查时尝试过单独定义 <code>k3s-runc</code> profile，但 containerd 的信号规则按 <code>runc</code> 名称授权，改名后又出现运行时信号被拒绝。因此撤掉了独立 profile，最终扩展原来的 <code>runc</code>。这里的 <code>flags=(unconfined)</code> 沿用 Ubuntu 对运行时的配置，业务容器仍使用 RuntimeDefault，没有把业务 Pod 改成 Unconfined，也没有关闭两个 AppArmor 内核限制。</p>
+<p>新规则不会把已运行进程的标签自动改好。确认数据库和文件备份可用后，逐个重建受影响的业务、监控及入口 Pod，保留 PVC，每组恢复健康后再处理下一组。以 Gitea Deployment 为例，在控制节点逐项执行，并等待就绪：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo k3s kubectl rollout restart deployment/gitea -n gitea
+sudo k3s kubectl rollout status deployment/gitea -n gitea --timeout=180s</code></div></pre>
+<p>超时后先看 Pod 事件和日志，排除数据盘、数据库或认证依赖问题，再继续处理。其他 Deployment 使用其真实名称；StatefulSet 按自身更新策略处理，不批量删除所有 Pod，也不删除 PVC。在新容器内检查标签：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo k3s kubectl exec -n gitea deploy/gitea -- cat /proc/1/attr/current</code></div></pre>
+<p>本次新容器的结果为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">cri-containerd.apparmor.d (enforce)</code></div></pre>
+<p>最后再次整机重启控制节点，确认数据库、FreeIPA、Gitea、Nextcloud 和监控可以自动恢复。配置由系统原有 AppArmor 服务加载，没有添加定时修复脚本。以后更新 <code>apparmor</code> 软件包遇到配置合并提示时，需要核对这条 K3s 路径是否仍然保留。</p>
+<h4 id="3-2-3-Service-声明式配置">3.2.3 Service 声明式配置</h4>
+<p>这项问题在升级检查中一并发现，与系统版本无关：控制节点的业务 Service 清单反复报告地址已分配，现有 Gitea、Nextcloud 网页却可以正常访问。</p>
+<p>这份清单放在 <code>/var/lib/rancher/k3s/server/manifests/</code> 下，由 K3s Addon 自动应用。清单中带着导出对象的固定 <code>clusterIP</code>、<code>clusterIPs</code>，已有 Service 又未被该 Addon 纳管。控制器尝试创建时，先遇到 IP 已分配错误，未能进入对象已存在时的接管流程。</p>
+<p>最初补齐管理标记后恢复了应用，但后续维护没有继续依赖手工补标记。检查工作负载、ConfigMap 和路由，确认没有直接引用这两个 ClusterIP 后，从部署源中去掉固定 <code>clusterIP</code>、<code>clusterIPs</code>，保留 Service 名称、selector、端口及双栈策略，由 Kubernetes 分配地址。下面仅表示地址策略部分，原有 selector 和 ports 不应删掉：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-yaml">spec:
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6</code></div></pre>
+<p>以示例清单 <code>business-services.yaml</code> 为例，在控制节点备份后编辑：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo cp -a /var/lib/rancher/k3s/server/manifests/business-services.yaml \
+  /root/upgrade-backup/business-services.yaml.before
+sudoedit /var/lib/rancher/k3s/server/manifests/business-services.yaml</code></div></pre>
+<p>K3s 会自动应用目录内的变更，无需删除运行中的 Service。此次修改后，两者的 UID、地址和端口都没有变化。另建无后端临时 Service 验证自动接管，也不再需要补管理标记，测试结束后清理了临时资源。</p>
+<p>维护时可以查看对应 Addon 的应用结果：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo k3s kubectl get addons -n kube-system
+sudo k3s kubectl describe addon business-services -n kube-system
+sudo k3s kubectl get events -n kube-system --field-selector type=Warning</code></div></pre>
+<p>其中 <code>business-services</code> 是示例清单 <code>business-services.yaml</code> 对应的 Addon 名称。后续修改这份声明式清单，不再把导出的运行时分配字段写回源文件。K3s 的自动部署行为见<a target="_blank" rel="noopener" href="https://docs.k3s.io/installation/packaged-components" class="external-link" data-redirect="https%3A%2F%2Fdocs.k3s.io%2Finstallation%2Fpackaged-components">官方 Addon 文档</a>，地址字段见 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/services-networking/service/" class="external-link" data-redirect="https%3A%2F%2Fkubernetes.io%2Fdocs%2Fconcepts%2Fservices-networking%2Fservice%2F">Service 文档</a>。这次只调整没有固定地址依赖的普通业务 Service，FreeIPA、Traefik 等外部入口的固定 VIP 另行保留。</p>
+<h3 id="3-3-GNOME-与-Guacamole">3.3 GNOME 与 Guacamole</h3>
+<p>原先使用 XRDP 启动 GNOME Xorg 会话，升级后出现登录界面字体异常、无法进入桌面。新系统的 GNOME 50 已不再提供原有 Xorg 会话，这套组合不能原样沿用。</p>
+<p>这次保留 GNOME，改用系统级原生 RDP。它与共享一个已经登录的桌面不同：先进入远程登录入口，再到 GDM 使用个人账号登录。官方的 <a target="_blank" rel="noopener" href="https://github.com/GNOME/gnome-remote-desktop/blob/50.0/README.md" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FGNOME%2Fgnome-remote-desktop%2Fblob%2F50.0%2FREADME.md">多用户远程登录说明</a> 对两层凭据有明确区分。</p>
+<h4 id="3-3-1-系统级远程登录">3.3.1 系统级远程登录</h4>
+<p>以下步骤在已安装 GNOME/GDM 的桌面节点执行；纯命令行服务器无需安装远程桌面。先保证 SSH 或控制台可用，安装组件并停止占用同一端口的 XRDP：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">sudo apt install gnome-remote-desktop
+sudo systemctl disable --now xrdp xrdp-sesman</code></div></pre>
+<p>已有证书时先保留备份，以下生成命令会覆盖同名文件。TLS 证书和私钥必须能被 <code>gnome-remote-desktop</code> 服务用户读取。以下使用独立自签名证书举例，实际可以换成内部受信任 CA 签发的证书：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div></div><code class="language-bash">sudo install -d -m 700 -o gnome-remote-desktop -g gnome-remote-desktop \
+  /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop
+sudo -u gnome-remote-desktop openssl req -x509 -newkey rsa:3072 \
+  -nodes -days 365 -subj '/CN=host-c.lab.example.com' \
+  -addext 'subjectAltName=DNS:host-c.lab.example.com' \
+  -keyout /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/tls.key \
+  -out /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/tls.crt
+sudo chmod 600 /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/tls.key
+sudo grdctl --system rdp set-tls-key /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/tls.key
+sudo grdctl --system rdp set-tls-cert /var/lib/gnome-remote-desktop/.local/share/gnome-remote-desktop/tls.crt
+sudo grdctl --system rdp set-credentials rdp-entry
+sudo grdctl --system rdp enable
+sudo systemctl enable --now gdm.service
+sudo systemctl enable --now gnome-remote-desktop.service</code></div></pre>
+<p>Ubuntu 上若 GDM 单元名称为 <code>gdm3.service</code>，按实际名称执行。已有 <code>/etc/gdm3/custom.conf</code> 若设置了 <code>WaylandEnable=false</code>，先备份并检查，GNOME 原生远程登录需要可用的 Wayland 会话；不要继续沿用为 XRDP 强制禁用 Wayland 的配置。</p>
+<p>设置凭据时交互输入入口密码，不把密码写在命令参数或终端记录中。这个入口用户名不是 Linux 用户，也不需要在 FreeIPA 新建同名账号。</p>
+<p>自动化配置时曾遇到一个坑：把用户名、密码两行一起写入标准输入，命令退出成功，实际凭据却没有正确保存。后来改为用户名作为参数、密码单独通过标准输入传入，再用真实 RDP 连接验证。因此配置后还需要实际登录一次。</p>
+<p>启用后检查服务和端口，确认监听的是预期的 3389：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo grdctl --system status
+systemctl status gnome-remote-desktop.service
+sudo ss -lntp | grep ':3389 '
+sudo journalctl -u gnome-remote-desktop.service -b --no-pager</code></div></pre>
+<p>服务器防火墙和中间路由需要允许实际 guacd 主机到达该端口。沿用已有受限规则，不为排障把 RDP 开放到所有公网来源。</p>
+<h4 id="3-3-2-Guacamole-连接与账号认证">3.3.2 Guacamole 连接与账号认证</h4>
+<p>Guacamole 的 RDP 连接改为使用上述入口账号，安全模式使用 NLA，目标仍为该主机的 TCP 3389 端口，沿用原有内网访问和转发规则。进入 GDM 后，再输入个人 FreeIPA 账号和密码。SSH 连接配置与这组入口凭据无关。</p>
+<p>本次保留了原来的自签名证书及客户端忽略证书校验设置，因此并未实现 RDP 证书统一信任。若要严格校验，需要让客户端信任签发 CA，并使用与证书匹配的主机名。</p>
+<p>GNOME 的命令行里虽然出现 Kerberos 选项，但 50.0 源码对 <code>--system</code> 模式明确拒绝该认证方式，不能据此认为 FreeIPA 入域后就可以去掉第一层入口凭据。<a target="_blank" rel="noopener" href="https://github.com/GNOME/gnome-remote-desktop/blob/50.0/src/grd-ctl.c" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FGNOME%2Fgnome-remote-desktop%2Fblob%2F50.0%2Fsrc%2Fgrd-ctl.c">对应实现</a> 可以直接核对。</p>
+<p>重启后通过 Guacamole 重新打开连接，已确认字体正常、可以进入桌面。SSH 也分别验证了直接连接和 Guacamole 连接；期间一次超时后来恢复，没有证据证明是缓存问题，也没有为此修改认证或 host key 校验。</p>
+<h4 id="3-3-3-Guacamole-OSC-显示异常">3.3.3 Guacamole OSC 显示异常</h4>
+<p>升级后通过 Guacamole 打开 SSH，提示符前出现了 <code>start=...;type=shell;machineid=...;cwd=...</code>。原生 SSH 终端显示正常，账号也能正常执行命令。</p>
+<p>这些内容来自 systemd 安装的 <code>/etc/profile.d/80-systemd-osc-context.sh</code>，用于向终端发送 OSC 3008 上下文。Guacamole 1.6.0 没有正确处理这段控制序列，把部分内容显示成了普通文本。可以先确认脚本来源，避免误改个人的 PS1：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">ls -l /etc/profile.d/80-systemd-osc-context.sh
+readlink -f /etc/profile.d/80-systemd-osc-context.sh</code></div></pre>
+<p><a target="_blank" rel="noopener" href="https://issues.apache.org/jira/browse/GUACAMOLE-2213" class="external-link" data-redirect="https%3A%2F%2Fissues.apache.org%2Fjira%2Fbrowse%2FGUACAMOLE-2213">GUACAMOLE-2213</a> 已记录这个问题，修复版本标记为 <code>1.6.1 [staging]</code>。这次没有改终端类型，也没有全局停用 systemd 的脚本，现有 Guacamole 仍为 1.6.0，因此连接验证通过后，提示符显示问题仍单独保留，等对应版本更新后复测。</p>
+<h3 id="3-4-Alloy-与-node-exporter">3.4 Alloy 与 node-exporter</h3>
+<h4 id="3-4-1-Alloy-WAL-配置">3.4.1 Alloy WAL 配置</h4>
+<p>Alloy 是原来就部署的日志采集组件，负责把系统与审计日志送到 Loki。升级后服务失败，原因是原有 <code>loki.write</code> WAL 配置需要 experimental 稳定性级别。</p>
+<p>保留原有 WAL 配置，在 <code>/etc/default/alloy</code> 的 <code>CUSTOM_ARGS</code> 中追加参数，已有参数不要覆盖：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">CUSTOM_ARGS=&quot;--stability.level=experimental&quot;</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo systemctl restart alloy
+systemctl status alloy
+journalctl -u alloy -b --no-pager</code></div></pre>
+<p>服务显示 active 后，还需要在 Loki 查询该节点最近的日志，确认数据真正到达。测试时从业务 Pod 访问 Loki 被拒绝，后来确认符合既有 NetworkPolicy；宿主机采集和管理命名空间访问正常，不需要放宽策略。</p>
+<h4 id="3-4-2-node-exporter-启动依赖">3.4.2 node-exporter 启动依赖</h4>
+<p>node-exporter 绑定了指定管理地址，启动时该地址尚未配置完成，导致监听失败。增加 systemd drop-in：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-bash">sudo systemctl edit prometheus-node-exporter.service</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">ini</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-ini">[Unit]
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+RestartSec=10s</code></div></pre>
+<p>原服务已有失败重启策略，drop-in 只补充网络依赖和重试间隔。使用 NetworkManager 的节点，还要确认对应的 wait-online 服务确实启用，否则 <code>network-online.target</code> 本身并不能保证地址已经可用。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">systemctl is-enabled NetworkManager-wait-online.service
+sudo systemctl daemon-reload
+sudo systemctl restart prometheus-node-exporter</code></div></pre>
+<p>最终在 Prometheus 查询该节点的 <code>up</code>，确认结果为 1，同时检查 metrics-server 能获取节点资源指标。</p>
+<h2 id="四、升级验证">四、升级验证</h2>
+<h3 id="4-1-主机与集群状态">4.1 主机与集群状态</h3>
+<p>三台最终都运行 Ubuntu 26.04.1 和 <code>7.0.0-43-generic</code>，K3s 保持 <code>v1.37.0+k3s1</code>。工作节点验证通过后按第一节恢复调度，再测试应用。</p>
+<p>每台主机执行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div></div><code class="language-bash">uname -r
+systemctl --failed
+sudo dpkg --audit
+findmnt /srv/data
+nvidia-smi
+ibstat</code></div></pre>
+<p>在控制节点检查集群：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-bash">sudo k3s kubectl get --raw=/readyz
+sudo k3s kubectl get nodes -o wide
+sudo k3s kubectl get pods -A -o wide
+sudo k3s kubectl get pvc -A
+sudo k3s kubectl get events -A --field-selector type=Warning</code></div></pre>
+<p>FreeIPA 还要验证在线认证，避免只测到 SSSD 缓存。下面在每台已入域主机的 root shell 中使用独立票据文件，命令中的域名需要替换：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-bash">cc=$(mktemp /tmp/ipa-check.XXXXXX)
+export KRB5CCNAME=FILE:$cc
+kinit -k -t /etc/krb5.keytab &quot;host/$(hostname -f)&quot;
+kvno ldap/ipa.lab.example.com
+kdestroy
+rm -f &quot;$cc&quot;
+unset KRB5CCNAME</code></div></pre>
+<p>第一台工作节点升级时，两组 Ray Serve 应用已恢复健康；最终验收时它们已不在部署清单中，因此没有列入下表的在运行服务。三台主机的在线票据申请均成功，个人账号的 SSH 和 sudo 也实际执行过。Guacamole SSH 分别验证了三台连接；GNOME 桌面则通过重新打开连接，确认能用个人账号进入桌面。</p>
+<h3 id="4-2-网络、业务与持久化">4.2 网络、业务与持久化</h3>
+<p>网络分宿主机和 Pod 两层测试。宿主机检查三节点管理 IPv4、内部 IPv6、IB 地址互通，再用 <code>curl -6</code> 验证公网下载。从每个节点的普通 Pod 分别访问三个 CoreDNS 的 IPv4/IPv6 地址、集群 API 和业务 Service，检查跨节点数据通路。测试结束后删除临时 Pod。</p>
+<p>这次按实时 Service 和 EndpointSlice 清单，对有就绪端点的 TCP 服务进行检查，三台合计 333 项通过；另有 72 项内网 HTTPS 和 23 项经公网入口的检查通过。HTTPS 校验证书，FreeIPA 使用内部 CA。公网入口测试来自允许访问的网络，不代表管理页面向所有公网来源开放。</p>
+<p>应用层的验证结果如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">服务</th>
+<th style="text-align:left">验证内容与结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">FreeIPA</td>
+<td style="text-align:left"><code>ipactl status</code> 全服务 RUNNING，三节点在线 Kerberos 认证正常</td>
+</tr>
+<tr>
+<td style="text-align:left">Gitea</td>
+<td style="text-align:left">个人账号 API 认证成功，healthz 的数据库和缓存检查通过，PostgreSQL 可执行查询</td>
+</tr>
+<tr>
+<td style="text-align:left">Nextcloud</td>
+<td style="text-align:left">维护模式关闭，无待升级数据库；LDAP 连接正常，个人账号 WebDAV 上传、下载内容校验及删除通过</td>
+</tr>
+<tr>
+<td style="text-align:left">Portainer、Cockpit、IPMI、路由器及交换机</td>
+<td style="text-align:left">经统一 HTTPS 入口可以打开管理页面；本轮没有逐项执行后台管理功能</td>
+</tr>
+<tr>
+<td style="text-align:left">Grafana、Prometheus、Loki</td>
+<td style="text-align:left">Grafana 数据库正常，三个主机 exporter 的 up 均为 1，Loki 持续收到三节点日志</td>
+</tr>
+<tr>
+<td style="text-align:left">持久化</td>
+<td style="text-align:left">10 个 PVC 均 Bound，实际卷路径位于数据盘，三台挂载正常</td>
+</tr>
+</tbody>
+</table>
+<p>Gitea 没有向真实仓库写入测试提交；Nextcloud 使用独立临时文件，验证后删除。旧的 Completed/Error Pod 要与现用副本分开看，不能只凭历史实例状态判断服务仍然异常。</p>
+<h3 id="4-3-GPU-与-RDMA">4.3 GPU 与 RDMA</h3>
+<p>系统升级阶段，三台的两张 Tesla T4 均可被 <code>nvidia-smi</code> 识别。第一台升级的工作节点驱动为 <code>580.196.07</code>，另外两台为 <code>580.178.04</code>，这一阶段只检查驱动能否随新内核加载，尚未统一版本。后续的驱动、CUDA、NCCL 维护及容器测试见 <a href="/2026/11/52784/" title="服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度">服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度</a>。</p>
+<p>IB 第一端口均 Active、56 Gb/s，第二端口没有接线。除了链路状态，还用 <code>ib_write_bw</code> 做了三对节点的实际传输。在接收节点运行：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">timeout 25 ib_write_bw -d ibp227s0 -i 1 -p 18519 \
+  -s 65536 -n 1000 --report_gbits</code></div></pre>
+<p>发送节点加上接收节点的 IB 地址。以下 <code>10.20.0.10</code> 仅为示例，设备名也应先用 <code>ibstat</code> 确认：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-bash">timeout 25 ib_write_bw -d ibp227s0 -i 1 -p 18519 \
+  -s 65536 -n 1000 --report_gbits 10.20.0.10</code></div></pre>
+<p>系统升级完成、CUDA 维护开始前的结果为：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">方向</th>
+<th style="text-align:right">平均带宽</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">host-a → host-b</td>
+<td style="text-align:right">47.02 Gb/s</td>
+</tr>
+<tr>
+<td style="text-align:left">host-a → host-c</td>
+<td style="text-align:right">49.70 Gb/s</td>
+</tr>
+<tr>
+<td style="text-align:left">host-b → host-c</td>
+<td style="text-align:right">50.31 Gb/s</td>
+</tr>
+</tbody>
+</table>
+<p>三组双端退出码均为 0。工具提示 CPU 当前频率不同，没有为这次连通性检查修改电源策略。这是 RC Write、单 QP、64 KiB、1000 次的短测，没有验证长时间压力、CUDA 计算、GPUDirect RDMA 或容器内 RDMA 作业。</p>
+<p>单控制节点和本地卷架构保持不变，控制节点停机仍会中断主要业务。后续维护需要继续检查 sudo-rs 的集中规则支持、Guacamole 的终端显示修复，以及 AppArmor 软件包更新时的配置合并。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://ubuntu.com/server/docs/how-to/software/upgrade-your-release/" class="external-link" data-redirect="https%3A%2F%2Fubuntu.com%2Fserver%2Fdocs%2Fhow-to%2Fsoftware%2Fupgrade-your-release%2F">Ubuntu 发行版升级</a></li>
+<li><a target="_blank" rel="noopener" href="https://ubuntu.com/server/docs/reference/other-tools/sudo-rs/" class="external-link" data-redirect="https%3A%2F%2Fubuntu.com%2Fserver%2Fdocs%2Freference%2Fother-tools%2Fsudo-rs%2F">Ubuntu sudo 实现选择</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/trifectatechfoundation/sudo-rs/issues/1548" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Ftrifectatechfoundation%2Fsudo-rs%2Fissues%2F1548">sudo-rs 集中规则接口进展</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/GNOME/gnome-remote-desktop/blob/50.0/README.md" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FGNOME%2Fgnome-remote-desktop%2Fblob%2F50.0%2FREADME.md">GNOME Remote Desktop 50.0</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/52783/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/52783/">https://www.doratiger.top/2026/11/52783/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/52784/"><span>服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/58245/"><span>统一认证实践（5）Authentik 接入 Gitea 统一登录与账号关联</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
