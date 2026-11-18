@@ -1,0 +1,236 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（15）Homepage 统计组件与后台服务账号【DoraTiger 的异次元】</title><meta name="description" content="前言 AdGuard Home 接入 Authentik 以后，我在 Homepage 上点卡片，登录一次就能进管理页。把统计组件的地址也换成同一个域名，卡片上的查询次数却读不出来。旁边的 qBittorrent 仍在刷新下载速度，我才发现，点卡片时用的是浏览器里的会话，读统计的却是 Homepage 后端。"><meta name="keywords" content="homepage,qbittorrent,authentik,adguard"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（15）Homepage 统计组件与后台服务账号【DoraTiger 的异次元】"><meta property="og:description" content="前言 AdGuard Home 接入 Authentik 以后，我在 Homepage 上点卡片，登录一次就能进管理页。把统计组件的地址也换成同一个域名，卡片上的查询次数却读不出来。旁边的 qBittorrent 仍在刷新下载速度，我才发现，点卡片时用的是浏览器里的会话，读统计的却是 Homepage 后端。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62515/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62515/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（15）Homepage 统计组件与后台服务账号","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-18T07:00:00.000Z","dateModified":"2026-11-18T15:36:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62515/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%8D%A1%E7%89%87%E9%87%8C%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%9C%B0%E5%9D%80"><span class="toc-text">一、卡片里的两个地址</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81AdGuard-Home-%E9%80%9A%E8%BF%87%E6%9C%8D%E5%8A%A1%E8%B4%A6%E5%8F%B7%E8%AF%BB%E5%8F%96%E7%BB%9F%E8%AE%A1"><span class="toc-text">二、AdGuard Home 通过服务账号读取统计</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%88%9B%E5%BB%BA%E5%90%8E%E5%8F%B0%E8%BA%AB%E4%BB%BD"><span class="toc-text">2.1 创建后台身份</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%85%8D%E7%BD%AE%E6%9C%8D%E5%8A%A1%E5%8D%A1%E7%89%87"><span class="toc-text">2.2 配置服务卡片</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81qBittorrent-%E4%BF%9D%E7%95%99%E5%86%85%E7%BD%91-API"><span class="toc-text">三、qBittorrent 保留内网 API</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81providers-%E4%B8%8E%E7%BB%9F%E8%AE%A1%E6%8E%92%E9%94%99"><span class="toc-text">四、providers 与统计排错</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color0"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color8"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">87</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">153</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（15）Homepage 统计组件与后台服务账号</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/homepage/">homepage</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/qbittorrent/">qbittorrent</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/adguard/">adguard</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">3154 字 · 约 11 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>AdGuard Home 接入 Authentik 以后，我在 Homepage 上点卡片，登录一次就能进管理页。把统计组件的地址也换成同一个域名，卡片上的查询次数却读不出来。旁边的 qBittorrent 仍在刷新下载速度，我才发现，点卡片时用的是浏览器里的会话，读统计的却是 Homepage 后端。</p>
+<span id="more"></span>
+<p>我保留了原来的导航布局，只调整每个组件从哪里取数、用哪个账号取数。本文沿用已有的 NPM 和 Proxy Outpost，域名、端口及服务账号均为示例。</p>
+<h2 id="一、卡片里的两个地址">一、卡片里的两个地址</h2>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>谁发起请求</th>
+<th>在哪里验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>href</code></td>
+<td>点击卡片的浏览器</td>
+<td>打开 HTTPS 域名，无痕窗口应先进入 Authentik</td>
+</tr>
+<tr>
+<td><code>widget.url</code></td>
+<td>Homepage 后端</td>
+<td>从 Homepage 所在容器的网络访问服务 API，检查是否返回统计数据</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>读卡片的人</td>
+<td>记录部署位置及直连入口，反向代理维护时仍能找到服务</td>
+</tr>
+</tbody>
+</table>
+<p>浏览器登录后的 Cookie 留在浏览器。Homepage 后端轮询统计接口时，需要组件能发送的凭据。对 AdGuard，我让后台也经过域名；对 qBittorrent，保留内网 API 地址。两张卡片的点击入口都可以继续使用 HTTPS。</p>
+<h2 id="二、AdGuard-Home-通过服务账号读取统计">二、AdGuard Home 通过服务账号读取统计</h2>
+<h3 id="2-1-创建后台身份">2.1 创建后台身份</h3>
+<ol>
+<li>在 Authentik 的“目录 → 用户”创建服务账号，例如 <code>svc-homepage-adguard</code>。把它加入第八篇已绑定到 AdGuard 应用的专用访问组。</li>
+<li>在“目录 → 令牌和应用密码”创建一个 <strong>App password</strong>，用户选择刚创建的服务账号。把生成的值交给 Homepage。人员账号照常使用原有的登录流程和 MFA。</li>
+<li>打开 AdGuard 的 Proxy Provider，检查接收入站认证头的设置。NPM 的认证子请求需要把客户端的 <code>Authorization</code> 送到 Outpost。原先为 AdGuard 配好的 <strong>Send HTTP-Basic Authentication</strong> 及后台用户名、密码属性键继续使用。</li>
+</ol>
+<p>这里有两组凭据。Homepage 把服务账号和应用密码发给 Outpost；Outpost 根据应用访问策略放行后，NPM 再把前哨给出的后台 Basic 凭据传给 AdGuard。撤销 Homepage 的应用密码即可单独停掉这张卡片的认证。服务账号实际能操作什么，仍由后端凭据决定；卡片只显示统计，并不会让一个后台管理员账号自动获得只读限制。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/header_authentication/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fheader_authentication%2F">Authentik 认证头说明</a></p>
+<h3 id="2-2-配置服务卡片">2.2 配置服务卡片</h3>
+<p>下面是 Homepage 配置目录中 <code>services.yaml</code> 的一组条目。若用 TrueNAS 应用，打开 Homepage 的编辑页，在容器环境变量中新增 <code>HOMEPAGE_VAR_ADGUARD_USER</code> 和 <code>HOMEPAGE_VAR_ADGUARD_APP_PASSWORD</code>，分别填服务账号名和上一步生成的应用密码，保存并等待应用就绪。Compose 部署则在 Homepage 服务的 <code>environment</code> 或 <code>env_file</code> 中提供这两个变量，再运行 <code>docker compose up -d</code> 让容器读入新值。示例中的直连地址仅用于说明。</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">- 网络服务:
+    - AdGuard Home:
+        href: https://dns.example.org/
+        description: &quot;DNS 管理 · 直连 http://192.0.2.7:3000&quot;
+        widget:
+          type: adguard
+          url: https://dns.example.org
+          username: &quot;&#123;&#123;HOMEPAGE_VAR_ADGUARD_USER&#125;&#125;&quot;
+          password: &quot;&#123;&#123;HOMEPAGE_VAR_ADGUARD_APP_PASSWORD&#125;&#125;&quot;</code></div></pre>
+<p>先从能解析该域名的环境验证代理链。下面的命令会提示输入应用密码，只输出状态码和内容类型。测试时不要加自动跟随跳转的 <code>-L</code>，否则登录页最终返回的 200 容易被误认为接口正常。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">curl --user svc-homepage-adguard --silent --show-error \
+  --output /dev/null --write-out '%&#123;http_code&#125; %&#123;content_type&#125;\n' \
+  https://dns.example.org/control/stats</code></div></pre>
+<p>预期为 HTTP 200 和 JSON。再刷新 Homepage，观察查询总数或拦截统计是否随实际查询变化。返回 302 时检查认证头有没有进入前哨；返回 401 时分别核对服务账号的应用密码和代理转发的后台凭据。Outpost 能否复用会话取决于客户端是否保留 Cookie，不能按“前哨部署在本地”推算每次轮询都能省去与身份服务的通信。<a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/adguard-home/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fadguard-home%2F">AdGuard Home 小组件</a></p>
+<h2 id="三、qBittorrent-保留内网-API">三、qBittorrent 保留内网 API</h2>
+<p>qBittorrent 的网页同样可以经 Authentik 直接进入。后台组件则按 qBittorrent Web API 的约定取数；浏览器已经通过前哨，不会替 Homepage 建立下载器会话。本次保留如下配置结构，在受控内网中让 Homepage 直接访问 WebUI 的 API 端口。</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-yaml">- 下载服务:
+    - qBittorrent:
+        href: https://downloads.example.org/
+        description: &quot;下载器 · 直连 http://192.0.2.20:8080&quot;
+        widget:
+          type: qbittorrent
+          url: http://192.0.2.20:8080
+          username: &quot;&#123;&#123;HOMEPAGE_VAR_QBIT_USER&#125;&#125;&quot;
+          password: &quot;&#123;&#123;HOMEPAGE_VAR_QBIT_PASSWORD&#125;&#125;&quot;</code></div></pre>
+<p>用同样的方法给 Homepage 容器添加 <code>HOMEPAGE_VAR_QBIT_USER</code> 和 <code>HOMEPAGE_VAR_QBIT_PASSWORD</code>，填下载器自己的用户名和密码。已有“下载服务”分组时，只在原分组中添加卡片。先确认容器可以访问该地址，再看小组件能否取得有效列表或传输统计。数字持续变化只说明当前取数成功；要判断究竟是凭据生效还是来源命中了免认证范围，还要核对 qBittorrent 的认证设置。这次没有为了卡片增加免认证网段。其他下载客户端单独改用 API Key，也不要求 Homepage 采用同一种方式。<a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/qbittorrent/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fqbittorrent%2F">qBittorrent 小组件</a></p>
+<h2 id="四、providers-与统计排错">四、providers 与统计排错</h2>
+<p>Homepage 的 <code>settings.yaml → providers</code> 可集中保存受支持组件的共享配置。例如官方天气组件允许在 <code>settings.yaml</code> 定义 <code>providers.openweathermap</code>，在组件里用 <code>provider: openweathermap</code> 引用。这个键负责配置复用；它不会替每一种服务组件交换 Authentik 令牌，也不提供秘密加密。AdGuard 和 qBittorrent 的示例直接使用组件文档列出的字段，变量值留在容器部署配置中。<a target="_blank" rel="noopener" href="https://gethomepage.dev/configs/settings/#providers" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fconfigs%2Fsettings%2F%23providers">Homepage Providers</a></p>
+<p>我现在按返回内容排查卡片：域名返回 HTML 登录页，先查前哨；应用返回 JSON 错误，查组件使用的接口和版本；网页一直正常而统计停了，先检查 <code>widget.url</code> 与服务账号。Jellyfin 就遇到过一次 401，实际配置需要补上 <code>version: 2</code>，原来的 API Key 仍然可用。最后用无痕窗口验点击入口，再回 Homepage 验统计，两项分别通过才算完成。<a target="_blank" rel="noopener" href="https://gethomepage.dev/widgets/services/jellyfin/" class="external-link" data-redirect="https%3A%2F%2Fgethomepage.dev%2Fwidgets%2Fservices%2Fjellyfin%2F">Jellyfin 小组件版本说明</a></p>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62515/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62515/">https://www.doratiger.top/2026/11/62515/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/62516/"><span>统一认证实践（16）统一用户名与已有账号迁移</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/62514/"><span>统一认证实践（14）Authentik 接入 Nexus 仓库 LDAP 统一账号</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（12）Authentik 接入 Navidrome 与音乐客户端认证【DoraTiger 的异次元】</title><meta name="description" content="前言 Navidrome 的网页和音乐客户端使用不同的登录方式。网页希望通过 DoraTiger Auth 直接进入原音乐库，手机上的 Subsonic 客户端则继续使用 Navidrome 账号。将整个域名都重定向到身份中心，会让音乐客户端收到无法处理的网页登录页面。"><meta name="keywords" content="docker,truenas,authentik,nginx,navidrome"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（12）Authentik 接入 Navidrome 与音乐客户端认证【DoraTiger 的异次元】"><meta property="og:description" content="前言 Navidrome 的网页和音乐客户端使用不同的登录方式。网页希望通过 DoraTiger Auth 直接进入原音乐库，手机上的 Subsonic 客户端则继续使用 Navidrome 账号。将整个域名都重定向到身份中心，会让音乐客户端收到无法处理的网页登录页面。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62512/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62512/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（12）Authentik 接入 Navidrome 与音乐客户端认证","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-16T04:00:00.000Z","dateModified":"2026-11-18T15:36:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62512/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%AE%A4%E8%AF%81%E8%B7%AF%E5%BE%84"><span class="toc-text">一、认证路径</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C%E4%B8%8E%E5%8E%9F%E6%95%B0%E6%8D%AE"><span class="toc-text">二、容器网络与原数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%8E%9F%E5%AE%9E%E4%BE%8B%E8%BD%AC%E6%8D%A2"><span class="toc-text">2.1 原实例转换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%87%AA%E5%AE%9A%E4%B9%89%E9%85%8D%E7%BD%AE%E7%A4%BA%E4%BE%8B"><span class="toc-text">2.2 自定义配置示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%8F%AF%E4%BF%A1%E6%9D%A5%E6%BA%90"><span class="toc-text">2.3 可信来源</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Authentik-%E5%BA%94%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">三、Authentik 应用配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E8%AE%BF%E9%97%AE%E7%BB%84"><span class="toc-text">3.1 访问组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-Proxy-Provider"><span class="toc-text">3.2 Proxy Provider</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81NPM-%E8%B7%AF%E7%94%B1%E9%85%8D%E7%BD%AE"><span class="toc-text">四、NPM 路由配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-HTTPS-%E7%AB%99%E7%82%B9"><span class="toc-text">4.1 HTTPS 站点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E7%BD%91%E9%A1%B5%E6%A0%B9%E8%B7%AF%E5%BE%84"><span class="toc-text">4.2 网页根路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-Subsonic-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%B7%AF%E5%BE%84"><span class="toc-text">4.3 Subsonic 客户端路径</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%B4%A6%E5%8F%B7%E4%B8%8E%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="toc-text">五、账号与客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E7%BD%91%E9%A1%B5%E5%8E%9F%E8%B4%A6%E5%8F%B7"><span class="toc-text">5.1 网页原账号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E9%9F%B3%E4%B9%90%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="toc-text">5.2 音乐客户端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E6%92%A4%E9%94%80%E6%9D%83%E9%99%90"><span class="toc-text">5.3 撤销权限</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">六、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-HTTP-2-%E5%8D%8F%E8%AE%AE%E9%94%99%E8%AF%AF"><span class="toc-text">6.1 HTTP&#x2F;2 协议错误</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E7%99%BB%E5%BD%95%E5%90%8E%E4%BB%8D%E5%87%BA%E7%8E%B0-Navidrome-%E5%AF%86%E7%A0%81%E6%A1%86"><span class="toc-text">6.2 登录后仍出现 Navidrome 密码框</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E6%89%8B%E6%9C%BA%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%A2%AB%E8%B7%B3%E8%BD%AC%E5%88%B0%E7%99%BB%E5%BD%95%E9%A1%B5"><span class="toc-text">6.3 手机客户端被跳转到登录页</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%A4%87%E4%BB%BD%E4%B8%8E%E5%8D%87%E7%BA%A7"><span class="toc-text">七、备份与升级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color6"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color4"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">87</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">153</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（12）Authentik 接入 Navidrome 与音乐客户端认证</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/truenas/">truenas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nginx/">nginx</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/navidrome/">navidrome</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">5063 字 · 约 17 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>Navidrome 的网页和音乐客户端使用不同的登录方式。网页希望通过 DoraTiger Auth 直接进入原音乐库，手机上的 Subsonic 客户端则继续使用 Navidrome 账号。将整个域名都重定向到身份中心，会让音乐客户端收到无法处理的网页登录页面。</p>
+<span id="more"></span>
+<p>本次基于现有 Navidrome <code>0.55.2</code>、Authentik <code>2026.8.5</code> 和 NPM 配置：网页通过 Forward Auth 检查身份，再向 Navidrome 传递可信用户名；<code>/rest/</code> 保留原生认证。</p>
+<h2 id="一、认证路径">一、认证路径</h2>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">网页 → NPM → Authentik 前哨检查 → 可信用户名头 → Navidrome
+客户端 → NPM /rest/ → 清除外部身份头 → Navidrome 原生认证</code></div></pre>
+<p>这不是 OIDC 账号关联。Navidrome 从可信代理的请求头获取用户名，找到已有同名用户后继续使用原音乐库和权限。</p>
+<p>本文的配置字段适用于 <code>0.55.2</code>：<code>ReverseProxyUserHeader</code> 和 <code>ReverseProxyWhitelist</code>。新版文档已使用 ExtAuth 配置，不能只对照最新版页面修改旧实例。<a target="_blank" rel="noopener" href="https://github.com/navidrome/navidrome/blob/v0.55.2/server/auth.go" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fnavidrome%2Fnavidrome%2Fblob%2Fv0.55.2%2Fserver%2Fauth.go">版本源码</a></p>
+<p>网页身份头认证不会同步 Navidrome 密码，用户名相同也不意味着音乐客户端可以输入 Authentik 密码。当前实例没有配置 OIDC 或 LDAP，<code>/rest/</code> 继续使用 Navidrome 自己的凭据。选择后续方案时需单独验证 Subsonic 客户端支持，不能只用网页免密登录作为统一账号已完成的依据。</p>
+<h2 id="二、容器网络与原数据">二、容器网络与原数据</h2>
+<h3 id="2-1-原实例转换">2.1 原实例转换</h3>
+<p>TrueNAS 原目录应用不方便加入已有的外部 Docker 网络。本次使用 TrueNAS 的 <code>app.convert_to_custom</code> 将原应用转为自定义应用，保留已有镜像、运行配置和挂载，再加入 NPM 网络。</p>
+<p>操作前导出应用配置并备份 Navidrome 数据库。转换后核对 <code>/data</code> 与 <code>/music</code> 的宿主路径、UID/GID、扫描参数和端口，不重新初始化空数据目录。转换为自定义应用后，镜像升级由自定义应用维护，不再沿用原目录应用的升级入口。</p>
+<h3 id="2-2-自定义配置示例">2.2 自定义配置示例</h3>
+<p>下面是已有应用所需网络与环境字段的示例，挂载路径、UID/GID 和其他原参数需从当前实例保留：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div><div class="line-numbers-item">19</div></div><code class="language-yaml">services:
+  navidrome:
+    image: deluan/navidrome:0.55.2
+    restart: unless-stopped
+    environment:
+      ND_PORT: &quot;30043&quot;
+      ND_REVERSEPROXYUSERHEADER: X-Authentik-Username
+      ND_REVERSEPROXYWHITELIST: &quot;192.0.2.42/32&quot;
+    volumes:
+      - /mnt/pool/apps/navidrome/data:/data
+      - /mnt/pool/media/music:/music:ro
+    networks:
+      npm_backend:
+        aliases:
+          - navidrome-web
+networks:
+  npm_backend:
+    external: true
+    name: npm_backend</code></div></pre>
+<p>这里的 <code>192.0.2.42/32</code> <strong>只是 NPM 容器来源地址的示例</strong>，必须从实际网络检查结果替换。若 NPM 通过 IPv6 连接，还需添加其精确 <code>/128</code> 地址，用逗号分隔。没有 <code>ports</code>，业务只从 NPM 网络进入。</p>
+<h3 id="2-3-可信来源">2.3 可信来源</h3>
+<p>Navidrome 校验的是到达后端的代理来源地址，不能直接填浏览器地址、域名解析地址或整个局域网。</p>
+<p>本次避免经过宿主机发布端口：那条路径可能让后端只看到 Docker 网关，信任网关会扩大能够注入身份头的范围。NPM 与 Navidrome 直接连接后，白名单只允许 NPM 当前 IPv4/IPv6 地址。</p>
+<p>NPM 重建后要重新核对地址。地址变化应更新精确白名单，不为省事扩大成整个 Docker 网段。<a target="_blank" rel="noopener" href="https://www.navidrome.org/docs/usage/integration/authentication/" class="external-link" data-redirect="https%3A%2F%2Fwww.navidrome.org%2Fdocs%2Fusage%2Fintegration%2Fauthentication%2F">外部认证说明</a></p>
+<h2 id="三、Authentik-应用配置">三、Authentik 应用配置</h2>
+<h3 id="3-1-访问组">3.1 访问组</h3>
+<p>在“目录 → 组”创建 <code>truenas-navidrome-users</code>，不启用超级用户权限，加入允许访问音乐库的用户。该组独立于其他应用，不保存或继承 AdGuard 等服务的凭据。</p>
+<p>准备接入已有用户时，先确认 Authentik 用户名与 Navidrome 用户名一致。本例以 <code>music-user</code> 表示两侧已经核对的原账号。</p>
+<h3 id="3-2-Proxy-Provider">3.2 Proxy Provider</h3>
+<p>创建 Proxy Provider，填写：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-truenas-navidrome</code></td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Forward auth (single application)</td>
+</tr>
+<tr>
+<td>External host</td>
+<td><code>https://music.example.com</code></td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td><code>doratiger-authentication</code></td>
+</tr>
+<tr>
+<td>Authorization flow</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code></td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td><code>doratiger-provider-invalidation</code></td>
+</tr>
+<tr>
+<td>HTTP Basic 转发</td>
+<td>关闭</td>
+</tr>
+<tr>
+<td>Unauthenticated paths</td>
+<td>留空，由 NPM 单独处理客户端路径</td>
+</tr>
+</tbody>
+</table>
+<p>保存后以 <strong>with existing provider</strong> 创建应用，名称 <code>TrueNAS · Navidrome</code>，Slug <code>truenas-navidrome</code>，Launch URL 填 <code>https://music.example.com/app/</code>，选择上述 Provider。</p>
+<p>在应用的策略／组／用户绑定中添加 <code>truenas-navidrome-users</code>，Order 为 0，启用，Negate 关闭。编辑现有 TrueNAS Proxy Outpost，在列表中加入该应用并保存。</p>
+<p>网页使用身份头，不需要把 Navidrome 明文密码交给 Provider。客户端凭据继续由 Navidrome 管理，改密码不会自动同步到其他应用。</p>
+<h2 id="四、NPM-路由配置">四、NPM 路由配置</h2>
+<h3 id="4-1-HTTPS-站点">4.1 HTTPS 站点</h3>
+<p>创建或编辑 Proxy Host：域名 <code>music.example.com</code>，上游 <code>http://navidrome-web:30043</code>，启用 WebSocket 支持，配置证书并开启 Force SSL。</p>
+<p>Advanced 中添加认证路径与登录跳转，<code>authentik-outpost</code> 替换为现有前哨别名：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div><div class="line-numbers-item">14</div><div class="line-numbers-item">15</div><div class="line-numbers-item">16</div><div class="line-numbers-item">17</div><div class="line-numbers-item">18</div></div><code class="language-nginx">port_in_redirect off;
+set $ak_http_host $host;
+
+location /outpost.goauthentik.io &#123;
+    proxy_pass http://authentik-outpost:9000;
+    proxy_set_header Host $ak_http_host;
+    proxy_set_header X-Original-URL $scheme://$ak_http_host$request_uri;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length &quot;&quot;;
+&#125;
+
+location @goauthentik_proxy_signin &#123;
+    internal;
+    add_header Set-Cookie $auth_cookie;
+    return 302 /outpost.goauthentik.io/start?rd=$scheme://$ak_http_host$request_uri;
+&#125;</code></div></pre>
+<p>这些配置按标准 HTTPS 443 编写。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_nginx/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_nginx%2F">Authentik Nginx 模板</a></p>
+<h3 id="4-2-网页根路径">4.2 网页根路径</h3>
+<p>在 Custom Locations 添加 <code>/</code>，上游与主站一致。齿轮中的自定义配置填写：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-nginx">auth_request /outpost.goauthentik.io/auth/nginx;
+error_page 401 = @goauthentik_proxy_signin;
+auth_request_set $auth_cookie $upstream_http_set_cookie;
+add_header Set-Cookie $auth_cookie;
+auth_request_set $authentik_username $upstream_http_x_authentik_username;
+proxy_set_header X-Authentik-Username $authentik_username;
+proxy_set_header Remote-User &quot;&quot;;</code></div></pre>
+<p>用户名从认证子请求结果取得，并覆盖发给后端的同名头。不能把浏览器自行填写的 <code>X-Authentik-Username</code> 直接透传。</p>
+<h3 id="4-3-Subsonic-客户端路径">4.3 Subsonic 客户端路径</h3>
+<p>再添加 <code>/rest/</code> Custom Location，上游仍为 <code>navidrome-web:30043</code>，自定义配置为：</p>
+<pre><div class="code-header"><span class="code-header-type">nginx</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-nginx">auth_request off;
+proxy_set_header X-Authentik-Username &quot;&quot;;
+proxy_set_header Remote-User &quot;&quot;;</code></div></pre>
+<p>它不经过网页登录，但仍由 Navidrome 验证原生凭据。清空身份头后，不能通过伪造头冒充已登录用户。没有在服务端全局关闭认证，也没有把全部 API 都匿名放行。</p>
+<p>保存 NPM 配置后检查站点在线状态，确认 <code>/rest/</code> 比根路径更具体，客户端请求不会落入网页认证分支。</p>
+<h2 id="五、账号与客户端">五、账号与客户端</h2>
+<h3 id="5-1-网页原账号">5.1 网页原账号</h3>
+<p>用无痕窗口访问 <code>/app/</code>，完成 Authentik 登录后应直接回到原用户。核对管理员状态、播放列表及收藏，再播放音乐。本次原账号进入音乐库和播放已确认正常。</p>
+<p>源码中的身份头登录会在找不到同名用户时尝试建号；本次已有用户数据库，新身份不应被当作首次初始化管理员。不要把未使用过的空数据库与已有实例混用，开放其他用户前仍需检查账号权限。</p>
+<h3 id="5-2-音乐客户端">5.2 音乐客户端</h3>
+<p>客户端继续填写 <code>https://music.example.com</code> 和 Navidrome 自己的用户名、密码。OIDC 或 Forward Auth 不会把 Authentik 密码自动写入 Navidrome。</p>
+<p>先用正确凭据验证 Subsonic 请求，再用错误凭据或无凭据请求确认拒绝；还要检查仅伪造身份头不能登录。本次原生认证正反检查通过，网页和客户端分别走各自路径。</p>
+<h3 id="5-3-撤销权限">5.3 撤销权限</h3>
+<p>移出 Authentik 访问组只影响网页认证入口。用户仍可能持有 Navidrome 密码和已有会话，停用时需要在 Navidrome 同时处理；不能把组成员变化当成所有音乐客户端立即失效。</p>
+<h2 id="六、配置问题与解答">六、配置问题与解答</h2>
+<h3 id="6-1-HTTP-2-协议错误">6.1 HTTP/2 协议错误</h3>
+<p><strong>Q：浏览器出现 <code>ERR_HTTP2_PROTOCOL_ERROR</code>，是否需要关闭 HTTP/2？</strong></p>
+<p>本次迁移期间代理上游名称尚未可解析，NPM 曾把站点标记离线。容器网络和别名就绪后重新保存代理配置，我先用无痕窗口确认匿名请求会跳到 Authentik，再登录打开原音乐库播放一首歌。恢复访问后，NPM 仍启用 HTTP/2。</p>
+<h3 id="6-2-登录后仍出现-Navidrome-密码框">6.2 登录后仍出现 Navidrome 密码框</h3>
+<p><strong>Q：Authentik 已通过，为什么还不能免密进入？</strong></p>
+<p>依次核对响应中的用户名、NPM 是否覆盖写入身份头、后端看到的代理来源是否在精确白名单内，以及两侧用户名是否一致。通过前哨只说明入口认证成功，不代表 Navidrome 接受了身份头。</p>
+<h3 id="6-3-手机客户端被跳转到登录页">6.3 手机客户端被跳转到登录页</h3>
+<p><strong>Q：浏览器正常，客户端却报响应格式错误？</strong></p>
+<p>检查 <code>/rest/</code> 是否错误继承网页 Forward Auth。客户端需要原生 API 响应，不能把 HTML 登录页当作 Subsonic 结果。修复路由后仍要保留 Navidrome 凭据校验。</p>
+<h2 id="七、备份与升级">七、备份与升级</h2>
+<p>保留原应用定义、Navidrome 数据库和 NPM 站点配置。自定义应用升级时检查镜像版本、身份头字段和网络地址，尤其不要直接把新版 ExtAuth 配置复制到 0.55.2。</p>
+<p>回退时恢复原应用配置和 NPM 路由，保持原数据库挂载。若恢复宿主端口发布，要重新检查直接访问是否仍需要密码，不保留可伪造身份头的入口。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/navidrome/navidrome/blob/v0.55.2/server/auth.go" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fnavidrome%2Fnavidrome%2Fblob%2Fv0.55.2%2Fserver%2Fauth.go">Navidrome 0.55.2 认证实现</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.navidrome.org/docs/usage/integration/authentication/" class="external-link" data-redirect="https%3A%2F%2Fwww.navidrome.org%2Fdocs%2Fusage%2Fintegration%2Fauthentication%2F">Navidrome 外部认证文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_nginx/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_nginx%2F">Authentik Nginx 配置</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62512/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62512/">https://www.doratiger.top/2026/11/62512/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/62513/"><span>统一认证实践（13）Authentik 接入 RustGuac 与管理员角色映射</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/62511/"><span>统一认证实践（11）Authentik 接入 code-server 与 Caddy 前哨认证</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

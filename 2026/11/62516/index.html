@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（16）统一用户名与已有账号迁移【DoraTiger 的异次元】</title><meta name="description" content="前言 Gitea 接入 LDAP 后，用身份中心的用户名和 Gitea 原用户名都能进入同一个账号。刚接入时这很方便，时间久了却容易忘记客户端里存的是哪个名字。若直接改 Gitea 用户名，个人仓库的地址也要跟着核对。我最后保留了原仓库所有者，在 Authentik 原用户上统一登录名，再逐个调整依赖旧名字的应用。"><meta name="keywords" content="ldap,gitea,authentik,oidc,jellyfin"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（16）统一用户名与已有账号迁移【DoraTiger 的异次元】"><meta property="og:description" content="前言 Gitea 接入 LDAP 后，用身份中心的用户名和 Gitea 原用户名都能进入同一个账号。刚接入时这很方便，时间久了却容易忘记客户端里存的是哪个名字。若直接改 Gitea 用户名，个人仓库的地址也要跟着核对。我最后保留了原仓库所有者，在 Authentik 原用户上统一登录名，再逐个调整依赖旧名字的应用。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62516/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62516/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（16）统一用户名与已有账号迁移","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-18T08:00:00.000Z","dateModified":"2026-11-18T15:36:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62516/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%94%B9%E5%90%8D%E5%89%8D%E7%9A%84%E8%B4%A6%E5%8F%B7%E6%B8%85%E5%8D%95"><span class="toc-text">一、改名前的账号清单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%9C%A8-Authentik-%E5%8E%9F%E7%94%A8%E6%88%B7%E4%B8%8A%E6%94%B9%E5%90%8D"><span class="toc-text">二、在 Authentik 原用户上改名</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Gitea-%E4%BF%9D%E7%95%99%E4%BB%93%E5%BA%93%E6%89%80%E6%9C%89%E8%80%85"><span class="toc-text">三、Gitea 保留仓库所有者</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Jellyfin%E3%80%81Navidrome-%E4%B8%8E-Nexus"><span class="toc-text">四、Jellyfin、Navidrome 与 Nexus</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%AA%8C%E6%94%B6%E4%B8%8E%E5%9B%9E%E9%80%80"><span class="toc-text">五、验收与回退</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color8"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color8"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">87</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">153</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（16）统一用户名与已有账号迁移</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ldap/">ldap</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/gitea/">gitea</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/oidc/">oidc</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/jellyfin/">jellyfin</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">2415 字 · 约 9 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>Gitea 接入 LDAP 后，用身份中心的用户名和 Gitea 原用户名都能进入同一个账号。刚接入时这很方便，时间久了却容易忘记客户端里存的是哪个名字。若直接改 Gitea 用户名，个人仓库的地址也要跟着核对。我最后保留了原仓库所有者，在 Authentik 原用户上统一登录名，再逐个调整依赖旧名字的应用。</p>
+<span id="more"></span>
+<p>以下用 <code>old-login</code> 表示旧登录名，<code>repo-owner</code> 表示统一后的名字，Gitea 原账号写作 <code>Repo-Owner</code>。大小写差异保留下来，便于区分仓库所有者与目录登录名。</p>
+<h2 id="一、改名前的账号清单">一、改名前的账号清单</h2>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>需要记下的值</th>
+<th>迁移后用什么判断还是原账号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentik</td>
+<td>用户 UID、用户名、组、各 OIDC Provider 的 Subject mode</td>
+<td>UID 和组成员关系</td>
+</tr>
+<tr>
+<td>Gitea</td>
+<td>本地用户 ID、仓库所有者、LDAP 登录名、关联的 OIDC 源</td>
+<td>同一用户能管理原仓库，已有 remote 可继续使用</td>
+</tr>
+<tr>
+<td>Jellyfin</td>
+<td>用户 ID、用户名、SSO 源的 CanonicalLinks</td>
+<td>同一用户能看到原观看记录和收藏</td>
+</tr>
+<tr>
+<td>Navidrome</td>
+<td>用户 ID、用户名、管理员标记</td>
+<td>网页回到原音乐库，客户端仍能访问</td>
+</tr>
+<tr>
+<td>Nexus</td>
+<td>LDAP 登录属性、外部组与角色映射</td>
+<td>新登录名可见原有仓库及相应权限</td>
+</tr>
+</tbody>
+</table>
+<p>先在 Authentik 搜索目标名，同时检查各应用有没有同名的新账号。若已存在两个实际用户，应先确认归属再处理。显示名称只是界面上的昵称，改昵称不能替代这次登录名迁移。</p>
+<p>我保留了一个可用的管理员会话，并备份 Authentik 数据库、Gitea dump、Jellyfin 用户及 SSO 插件配置、Navidrome 数据库。另记下各应用中原用户的 ID。改名后若只能看到一个空媒体库，拿 ID 比对比看头像和昵称可靠。</p>
+<h2 id="二、在-Authentik-原用户上改名">二、在 Authentik 原用户上改名</h2>
+<p>打开“目录 → 用户”，选择原账号进入编辑，将用户名从 <code>old-login</code> 改为 <code>repo-owner</code>，保留原密码、昵称和组成员。重新打开同一条用户记录，核对 UID，并用无痕窗口验证新名能登录身份中心。</p>
+<p>改名前还需要打开关联应用的 OAuth2/OIDC Provider 核对 Subject mode。本次使用基于用户 ID 的 <code>hashed_user_id</code>，因此原地改名能保留同一 Provider 下的 OIDC 主体标识。若自己的 Provider 用用户名生成 <code>sub</code>，应先按应用的旧账号关联方式另作迁移。即使 <code>sub</code> 稳定，应用也可能另存一份用户名索引，Jellyfin 就需要单独处理。</p>
+<p>LDAP 侧按新名称查询 <code>cn</code>，再查一次旧名称。使用各 Provider 自己的 Base DN。查询新名应命中原用户，旧名应退出日常认证路径。最后检查表达式策略和属性映射中有无直接写入的旧用户名。</p>
+<h2 id="三、Gitea-保留仓库所有者">三、Gitea 保留仓库所有者</h2>
+<p>我保留 Gitea 用户 <code>Repo-Owner</code>、用户 ID 和个人仓库路径。以 Gitea 管理员打开“站点管理 → 用户账号”，找到 <code>Repo-Owner</code> 并点编辑。保留“用户名”和现有 LDAP 认证源，把“外部登录名”（<code>login_name</code>）从 <code>old-login</code> 改为 <code>repo-owner</code>，保存后重新打开同一用户核对。若通过管理 API 更新，先读回原用户及来源 ID，再提交，避免误选同名的 OIDC 来源。</p>
+<p>第五篇为不同用户名设置的 <code>giteaUsername</code> 继续指向原 Gitea 名称。在个人设置的“安全 → 关联账号”核对原 OIDC 关联仍在。分别退出并用 LDAP 密码、OIDC 按钮重新登录，各打开同一个已有仓库，再检查仓库设置是否可用。这次工作区里的 Git remote 沿用原地址。<a href="/2026/11/58245/">Gitea 的账号关联与 LDAP 配置</a></p>
+<h2 id="四、Jellyfin、Navidrome-与-Nexus">四、Jellyfin、Navidrome 与 Nexus</h2>
+<p><strong>Jellyfin。</strong> 在管理后台的用户列表中修改原用户的名称，或通过原生用户 API 更新同一用户 ID。在第九篇第 5.2 节列出的 SSO 插件配置接口读取完整配置并备份。在对应认证源的 <code>CanonicalLinks</code> 找到键 <code>old-login</code>，确认值是原用户 ID、目标键 <code>repo-owner</code> 尚未占用，再将键改为 <code>repo-owner</code>。通过同一接口保存完整配置，重新读取并比对这条映射。保留 LDAP 的 UID 映射和用户原有的认证提供者。用新名加密码登录一次，退出后点 OIDC 登录，再打开一部有播放进度的影片。我用这两条路径都回到了原媒体账号。<a href="/2026/11/62509/">Jellyfin 双认证配置</a></p>
+<p><strong>Navidrome。</strong> 在原用户上更新用户名，保留用户 ID、本地密码和管理员属性。网页经代理认证后，以新名进入原音乐库。音乐客户端若还保存旧名，需要单独修改服务器连接中的用户名，密码仍是 Navidrome 原有密码。此次还用新名加原密码调用 API，返回了改名前的同一用户 ID。<a href="/2026/11/62512/">Navidrome 网页与音乐客户端</a></p>
+<p><strong>Nexus。</strong> LDAP Realm 按 <code>cn</code> 解析用户。保留原组与外部角色映射，在 Nexus 自己的登录框输入新名和 Authentik 密码，核对仓库和管理设置。Nexus 本地的应急管理员单独保留。<a href="/2026/11/62514/">Nexus LDAP 角色映射</a></p>
+<h2 id="五、验收与回退">五、验收与回退</h2>
+<p>我最后用新会话逐项验证：Gitea 的 LDAP 和 OIDC 都回到原仓库所有者；Jellyfin 两种方式都保留观看记录；Navidrome 网页显示原音乐库；Nexus 接受新用户名并保留原权限。对于按稳定主体关联的应用，保留旧绑定并用原数据核对归属，比重新打开自动注册更容易发现问题。</p>
+<p>如果某个应用进入了新建的空账号，先停止用该账号产生业务数据，记下新旧 ID。从出问题的应用开始回退原登录名和映射。例如 Jellyfin 需要一起恢复用户名与 CanonicalLinks，Gitea 只需恢复原 LDAP 登录名。整库备份留作最后手段，优先原地修复，避免覆盖改名后新增的提交和观看记录。</p>
+<p>还有一类名字不在这次个人身份迁移里：代理向 qBittorrent、AdGuard Home 转发的后台账号，以及用于 LDAP 查询的服务账号。它们有独立的凭据和轮换周期。个人用户改名后若只有某个共享后台进不去，先看 Proxy Provider 引用的组属性。</p>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62516/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62516/">https://www.doratiger.top/2026/11/62516/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/62515/"><span>统一认证实践（15）Homepage 统计组件与后台服务账号</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

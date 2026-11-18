@@ -1,0 +1,305 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（11）Authentik 接入 code-server 与 Caddy 前哨认证【DoraTiger 的异次元】</title><meta name="description" content="前言 code-server 已通过 Caddy 提供 HTTPS，日常可以在浏览器中使用编辑器和终端。接入 DoraTiger Auth 后，希望复用现有登录与 MFA，不再重复输入 code-server 自己的密码。"><meta name="keywords" content="Debian,code-server,Caddy,docker,authentik"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（11）Authentik 接入 code-server 与 Caddy 前哨认证【DoraTiger 的异次元】"><meta property="og:description" content="前言 code-server 已通过 Caddy 提供 HTTPS，日常可以在浏览器中使用编辑器和终端。接入 DoraTiger Auth 后，希望复用现有登录与 MFA，不再重复输入 code-server 自己的密码。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62511/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62511/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（11）Authentik 接入 code-server 与 Caddy 前哨认证","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-16T03:00:00.000Z","dateModified":"2026-11-18T15:36:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62511/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%AE%A4%E8%AF%81%E4%B8%8E%E8%BF%90%E8%A1%8C%E8%BA%AB%E4%BB%BD"><span class="toc-text">一、认证与运行身份</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Authentik-%E5%BA%94%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">二、Authentik 应用配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%B8%93%E7%94%A8%E7%AE%A1%E7%90%86%E5%91%98%E7%BB%84"><span class="toc-text">2.1 专用管理员组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Proxy-Provider-%E4%B8%8E%E5%BA%94%E7%94%A8"><span class="toc-text">2.2 Proxy Provider 与应用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%9C%AC%E6%9C%BA-Proxy-Outpost"><span class="toc-text">三、本机 Proxy Outpost</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%BA%91%E7%AB%AF%E5%AF%B9%E8%B1%A1"><span class="toc-text">3.1 云端对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-Docker-Compose"><span class="toc-text">3.2 Docker Compose</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Caddy-Forward-Auth"><span class="toc-text">四、Caddy Forward Auth</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E7%AB%99%E7%82%B9%E9%85%8D%E7%BD%AE"><span class="toc-text">4.1 站点配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E9%AA%8C%E8%AF%81%E4%B8%8E%E9%87%8D%E8%BD%BD"><span class="toc-text">4.2 验证与重载</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81code-server-%E6%9C%AC%E5%9C%B0%E8%AE%A4%E8%AF%81"><span class="toc-text">五、code-server 本地认证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E9%85%8D%E7%BD%AE%E5%88%87%E6%8D%A2"><span class="toc-text">5.1 配置切换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%8A%9F%E8%83%BD%E6%A3%80%E6%9F%A5"><span class="toc-text">5.2 功能检查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%BB%B4%E6%8A%A4%E4%B8%8E%E5%9B%9E%E9%80%80"><span class="toc-text">六、维护与回退</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">七、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8D%95%E7%8B%AC%E8%BF%90%E8%A1%8C%E6%9C%AC%E6%9C%BA%E5%89%8D%E5%93%A8"><span class="toc-text">7.1 为什么单独运行本机前哨</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E6%98%AF%E5%90%A6%E4%BA%A7%E7%94%9F%E5%A4%9A%E4%B8%AA-code-server-%E7%94%A8%E6%88%B7"><span class="toc-text">7.2 是否产生多个 code-server 用户</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E5%AD%90%E8%B7%AF%E5%BE%84%E6%98%AF%E5%90%A6%E5%8F%AF%E4%BB%A5%E8%B7%B3%E8%BF%87%E8%AE%A4%E8%AF%81"><span class="toc-text">7.3 子路径是否可以跳过认证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color0"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color0"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">87</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">153</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（11）Authentik 接入 code-server 与 Caddy 前哨认证</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Debian/">Debian</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/code-server/">code-server</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/Caddy/">Caddy</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">3902 字 · 约 14 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>code-server 已通过 Caddy 提供 HTTPS，日常可以在浏览器中使用编辑器和终端。接入 DoraTiger Auth 后，希望复用现有登录与 MFA，不再重复输入 code-server 自己的密码。</p>
+<span id="more"></span>
+<p>这个入口可以执行开发机上的命令，因此只向专用管理员组开放。本次沿用已有 Debian 原生 code-server 服务，在同机增加 Authentik Proxy Outpost <code>2026.8.5</code>，由 Caddy 完成 Forward Auth。</p>
+<h2 id="一、认证与运行身份">一、认证与运行身份</h2>
+<p>基础安装和 HTTPS 配置见 <a href="/2026/09/22299/" title="Homelab 搭建手记（7）部署 code-server 并配置 HTTPS 访问">Homelab 搭建手记（7）部署 code-server 并配置 HTTPS 访问</a>。本文在已有服务上增加认证：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">浏览器 → Caddy :443 → code-server 127.0.0.1:30080
+             ↕
+      Outpost 127.0.0.1:30092
+             ↕
+        云端 Authentik</code></div></pre>
+<p>code-server 不处理 OIDC，也不按 Authentik 用户创建 Linux 账号。通过认证的人进入的是同一个 code-server 进程、同一个系统用户的文件和终端。需要多人独立开发环境时，应分别部署实例或选择具备工作空间隔离的平台。</p>
+<h2 id="二、Authentik-应用配置">二、Authentik 应用配置</h2>
+<h3 id="2-1-专用管理员组">2.1 专用管理员组</h3>
+<p>进入“目录 → 组”，创建 <code>debian-code-server-admins</code>，不启用 Authentik 超级用户权限，保存后仅加入可信的开发机管理员。</p>
+<h3 id="2-2-Proxy-Provider-与应用">2.2 Proxy Provider 与应用</h3>
+<p>在“应用程序 → 提供者 → 创建”选择 Proxy Provider：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-debian-code-server</code></td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td><code>doratiger-authentication</code></td>
+</tr>
+<tr>
+<td>Authorization flow</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code></td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td><code>doratiger-provider-invalidation</code></td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Forward auth (single application)</td>
+</tr>
+<tr>
+<td>External host</td>
+<td><code>https://code.example.com</code></td>
+</tr>
+<tr>
+<td>Unauthenticated paths</td>
+<td>留空</td>
+</tr>
+<tr>
+<td>HTTP Basic 转发</td>
+<td>关闭</td>
+</tr>
+</tbody>
+</table>
+<p>保存后在应用列表选择 <strong>with existing provider</strong>，名称填 <code>Debian · code-server</code>，Slug 填 <code>debian-code-server</code>，选择刚创建的 Provider，Launch URL 填 HTTPS 入口。</p>
+<p>进入应用的策略／组／用户绑定，添加 <code>debian-code-server-admins</code>，Order 为 0，启用，Negate 关闭。保存后再配置前哨。</p>
+<h2 id="三、本机-Proxy-Outpost">三、本机 Proxy Outpost</h2>
+<h3 id="3-1-云端对象">3.1 云端对象</h3>
+<p>在“应用程序 → 前哨”创建 Proxy Outpost，名称 <code>doratiger-debian-proxy</code>，选择 code-server 应用。这里手工运行 Docker 容器，不需要让云端服务直接控制开发机 Docker。</p>
+<p>保存后从部署说明取得该前哨的 Token。Token 只用于前哨连接身份中心，不是给浏览器使用的 API Key。</p>
+<h3 id="3-2-Docker-Compose">3.2 Docker Compose</h3>
+<p>在 Debian 宿主机准备目录，以下 <code>/opt/authentik-outpost</code> 是示例路径：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo install -d -m 700 -o &quot;$(id -u)&quot; -g &quot;$(id -g)&quot; /opt/authentik-outpost /opt/authentik-outpost/secrets
+cd /opt/authentik-outpost
+umask 077</code></div></pre>
+<p>创建 <code>compose.yaml</code>：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div></div><code class="language-yaml">services:
+  proxy:
+    image: ghcr.io/goauthentik/proxy:2026.8.5
+    restart: unless-stopped
+    env_file: secrets/outpost.env
+    ports:
+      - &quot;127.0.0.1:30092:9000&quot;</code></div></pre>
+<p>创建 <code>secrets/outpost.env</code>，由管理员通过编辑器填写真实 Token，文件权限设为 600：</p>
+<pre><div class="code-header"><span class="code-header-type">dotenv</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-dotenv">AUTHENTIK_HOST=https://auth.example.com
+AUTHENTIK_INSECURE=false
+AUTHENTIK_TOKEN=REPLACE_WITH_OUTPOST_TOKEN</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div></div><code class="language-bash">sudo chmod 600 secrets/outpost.env
+sudo docker compose config --quiet
+sudo docker compose up -d
+sudo docker compose ps</code></div></pre>
+<p>使用 <code>--quiet</code> 验证 Compose，不把解析后的 Token 打印出来。前哨只监听宿主机回环；本机原生 Caddy 可以访问，局域网其他机器不能直接使用这个端口。</p>
+<p>前哨需要出站访问云端 Authentik。若 Caddy 本身在另一个容器中，<code>127.0.0.1</code> 的含义不同，不能原样复制这份网络配置。</p>
+<h2 id="四、Caddy-Forward-Auth">四、Caddy Forward Auth</h2>
+<h3 id="4-1-站点配置">4.1 站点配置</h3>
+<p>保留原站点的 TLS、DNS-01 和其他必要配置，将认证检查放在业务反代之前。下面是站点路由的最小示例；使用 DNS Challenge 的实例保留已有 <code>tls</code> 块，不用本示例覆盖证书配置：</p>
+<pre><div class="code-header"><span class="code-header-type">caddyfile</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div></div><code class="language-caddyfile">code.example.com &#123;
+    route &#123;
+        reverse_proxy /outpost.goauthentik.io/* 127.0.0.1:30092
+
+        forward_auth 127.0.0.1:30092 &#123;
+            uri /outpost.goauthentik.io/auth/caddy
+            copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email
+        &#125;
+
+        reverse_proxy 127.0.0.1:30080
+    &#125;
+&#125;</code></div></pre>
+<p><code>route</code> 保证这些指令按书写顺序执行。前哨路径先交给前哨，其余请求先认证，再到 code-server。Header 名称沿用官方大小写。<a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_caddy/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_caddy%2F">Caddy 接入文档</a></p>
+<p>原站点有 <code>/proxy/*</code>、扩展 WebView 或 PDF 预览专用路由时，把它们放在同一认证检查之后。本次保留了原路由，不为解决页面问题创建匿名绕过路径。</p>
+<h3 id="4-2-验证与重载">4.2 验证与重载</h3>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy
+curl -I https://code.example.com/</code></div></pre>
+<p>未登录请求应进入认证跳转。再检查常用子路径，没有 Authentik 会话时不能直接打开编辑器或代理内容。</p>
+<p>本次还验证了随请求伪造身份头不能绕过认证。Caddy 必须实际向前哨验证请求，不能只判断浏览器是否带有 <code>X-Authentik-Username</code>。</p>
+<h2 id="五、code-server-本地认证">五、code-server 本地认证</h2>
+<h3 id="5-1-配置切换">5.1 配置切换</h3>
+<p>先确认前置认证生效，再修改 code-server 运行用户的 <code>~/.config/code-server/config.yaml</code>。保留其他设置，只调整相关字段：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-yaml">bind-addr: 127.0.0.1:30080
+auth: none
+cert: false</code></div></pre>
+<p><code>auth: none</code> 由外部认证保护这一前提决定。code-server 仍只能监听回环，不能在关闭密码后暴露 <code>0.0.0.0</code>。<a target="_blank" rel="noopener" href="https://coder.com/docs/code-server/guide" class="external-link" data-redirect="https%3A%2F%2Fcoder.com%2Fdocs%2Fcode-server%2Fguide">外部认证说明</a></p>
+<p>重启实际管理该服务的 systemd 单元。先用 <code>systemctl --user status</code> 或系统级 <code>systemctl status</code> 确认服务归属，不同时启用两份实例。本文原实例由既有 systemd 服务恢复运行，没有新增第二套进程管理。</p>
+<h3 id="5-2-功能检查">5.2 功能检查</h3>
+<p>用无痕窗口访问，完成 DoraTiger Auth 登录后应直接进入编辑器。本次已确认编辑器与终端可用。进一步检查打开项目、终端命令、扩展面板、WebSocket 和常用预览路径；登录页能打开不足以验证开发功能。</p>
+<h2 id="六、维护与回退">六、维护与回退</h2>
+<p>备份 Caddyfile、code-server 原配置和前哨部署文件。Token 文件保存在受限目录，不进入公开仓库。</p>
+<p>撤除前置认证前，先把 code-server 恢复为密码认证并验证，再移除 Caddy 的认证路由。不能先去掉前哨检查、留下 <code>auth: none</code> 的编辑器入口。</p>
+<p>增加组成员就相当于允许对方使用这个开发环境，不能把它当成只读网站访问权限。移出组后还要处理现有会话与终端，不能假设正在运行的命令会自动结束。</p>
+<h2 id="七、配置问题与解答">七、配置问题与解答</h2>
+<h3 id="7-1-为什么单独运行本机前哨">7.1 为什么单独运行本机前哨</h3>
+<p><strong>Q：已有 NAS 前哨，是否必须复用？</strong></p>
+<p>不必须。本机前哨让 Caddy 通过回环完成认证检查，不需要额外开放 NAS 前哨端口。它仍连接同一个云端 IdP，登录身份和流程没有分裂成两套。</p>
+<h3 id="7-2-是否产生多个-code-server-用户">7.2 是否产生多个 code-server 用户</h3>
+<p><strong>Q：不同 Authentik 用户能否得到各自的 home 目录？</strong></p>
+<p>此方案不会。Forward Auth 只控制入口，后端仍使用原系统用户。不要以为创建多个访问组成员就获得了操作系统隔离。</p>
+<h3 id="7-3-子路径是否可以跳过认证">7.3 子路径是否可以跳过认证</h3>
+<p><strong>Q：扩展预览失败，能否直接放行 <code>/proxy/*</code>？</strong></p>
+<p>不应把可访问本机服务的代理路径整体匿名开放。应检查 WebSocket、路径转发和 HTTPS 安全上下文，保持它与主编辑器同样经过认证。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/proxy/server_caddy/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fproxy%2Fserver_caddy%2F">Authentik Caddy 配置</a></li>
+<li><a target="_blank" rel="noopener" href="https://coder.com/docs/code-server/guide" class="external-link" data-redirect="https%3A%2F%2Fcoder.com%2Fdocs%2Fcode-server%2Fguide">code-server 外部认证</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62511/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62511/">https://www.doratiger.top/2026/11/62511/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/62512/"><span>统一认证实践（12）Authentik 接入 Navidrome 与音乐客户端认证</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/62510/"><span>统一认证实践（10）Authentik 接入 IT-Tools 与 NPM 入口认证</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（9）Authentik 接入 Jellyfin OIDC 与 LDAP 统一账号【DoraTiger 的异次元】</title><meta name="description" content="前言 Jellyfin 已经有自己的用户、观看进度和收藏。接入统一认证时，我希望继续使用原账号，同时让新用户直接通过 DoraTiger Auth 登录，在第一次访问时创建 Jellyfin 账号，不再单独注册。"><meta name="keywords" content="docker,ldap,truenas,authentik,oidc,jellyfin"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（9）Authentik 接入 Jellyfin OIDC 与 LDAP 统一账号【DoraTiger 的异次元】"><meta property="og:description" content="前言 Jellyfin 已经有自己的用户、观看进度和收藏。接入统一认证时，我希望继续使用原账号，同时让新用户直接通过 DoraTiger Auth 登录，在第一次访问时创建 Jellyfin 账号，不再单独注册。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62509/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62509/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（9）Authentik 接入 Jellyfin OIDC 与 LDAP 统一账号","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-16T01:00:00.000Z","dateModified":"2026-11-18T15:36:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62509/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%AE%A4%E8%AF%81%E7%BB%93%E6%9E%84"><span class="toc-text">一、认证结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-OIDC-%E6%8F%92%E4%BB%B6%E4%B8%8E%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86"><span class="toc-text">1.1 OIDC 插件与反向代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%8F%92%E4%BB%B6%E7%89%88%E6%9C%AC"><span class="toc-text">1.2 插件版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E7%A4%BA%E4%BE%8B%E5%AF%B9%E8%B1%A1"><span class="toc-text">1.3 示例对象</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85"><span class="toc-text">二、备份与插件安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E9%85%8D%E7%BD%AE%E5%92%8C%E6%95%B0%E6%8D%AE%E5%BA%93%E5%A4%87%E4%BB%BD"><span class="toc-text">2.1 配置和数据库备份</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%AE%89%E8%A3%85-SSO-Auth"><span class="toc-text">2.2 安装 SSO-Auth</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Authentik-%E5%BA%94%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">三、Authentik 应用配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E8%AE%BF%E9%97%AE%E7%BB%84%E4%B8%8E%E7%AE%A1%E7%90%86%E5%91%98%E7%BB%84"><span class="toc-text">3.1 访问组与管理员组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-OAuth2-OpenID-Connect-Provider"><span class="toc-text">3.2 OAuth2&#x2F;OpenID Connect Provider</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E7%BB%84%E5%A3%B0%E6%98%8E%E6%98%A0%E5%B0%84"><span class="toc-text">3.3 组声明映射</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E5%BA%94%E7%94%A8%E5%92%8C%E7%BB%91%E5%AE%9A"><span class="toc-text">3.4 应用和绑定</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Jellyfin-%E6%8F%92%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="toc-text">四、Jellyfin 插件配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-OIDC-%E8%AE%A4%E8%AF%81%E6%BA%90"><span class="toc-text">4.1 OIDC 认证源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%AA%92%E4%BD%93%E5%BA%93%E4%B8%8E%E7%AE%A1%E7%90%86%E5%91%98%E6%9D%83%E9%99%90"><span class="toc-text">4.2 媒体库与管理员权限</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E7%99%BB%E5%BD%95%E9%A1%B5%E5%85%A5%E5%8F%A3"><span class="toc-text">4.3 登录页入口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%97%A7%E8%B4%A6%E5%8F%B7%E5%85%B3%E8%81%94%E4%B8%8E%E8%AF%AF%E5%BB%BA%E8%B4%A6%E5%8F%B7%E4%BF%AE%E6%AD%A3"><span class="toc-text">五、旧账号关联与误建账号修正</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%85%B3%E8%81%94%E6%93%8D%E4%BD%9C"><span class="toc-text">5.1 关联操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%9C%AC%E6%AC%A1%E8%AF%AF%E5%BB%BA%E8%B4%A6%E5%8F%B7"><span class="toc-text">5.2 本次误建账号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E5%85%B3%E8%81%94%E9%AA%8C%E8%AF%81"><span class="toc-text">5.3 关联验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%96%B0%E7%94%A8%E6%88%B7%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%86%8C%E4%B8%8E%E7%94%A8%E6%88%B7%E5%90%8D%E6%98%A0%E5%B0%84"><span class="toc-text">六、新用户自动注册与用户名映射</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E8%87%AA%E5%8A%A8%E5%BB%BA%E5%8F%B7%E4%B8%8E%E7%BB%84%E9%99%90%E5%88%B6"><span class="toc-text">6.1 自动建号与组限制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E4%BB%8E-sub-%E6%94%B9%E4%B8%BA-preferred-username"><span class="toc-text">6.2 从 sub 改为 preferred_username</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E7%94%A8%E6%88%B7%E5%90%8D%E5%8F%98%E6%9B%B4%E4%B8%8E%E6%9D%83%E9%99%90%E6%92%A4%E9%94%80"><span class="toc-text">6.3 用户名变更与权限撤销</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81LDAP-%E5%AF%86%E7%A0%81%E8%AE%A4%E8%AF%81"><span class="toc-text">七、LDAP 密码认证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E7%BB%91%E5%AE%9A%E6%B5%81%E7%A8%8B%E4%B8%8E%E6%9F%A5%E8%AF%A2%E8%B4%A6%E5%8F%B7"><span class="toc-text">7.1 绑定流程与查询账号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-LDAP-Provider-%E4%B8%8E%E5%BA%94%E7%94%A8%E7%BB%91%E5%AE%9A"><span class="toc-text">7.2 LDAP Provider 与应用绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E6%9C%AC%E5%9C%B0-LDAP-%E5%89%8D%E5%93%A8"><span class="toc-text">7.3 本地 LDAP 前哨</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-Jellyfin-LDAP-%E6%8F%92%E4%BB%B6"><span class="toc-text">7.4 Jellyfin LDAP 插件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-5-%E5%8E%9F%E8%B4%A6%E5%8F%B7%E4%B8%8E-OIDC-%E5%85%B1%E7%94%A8"><span class="toc-text">7.5 原账号与 OIDC 共用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-6-%E7%99%BB%E5%BD%95%E9%AA%8C%E6%94%B6%E4%B8%8E%E5%BB%B6%E8%BF%9F"><span class="toc-text">7.6 登录验收与延迟</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E7%AD%94"><span class="toc-text">八、配置问题与解答</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E6%8F%92%E4%BB%B6%E5%B7%B2%E5%8A%A0%E8%BD%BD%EF%BC%8C%E4%BD%86%E6%B2%A1%E6%9C%89%E8%AE%A4%E8%AF%81%E6%BA%90"><span class="toc-text">8.1 插件已加载，但没有认证源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%93%81%E7%89%8C%E6%8E%A5%E5%8F%A3%E8%BF%94%E5%9B%9E-405"><span class="toc-text">8.2 品牌接口返回 405</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E5%B7%B2%E6%9C%89%E8%B4%A6%E5%8F%B7%E7%99%BB%E5%BD%95%E6%88%90%E5%8A%9F%E6%98%AF%E5%90%A6%E7%AD%89%E4%BA%8E%E6%96%B0%E7%94%A8%E6%88%B7%E9%AA%8C%E8%AF%81%E5%AE%8C%E6%88%90"><span class="toc-text">8.3 已有账号登录成功是否等于新用户验证完成</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color2"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color3"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">87</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">153</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（9）Authentik 接入 Jellyfin OIDC 与 LDAP 统一账号</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ldap/">ldap</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/truenas/">truenas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/oidc/">oidc</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/jellyfin/">jellyfin</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">11962 字 · 约 40 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>Jellyfin 已经有自己的用户、观看进度和收藏。接入统一认证时，我希望继续使用原账号，同时让新用户直接通过 DoraTiger Auth 登录，在第一次访问时创建 Jellyfin 账号，不再单独注册。</p>
+<span id="more"></span>
+<p>网页登录采用 OIDC，普通用户名密码登录通过 LDAP 复用 Authentik 账号，两种方式都进入原 Jellyfin 用户。</p>
+<p>本次使用 Jellyfin <code>12.4.0.0</code>、Authentik <code>2026.8.5</code>、K0lin 分支的 SSO-Auth <code>5.1.1</code> 和官方 LDAP Authentication <code>24.0.0.0</code>。与 Gitea 原生支持 OIDC 不同，Jellyfin 需要安装第三方认证插件。接入过程中出现过误建账号，最后修正关联，并改为沿用 Authentik 用户名。</p>
+<h2 id="一、认证结构">一、认证结构</h2>
+<h3 id="1-1-OIDC-插件与反向代理">1.1 OIDC 插件与反向代理</h3>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">浏览器 → NPM HTTPS → Jellyfin SSO-Auth 插件
+                         ↕ OIDC
+                   云端 DoraTiger Auth
+                         ↓
+              应用访问组、登录流程与 MFA</code></div></pre>
+<p>NPM 继续负责 HTTPS 和业务反代，不添加 Forward Auth，TrueNAS 上的 Proxy Outpost 也不参与 OIDC。LDAP 密码登录则由单独的 LDAP Outpost 接收请求，两种前哨用途不同。Jellyfin 插件读取发现文档、处理授权回调，再建立 Jellyfin 自己的用户会话。</p>
+<p>Authentik 管理身份和应用访问资格；媒体库权限、收藏和观看记录仍属于 Jellyfin 用户。OIDC 接入不会把影视文件传到身份服务器，也不等于把 Jellyfin 用户数据库迁到 Authentik。</p>
+<p>原生 OIDC 的基本关系可以参考 <a href="/2026/11/58245/" title="统一认证实践（5）Authentik 接入 Gitea OIDC 与 LDAP 统一账号">统一认证实践（5）Authentik 接入 Gitea OIDC 与 LDAP 统一账号</a>，但两者的账号匹配实现不同，不能照搬 Gitea 的关联行为。</p>
+<h3 id="1-2-插件版本">1.2 插件版本</h3>
+<p>旧的 <code>9p4/jellyfin-plugin-sso</code> 仓库已经归档。本次选择 <a target="_blank" rel="noopener" href="https://github.com/K0lin/jellyfin-plugin-sso/releases/tag/v5.1.1" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FK0lin%2Fjellyfin-plugin-sso%2Freleases%2Ftag%2Fv5.1.1">K0lin 维护分支的正式发行版</a>，其 5.1 系列面向 Jellyfin 12。插件仍有 alpha 提示，升级时需要同时核对 Jellyfin ABI 和插件发行说明。</p>
+<p>本文后面的菜单与字段按 5.1.1 编写。不要在 Jellyfin 12 中直接安装旧教程里的 10.x 插件包，也不要为了兼容自动改用 nightly。</p>
+<h3 id="1-3-示例对象">1.3 示例对象</h3>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>身份服务</td>
+<td><code>https://auth.example.com</code></td>
+</tr>
+<tr>
+<td>Jellyfin</td>
+<td><code>https://jellyfin.example.com</code></td>
+</tr>
+<tr>
+<td>Authentik 应用 Slug</td>
+<td><code>truenas-jellyfin</code></td>
+</tr>
+<tr>
+<td>Provider</td>
+<td><code>doratiger-truenas-jellyfin</code></td>
+</tr>
+<tr>
+<td>普通访问组</td>
+<td><code>truenas-jellyfin-users</code></td>
+</tr>
+<tr>
+<td>管理员组</td>
+<td><code>truenas-jellyfin-admins</code></td>
+</tr>
+<tr>
+<td>插件认证源名称</td>
+<td><code>DoraTiger</code></td>
+</tr>
+<tr>
+<td>已有 Jellyfin 用户</td>
+<td><code>media-admin</code></td>
+</tr>
+</tbody>
+</table>
+<p>部署位置写入后台对象名称；插件认证源名称还会出现在回调路径中，改名时必须同步修改回调。</p>
+<h2 id="二、备份与插件安装">二、备份与插件安装</h2>
+<h3 id="2-1-配置和数据库备份">2.1 配置和数据库备份</h3>
+<p>在 TrueNAS 应用详情核对 Jellyfin <code>/config</code> 的实际宿主机挂载。以下以 <code>/mnt/pool/apps/jellyfin/config</code> 为示例，执行位置为 TrueNAS 宿主机，容器名先用 <code>docker ps</code> 确认。</p>
+<p>暂停播放并停止应用后，备份配置、插件和用户数据库。Jellyfin 12 的数据库位于 <code>/config/data/jellyfin.db</code>；如目录中有 WAL 文件，一并保留。本次采用停机归档，避免复制过程中数据库继续变化。</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div></div><code class="language-bash"># 替换实际容器名和挂载路径
+backup_dir=/root/jellyfin-before-sso
+install -d -m 700 &quot;$backup_dir&quot;
+docker stop JELLYFIN_CONTAINER
+umask 077
+tar -czf &quot;$backup_dir/config-and-users.tar.gz&quot; \
+  -C /mnt/pool/apps/jellyfin/config config plugins data
+# 备份成功后启动；备份失败也应先检查并恢复服务
+docker start JELLYFIN_CONTAINER</code></div></pre>
+<p>这里的示例归档整个 <code>data</code> 目录，实际部署时可以根据版本缩小到需要的数据库和配置。影视原文件另有自己的备份；不要把整个媒体目录误当成插件配置一起打包。Authentik 数据库也应在增加 Provider 前备份。</p>
+<h3 id="2-2-安装-SSO-Auth">2.2 安装 SSO-Auth</h3>
+<p>在 Jellyfin“控制台 → 插件 → 存储库”添加仓库：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://raw.githubusercontent.com/K0lin/jellyfin-plugin-sso/manifest-release/manifest.json</code></div></pre>
+<p>名称可填 <code>SSO-Auth (K0lin)</code>。保存后刷新插件目录，选择兼容 Jellyfin 12 的 <code>5.1.1</code> 正式版本，安装并重启 Jellyfin。检查插件列表状态是否为 Active。</p>
+<p>本次实机使用发行 ZIP 安装：核对 manifest 校验值后，解压到 <code>/config/plugins/SSO-Auth_5.1.1/</code>，保留 DLL 和 <code>meta.json</code>，文件所有者与 Jellyfin 的运行用户一致，再重启容器。目录安装和 ZIP 安装二选一，不要重复装两个版本。</p>
+<p>插件的实际配置文件是：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">/config/plugins/configurations/SSO-Auth.xml</code></div></pre>
+<p>它包含客户端密钥，不公开、不提交。建议优先从插件管理界面保存；直接改文件时必须停止服务，避免内存中的旧配置覆盖文件。</p>
+<h2 id="三、Authentik-应用配置">三、Authentik 应用配置</h2>
+<h3 id="3-1-访问组与管理员组">3.1 访问组与管理员组</h3>
+<p>在“目录 → 组”分别创建 <code>truenas-jellyfin-users</code> 和 <code>truenas-jellyfin-admins</code>，两组都不启用 Authentik 超级用户权限。</p>
+<p>先把准备关联原管理员的身份加入两组。普通用户只加入 users 组。users 决定能否进入应用，admins 由插件解释为 Jellyfin 管理权限，不代表 Authentik 管理权限。</p>
+<h3 id="3-2-OAuth2-OpenID-Connect-Provider">3.2 OAuth2/OpenID Connect Provider</h3>
+<p>进入“应用程序 → 提供者 → 创建”，选择 OAuth2/OpenID Connect：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-truenas-jellyfin</code></td>
+</tr>
+<tr>
+<td>Authentication flow</td>
+<td>复用 <code>doratiger-authentication</code></td>
+</tr>
+<tr>
+<td>Authorization flow</td>
+<td><code>doratiger-provider-authorization-implicit-consent</code></td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td><code>doratiger-provider-invalidation</code></td>
+</tr>
+<tr>
+<td>Client type</td>
+<td>Confidential</td>
+</tr>
+<tr>
+<td>Grant types</td>
+<td>Authorization code</td>
+</tr>
+<tr>
+<td>Signing key</td>
+<td>现有签名证书</td>
+</tr>
+<tr>
+<td>Issuer mode</td>
+<td>每个 Provider 独立发行者</td>
+</tr>
+<tr>
+<td>Subject mode</td>
+<td><code>hashed_user_id</code></td>
+</tr>
+</tbody>
+</table>
+<p>三个流程的创建见 <a href="/2026/11/58242/" title="统一认证实践（2）Authentik DoraTiger 自建流程与默认配置清理">统一认证实践（2）Authentik DoraTiger 自建流程与默认配置清理</a>。保存生成的 Client ID 和 Client Secret，稍后填入插件。</p>
+<p>Redirect URI 添加下列地址，匹配方式 Strict，类型 Authorization：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://jellyfin.example.com/sso/OID/redirect/DoraTiger</code></div></pre>
+<p>这里的 <code>DoraTiger</code> 必须与插件源名称一致，不能填应用 Slug。最终配置使用新路径 <code>/redirect/</code>，不混用旧的 <code>/r/</code>。</p>
+<h3 id="3-3-组声明映射">3.3 组声明映射</h3>
+<p>进入“自定义 → 属性映射 → 创建”，选择 OAuth2/OpenID Scope Mapping。名称填 <code>doratiger-truenas-jellyfin-groups</code>，Scope name 填 <code>groups</code>，表达式为：</p>
+<pre><div class="code-header"><span class="code-header-type">python</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div></div><code class="language-python">return &#123;
+    &quot;groups&quot;: [
+        group.name
+        for group in request.user.ak_groups.filter(
+            name__in=[&quot;truenas-jellyfin-users&quot;, &quot;truenas-jellyfin-admins&quot;]
+        )
+    ]
+&#125;</code></div></pre>
+<p>保存后编辑 Provider，在 Scope mappings 中选择标准 <code>openid</code>、<code>profile</code>、<code>email</code>，再加入这个 groups 映射。开启将声明包含在 ID Token 中。标准 profile 映射提供 <code>preferred_username</code>，它是后面创建可读用户名的来源。</p>
+<h3 id="3-4-应用和绑定">3.4 应用和绑定</h3>
+<p>在“应用程序 → 应用程序”选择 <strong>with existing provider</strong> 创建应用，名称填 <code>TrueNAS · Jellyfin</code>，Slug 填 <code>truenas-jellyfin</code>，Provider 选择上面创建的对象，Launch URL 填 <code>https://jellyfin.example.com/</code>。</p>
+<p>保存后，在应用详情的“策略／组／用户绑定”添加 users 组，Order 为 0，启用，Negate 关闭。应用策略引擎模式使用 ALL。</p>
+<p>旧账号关联期间，再添加一个指向本人 Authentik 用户的临时绑定，Order 为 1。ALL 表示既要在 users 组内，又必须是当前关联的这个人。关联验证完成后移除临时用户绑定，保留组绑定。</p>
+<h2 id="四、Jellyfin-插件配置">四、Jellyfin 插件配置</h2>
+<h3 id="4-1-OIDC-认证源">4.1 OIDC 认证源</h3>
+<p>使用原管理员进入“控制台 → 插件 → SSO-Auth”，在 OpenID 配置中增加名为 <code>DoraTiger</code> 的认证源：</p>
+<table>
+<thead>
+<tr>
+<th>字段／配置键</th>
+<th>最终配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enabled</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>OidEndpoint</td>
+<td><code>https://auth.example.com/application/o/truenas-jellyfin/</code></td>
+</tr>
+<tr>
+<td>OidClientId / OidSecret</td>
+<td>Provider 对应的 Client ID / Secret</td>
+</tr>
+<tr>
+<td>OidScopes</td>
+<td><code>openid</code>、<code>profile</code>、<code>email</code>、<code>groups</code></td>
+</tr>
+<tr>
+<td>RoleClaim</td>
+<td><code>groups</code></td>
+</tr>
+<tr>
+<td>Roles</td>
+<td><code>truenas-jellyfin-users</code></td>
+</tr>
+<tr>
+<td>AdminRoles</td>
+<td><code>truenas-jellyfin-admins</code></td>
+</tr>
+<tr>
+<td>EnableAuthorization</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>DefaultUsernameClaim</td>
+<td><strong><code>preferred_username</code></strong></td>
+</tr>
+<tr>
+<td>SchemeOverride</td>
+<td><code>https</code></td>
+</tr>
+<tr>
+<td>NewPath</td>
+<td>开启</td>
+</tr>
+</tbody>
+</table>
+<p>Issuer 填发行者地址，不把 Authentik 登录页当作发现地址。保存后可以检查下面的发现文档是否正常返回 JSON：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://auth.example.com/application/o/truenas-jellyfin/.well-known/openid-configuration</code></div></pre>
+<p>HTTPS、发行者名称和端点校验保持开启，不使用“跳过验证”处理回调配置问题。</p>
+<h3 id="4-2-媒体库与管理员权限">4.2 媒体库与管理员权限</h3>
+<p>本次 <code>EnableAllFolders=true</code>，进入应用的普通用户可访问全部媒体库；如果只开放部分库，应关闭该选项并填写允许的库，而不是把访问组等同于分库权限。</p>
+<p><code>PreserveAdminPermissions=true</code> 用于保留原管理员兜底。它也意味着移除 admins 组不会自动剥夺既有管理员权限，需要同时在 Jellyfin 中降权。</p>
+<p>直播访问采用角色控制：开启 <code>EnableLiveTvRoles</code>，在 <code>LiveTvRoles</code> 和 <code>LiveTvManagementRoles</code> 中填 admins 组，保留原管理员的直播权限；默认直播访问和管理关闭。下载权限不强制重写。保存后重新打开配置核对，避免字段默认值覆盖原账号权限。</p>
+<h3 id="4-3-登录页入口">4.3 登录页入口</h3>
+<p>在 Jellyfin 的品牌设置中找到 Login disclaimer，保留原内容后追加：</p>
+<pre><div class="code-header"><span class="code-header-type">html</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-html">&lt;form action=&quot;/sso/OID/start/DoraTiger&quot;&gt;
+  &lt;button class=&quot;raised block emby-button button-submit&quot;&gt;
+    DoraTiger Auth 登录
+  &lt;/button&gt;
+&lt;/form&gt;</code></div></pre>
+<p>在 Custom CSS 中追加：</p>
+<pre><div class="code-header"><span class="code-header-type">css</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-css">.disclaimerContainer &#123;
+  display: block;
+&#125;</code></div></pre>
+<p>保存后用无痕窗口检查按钮和原密码表单均存在。这里使用插件提供的原生入口，不修改 Jellyfin Web 的编译产物。</p>
+<h2 id="五、旧账号关联与误建账号修正">五、旧账号关联与误建账号修正</h2>
+<h3 id="5-1-关联操作">5.1 关联操作</h3>
+<p>先用原 Jellyfin 密码登录，再在<strong>同一浏览器、同一域名</strong>打开：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">https://jellyfin.example.com/SSOViews/linking</code></div></pre>
+<p>在 DoraTiger 下点击 <strong>Link account</strong>，确认跳转的是自己的 Authentik 身份，完成认证后回到 Jellyfin。重新查看关联列表，核对用户仍是原账号，观看进度、收藏和管理员入口都存在。</p>
+<p>关联入口和登录页的“DoraTiger Auth 登录”用途不同。未建立映射时直接执行普通 SSO 登录，可能进入自动建号路径。</p>
+<h3 id="5-2-本次误建账号">5.2 本次误建账号</h3>
+<p>第一次认证后出现了长用户名，检查发现 OIDC 身份指向新建用户，原账号仍然存在。当时使用的是 <code>DefaultUsernameClaim=sub</code>，长字符串就是不透明身份标识，而不是原用户名。</p>
+<p>这包含两个问题：身份关联目标不对，以及用户名来源不适合日常使用。只把长用户名改成原用户名，不能修复原用户 ID 的归属，也不能自动合并观看记录。</p>
+<p>处理时先保存插件配置，再核对三个值：原账号 ID、新账号 ID、CanonicalLinks 中这个身份对应的用户 ID。确认两侧身份归属后，通过插件配置接口将该项目标改回原账号。没有复制或覆盖原数据库。</p>
+<p>管理员维护接口为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">GET  /Plugins/505ce9d1-d916-42fa-86ca-673ef241d7df/Configuration
+POST /Plugins/505ce9d1-d916-42fa-86ca-673ef241d7df/Configuration</code></div></pre>
+<p>读取完整配置、只修改目标认证源中的 CanonicalLinks、保留其他字段再保存。该响应包含客户端密钥，不能直接贴进终端日志或聊天。操作需要相应管理权限；权限不足时使用管理员界面，不通过改库绕过。</p>
+<h3 id="5-3-关联验证">5.3 关联验证</h3>
+<p>修正后用新的无痕窗口重新执行 SSO 登录，已经回到原账号，原记录和播放正常。旧窗口可能还持有误建账号的会话，不能据此判断修正无效。</p>
+<p>确认原账号可用后，再处理误建账号。此前尝试禁用重复用户的策略 API 返回 403，因此没有将请求成功与实际禁用混为一谈；后续用户列表复核时，重复账号已不在列表中。</p>
+<h2 id="六、新用户自动注册与用户名映射">六、新用户自动注册与用户名映射</h2>
+<h3 id="6-1-自动建号与组限制">6.1 自动建号与组限制</h3>
+<p>此插件没有独立的 Auto Register 开关。允许身份完成 SSO、又找不到用户关联时，会尝试查找同名用户或创建用户。因此本文通过 Authentik 应用授权控制开放范围。</p>
+<p>原账号验收后，删除应用上的临时本人绑定，只保留 users 组绑定。新成员开通顺序为：</p>
+<ol>
+<li>在 Authentik 创建或邀请用户。</li>
+<li>核对用户名不会冒用已有 Jellyfin 用户，再加入 <code>truenas-jellyfin-users</code>。</li>
+<li>用户点击 DoraTiger Auth 登录。</li>
+<li>插件收到身份和组声明，首次登录创建 Jellyfin 用户，随后回到同一账号。</li>
+</ol>
+<p>加入组本身不会立即创建 Jellyfin 用户。没有加入组时，Authentik 的应用授权被拒绝，不能通过这条入口自动注册。</p>
+<h3 id="6-2-从-sub-改为-preferred-username">6.2 从 sub 改为 preferred_username</h3>
+<p>最终将 <code>DefaultUsernameClaim</code> 改为 <code>preferred_username</code>，新用户直接使用 Authentik 用户名。现有原账号的 CanonicalLinks 也同步从旧 sub 键迁移到 Authentik 用户名键，值仍为原 Jellyfin 用户 ID。</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>原方案</th>
+<th>最终方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户名声明</td>
+<td><code>sub</code></td>
+<td><code>preferred_username</code></td>
+</tr>
+<tr>
+<td>新用户名称</td>
+<td>不透明标识</td>
+<td>Authentik 用户名</td>
+</tr>
+<tr>
+<td>已有用户关联键</td>
+<td>原 sub</td>
+<td>对应 Authentik 用户名</td>
+</tr>
+<tr>
+<td>已有用户 ID</td>
+<td>原用户 ID</td>
+<td>保持原用户 ID</td>
+</tr>
+</tbody>
+</table>
+<p>Authentik Provider 的 Subject mode 仍是 <code>hashed_user_id</code>，没有修改协议本身的 sub。改变的是插件选择哪个声明作为本地用户名和关联键。</p>
+<h3 id="6-3-用户名变更与权限撤销">6.3 用户名变更与权限撤销</h3>
+<p>该插件把用户名同时用作关联依据，与 Gitea 按外部身份关联的行为并不完全相同。Authentik 用户改名时，需要同步迁移 CanonicalLinks；不要把已使用过的用户名重新分配给无关人员。对于既有 Jellyfin 用户，先核对归属，再开放同名 Authentik 用户访问。</p>
+<p>从访问组移除成员只能限制后续 OIDC 授权，不会删除其 Jellyfin 数据，也不能保证电视端已存在的会话立即失效。停用用户时还要在 Jellyfin 处理会话和账号状态。</p>
+<h2 id="七、LDAP-密码认证">七、LDAP 密码认证</h2>
+<h3 id="7-1-绑定流程与查询账号">7.1 绑定流程与查询账号</h3>
+<p>LDAP 接收用户名和密码，无法展示网页上的输入、Passkey 或跳转阶段。进入 Authentik“流程和阶段”，新建专用身份认证流程，名称 <code>DoraTiger LDAP authentication</code>，Slug <code>doratiger-ldap-authentication</code>，Designation 选择 Authentication。</p>
+<p>在阶段列表新建以下对象，再进入流程的“阶段绑定”添加：</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>类型与配置</th>
+<th>绑定位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>doratiger-ldap-password</code></td>
+<td>Password，启用用户数据库标准密码与应用程序密码后端</td>
+<td>由识别阶段引用</td>
+</tr>
+<tr>
+<td><code>doratiger-ldap-identification</code></td>
+<td>Identification，用户字段选 username，Password stage 选择上面的密码阶段</td>
+<td>流程 Order 10</td>
+</tr>
+<tr>
+<td><code>doratiger-ldap-login</code></td>
+<td>User Login，完成身份登录</td>
+<td>流程 Order 30</td>
+</tr>
+</tbody>
+</table>
+<p>密码阶段由识别阶段调用，不再作为独立流程绑定重复执行。已有相同 LDAP 流程时可复用；浏览器原来的 MFA 流程保持不变。本次 LDAP Provider 的 MFA support 关闭，普通客户端使用 Authentik 密码，不代表该路径执行了网页 MFA。</p>
+<p>在“目录 → 用户”创建服务账号 <code>svc-example-jellyfin-reader</code>，使用独立随机密码，账号类型为 Service account，不授予超级管理员权限。它只用于目录查询，不是实际观看影片的用户。</p>
+<h3 id="7-2-LDAP-Provider-与应用绑定">7.2 LDAP Provider 与应用绑定</h3>
+<p>在“应用程序 → 提供者”创建 LDAP Provider：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-truenas-jellyfin-ldap</code></td>
+</tr>
+<tr>
+<td>Bind flow／Authorization flow</td>
+<td><code>doratiger-ldap-authentication</code></td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td>现有 <code>doratiger-provider-invalidation</code></td>
+</tr>
+<tr>
+<td>Base DN</td>
+<td><code>ou=jellyfin,dc=ldap,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td>Bind mode / Search mode</td>
+<td>Direct</td>
+</tr>
+<tr>
+<td>TLS server name</td>
+<td><code>ldap.example.internal</code></td>
+</tr>
+<tr>
+<td>Certificate</td>
+<td>SAN 包含上述名称的服务证书</td>
+</tr>
+<tr>
+<td>MFA support</td>
+<td>关闭</td>
+</tr>
+</tbody>
+</table>
+<p>Base DN 是目录中的命名空间，不要求对应公网 DNS。多个 LDAP Provider 共用前哨时，各自使用不同 Base DN。服务证书从“系统 → 证书”管理，导入证书及私钥；客户端只安装用于验证的证书，不复制私钥。</p>
+<p>选择 <strong>with existing provider</strong> 新建应用，Slug 为 <code>truenas-jellyfin-ldap</code>，引用此 LDAP Provider。原 OIDC 应用保留。新应用的策略引擎模式设为 ANY，在“策略／组／用户绑定”分别绑定 <code>truenas-jellyfin-users</code> 和查询账号，Order 0、1，均启用、不取反。这里允许组内用户认证，也允许服务账号查询，两者取其一。</p>
+<p>在 RBAC 角色中创建 <code>doratiger-jellyfin-ldap-search</code>。对这个 LDAP Provider 授予 <code>Search full LDAP directory</code> 对象权限，再把查询账号加入该角色。不要授予整个身份系统的管理权限。查询账号可以读取目录，因此客户端仍需明确填写访问组过滤条件。</p>
+<h3 id="7-3-本地-LDAP-前哨">7.3 本地 LDAP 前哨</h3>
+<p>在“应用程序 → 前哨”新建 LDAP 类型前哨，或给已有 LDAP 前哨增加上述 Provider。本次复用本地前哨，保留其他应用 Provider。手动部署的最小 Compose 示例为：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-yaml">services:
+  ldap:
+    image: ghcr.io/goauthentik/ldap:2026.8.5
+    restart: unless-stopped
+    env_file: ./outpost.env
+    networks:
+      jellyfin:
+        aliases:
+          - ldap.example.internal
+networks:
+  jellyfin:
+    external: true
+    name: YOUR_JELLYFIN_NETWORK</code></div></pre>
+<p>在 TrueNAS 的自定义应用中使用该 Compose 时，把 env_file 改为宿主机绝对路径；网络名从实际 Jellyfin 容器检查结果填写。若与其他应用共用前哨，在原配置中增加网络，不覆盖已有网络。凭据文件权限设为 600，内容如下，占位符替换为前哨页面给出的 token：</p>
+<pre><div class="code-header"><span class="code-header-type">dotenv</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-dotenv">AUTHENTIK_HOST=https://auth.example.com
+AUTHENTIK_INSECURE=false
+AUTHENTIK_TOKEN=REPLACE_WITH_OUTPOST_TOKEN</code></div></pre>
+<p>此部署不发布宿主机端口。Jellyfin 经同一 Docker 网络访问 <code>ldap.example.internal:6636</code>；3389 为 LDAP，6636 为 LDAPS。前哨还必须能访问云端 Authentik。NPM 的普通 HTTPS 代理保持原样。</p>
+<h3 id="7-4-Jellyfin-LDAP-插件">7.4 Jellyfin LDAP 插件</h3>
+<p>进入“控制台 → 插件 → 目录”，从官方仓库安装与 Jellyfin 12 兼容的 LDAP Authentication 24.0，暂停播放后重启，确认 LDAP-Auth 为 Active。打开插件设置：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LdapServer / LdapPort</td>
+<td><code>ldap.example.internal</code> / <code>6636</code></td>
+</tr>
+<tr>
+<td>UseSsl / UseStartTls</td>
+<td>true / false</td>
+</tr>
+<tr>
+<td>SkipSslVerify</td>
+<td>false</td>
+</tr>
+<tr>
+<td>LdapRootCaPath</td>
+<td><code>/config/plugins/configurations/doratiger-ldap.crt</code></td>
+</tr>
+<tr>
+<td>LdapBindUser</td>
+<td><code>cn=svc-example-jellyfin-reader,ou=users,ou=jellyfin,dc=ldap,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td>LdapBindPassword</td>
+<td>查询账号独立密码</td>
+</tr>
+<tr>
+<td>LdapBaseDn / LdapAdminBaseDn</td>
+<td><code>ou=users,ou=jellyfin,dc=ldap,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td>LdapSearchFilter</td>
+<td><code>(memberOf=cn=truenas-jellyfin-users,ou=groups,ou=jellyfin,dc=ldap,dc=example,dc=com)</code></td>
+</tr>
+<tr>
+<td>LdapAdminFilter</td>
+<td><code>(memberOf=cn=truenas-jellyfin-admins,ou=groups,ou=jellyfin,dc=ldap,dc=example,dc=com)</code></td>
+</tr>
+<tr>
+<td>LdapSearchAttributes / LdapUsernameAttribute</td>
+<td><code>cn</code> / <code>cn</code></td>
+</tr>
+<tr>
+<td>LdapUidAttribute</td>
+<td><code>uid</code></td>
+</tr>
+<tr>
+<td>CreateUsersFromLdap</td>
+<td>true</td>
+</tr>
+<tr>
+<td>AllowPassChange</td>
+<td>false</td>
+</tr>
+<tr>
+<td>EnableAllFolders</td>
+<td>true，按实际媒体库授权调整</td>
+</tr>
+</tbody>
+</table>
+<p>将服务端证书的信任材料保存到表中的容器路径，文件必须可由 Jellyfin 读取。自签证书需明确导入并验证，不用跳过校验代替。插件实际配置文件名为 <code>LDAP-Auth.xml</code>，其中有查询密码，应限制权限并纳入受保护备份。</p>
+<p>保存后执行插件的服务器连接测试、用户与管理员过滤测试，再搜索原用户名。连接和绑定都应成功，管理员集合应属于允许用户集合。Authentik 的 <code>cn</code> 是用户名，<code>uid</code> 是稳定标识，不能把 uid 当作可读用户名。</p>
+<h3 id="7-5-原账号与-OIDC-共用">7.5 原账号与 OIDC 共用</h3>
+<p>安装插件不会自动把原账号改为 LDAP 用户。在“控制台 → 用户”编辑原用户的 Authentication provider，选择 LDAP 提供者并保存，其他权限保持原样。已有用户与 Authentik 用户须先核对身份归属和用户名，不能只凭同名合并账号。</p>
+<p>本次还在 LDAP 插件配置的 <code>LdapUsers</code> 中明确关联了目录 UID 和原 Jellyfin 用户 ID。界面没有暴露关联列表时，可通过管理员插件配置接口读取完整配置，仅增加对应映射后保存：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div></div><code class="language-text">GET  /Plugins/958aad66-3784-4d2a-b89a-a7b6fab6e25c/Configuration
+POST /Plugins/958aad66-3784-4d2a-b89a-a7b6fab6e25c/Configuration</code></div></pre>
+<p><code>LdapUsers</code> 的单项结构如下，两个 ID 必须来自实际查询，不能照抄或使用用户名代替：</p>
+<pre><div class="code-header"><span class="code-header-type">json</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-json">&#123;
+  &quot;LinkedJellyfinUserId&quot;: &quot;EXISTING_JELLYFIN_USER_ID&quot;,
+  &quot;LdapUid&quot;: &quot;ACTUAL_LDAP_UID&quot;,
+  &quot;ProfileImageHash&quot;: &quot;&quot;
+&#125;</code></div></pre>
+<p>这是完整插件配置中的数组元素，不是可单独 POST 的配置。保留原数组其他项目，接口响应含查询密码，不输出到公开日志。原账号 ID 不变，观看记录和收藏仍归属于原用户。</p>
+<p>随后进入 SSO-Auth 的 DoraTiger 配置，将 <strong>Set default Provider / DefaultProvider</strong> 设为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">Jellyfin.Plugin.LDAP_Auth.LdapAuthenticationProviderPlugin</code></div></pre>
+<p>这样 OIDC 登录后仍保留 LDAP 密码认证。CanonicalLinks、preferred_username 和原用户 ID 不改。新用户从 OIDC 先登录时也会获得 LDAP 提供者；从 LDAP 先登录时按 cn 建号。新成员仍需检查首次建号及两条路径的同账号归属，不把管理员成功当作普通用户测试。</p>
+<h3 id="7-6-登录验收与延迟">7.6 登录验收与延迟</h3>
+<p>我先用 LDAP 密码登录，退出后用 OIDC 登录，再退出并用密码登录。三次都回到原账号，之前的播放记录仍在。密码登录现在输入 Authentik 密码，原 Jellyfin 本地密码不再用于这个用户的普通登录。</p>
+<p>接入后感受到登录比原来慢。当前路径为：</p>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div></div><code class="language-text">客户端 → Jellyfin → 本地 LDAP Outpost → 云端 Authentik</code></div></pre>
+<p>Direct 模式下本地前哨仍需访问云端，并不是离线密码库。新增网络往返可以解释一部分耗时，但目前没有分段测量，不能把所有延迟都归因于网络，也没有为了提速开启缓存模式。已有播放会话使用 Jellyfin 自己的会话，不会对每个视频分片重新进行 LDAP 密码认证。</p>
+<p>支持 Quick Connect 的客户端仍可从已登录浏览器授权。电视、手机逐型号兼容性和 Quick Connect 尚未逐一验证。<a target="_blank" rel="noopener" href="https://jellyfin.org/docs/general/server/quick-connect/" class="external-link" data-redirect="https%3A%2F%2Fjellyfin.org%2Fdocs%2Fgeneral%2Fserver%2Fquick-connect%2F">客户端说明</a></p>
+<p>备份覆盖 LDAP 与 SSO 插件配置、用户数据库和 Authentik 对象。回退时先恢复原用户的认证提供者及 SSO DefaultProvider，再停用 LDAP；不要整库恢复覆盖新增观看记录。移除访问组限制后续登录，已有会话还需在 Jellyfin 撤销。共用前哨的证书续期应同时更新各客户端信任材料。</p>
+<h2 id="八、配置问题与解答">八、配置问题与解答</h2>
+<h3 id="8-1-插件已加载，但没有认证源">8.1 插件已加载，但没有认证源</h3>
+<p><strong>Q：为什么 SSO-Auth 为 Active，GetNames 却返回空列表？</strong></p>
+<p>本次最初按命名空间猜测了 XML 文件名，插件没有读取。实际文件是 <code>SSO-Auth.xml</code>。修正后源列表出现 DoraTiger，完整授权链能够到达 Authentik 登录流程。配置文件名应以运行版本为准。</p>
+<h3 id="8-2-品牌接口返回-405">8.2 品牌接口返回 405</h3>
+<p><strong>Q：能读取品牌设置，为什么保存失败？</strong></p>
+<p>本次读取 <code>/Branding/Configuration</code> 成功，但向同一路径 POST 返回 405。实际写入使用 <code>/System/Configuration/branding</code>，返回 204。通过控制台配置时无需手写接口；自动化维护应核对运行版本的读写路径。</p>
+<h3 id="8-3-已有账号登录成功是否等于新用户验证完成">8.3 已有账号登录成功是否等于新用户验证完成</h3>
+<p><strong>Q：是否已经证明所有用户都能自动注册？</strong></p>
+<p>原账号关联、插件自动建号和普通用户权限是三个不同检查。本次误建账号证明建号路径曾运行，修正后原账号登录成功；这不能代替普通新身份的完整权限测试。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li>
+<p><a target="_blank" rel="noopener" href="https://github.com/jellyfin/jellyfin-plugin-ldapauth" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2Fjellyfin%2Fjellyfin-plugin-ldapauth">Jellyfin 官方 LDAP 插件</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/ldap/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fldap%2F">Authentik LDAP Provider</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://github.com/K0lin/jellyfin-plugin-sso/tree/v5.1.1" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FK0lin%2Fjellyfin-plugin-sso%2Ftree%2Fv5.1.1">SSO-Auth 5.1.1 源码与说明</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://github.com/K0lin/jellyfin-plugin-sso/releases/tag/v5.1.1" class="external-link" data-redirect="https%3A%2F%2Fgithub.com%2FK0lin%2Fjellyfin-plugin-sso%2Freleases%2Ftag%2Fv5.1.1">SSO-Auth 正式发行版</a></p>
+</li>
+<li>
+<p><a target="_blank" rel="noopener" href="https://jellyfin.org/docs/general/server/quick-connect/" class="external-link" data-redirect="https%3A%2F%2Fjellyfin.org%2Fdocs%2Fgeneral%2Fserver%2Fquick-connect%2F">Jellyfin Quick Connect</a></p>
+</li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62509/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62509/">https://www.doratiger.top/2026/11/62509/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/62510/"><span>统一认证实践（10）Authentik 接入 IT-Tools 与 NPM 入口认证</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/52784/"><span>服务器操作指北（13）CUDA、NCCL 维护与 K3s GPU、RDMA 调度</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>

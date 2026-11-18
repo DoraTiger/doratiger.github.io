@@ -1,0 +1,435 @@
+<!DOCTYPE html><html lang="zh-Hans" data-appearance="night" data-redirect-path="/redirect/" data-page-visible-title="欢迎回来！d(`･∀･)b 👏" data-page-hidden-title="藏起来了 d(`x_x)b"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><link rel="icon" href="/images/identity/favicon.svg"><title>统一认证实践（14）Authentik 接入 Nexus 仓库 LDAP 统一账号【DoraTiger 的异次元】</title><meta name="description" content="前言 统一账号不一定要在每个软件前面加一层网页登录。对于制品仓库，我更希望用户直接使用身份中心的账号，仓库权限仍在 Nexus 内管理。本次采用 Nexus 原生 LDAP 接入 Authentik，保留原来的本地 admin 作为备用入口。"><meta name="keywords" content="nexus,docker,ldap,truenas,authentik"><meta name="author" content="有次元袋的 tiger,superheaoz@hotmail.com"><meta name="copyright" content="有次元袋的 tiger"><meta property="og:title" content="统一认证实践（14）Authentik 接入 Nexus 仓库 LDAP 统一账号【DoraTiger 的异次元】"><meta property="og:description" content="前言 统一账号不一定要在每个软件前面加一层网页登录。对于制品仓库，我更希望用户直接使用身份中心的账号，仓库权限仍在 Nexus 内管理。本次采用 Nexus 原生 LDAP 接入 Authentik，保留原来的本地 admin 作为备用入口。"><meta property="og:image" content="/images/identity/avatar-share.png"><meta property="og:url" content="https://www.doratiger.top/2026/11/62514/"><link rel="canonical" href="https://www.superheaoz.top/2026/11/62514/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#E7A63A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="format-detection" content="telephone=no"><script>(function () {
+  try {
+    var appearance = window.localStorage.getItem('doratiger-appearance');
+    if (appearance === 'day' || appearance === 'night') {
+      document.documentElement.dataset.appearance = appearance;
+    }
+  } catch (_) {}
+})();
+</script><meta name="robots" content="index, follow"><meta name="revisit-after" content="7 days"><meta name="generator" content="Hexo"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"统一认证实践（14）Authentik 接入 Nexus 仓库 LDAP 统一账号","author":{"@type":"Person","name":"有次元袋的 tiger"},"datePublished":"2026-11-16T06:00:00.000Z","dateModified":"2026-11-18T15:36:00.000Z","publisher":{"@type":"Organization","name":"DoraTiger 的异次元"},"mainEntityOfPage":"https://www.superheaoz.top/2026/11/62514/"}</script><!-- hexo injector head_end start --><script type="module" src="/js/utils/externalRedirect.js"></script>
+
+        <script>
+            window.MathJax = {"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{"skipHtmlTags":["script","noscript","style","textarea","pre"]}};
+        </script>
+    
+<script src="/js/utils/cdnImageFallback.js"></script>
+
+    <script>
+        window.searchConfig = {"algolia":{"appId":"SO8HGDBW35","searchKey":"166967fa5ce0be5e314b597d3395cb61","indexName":"doratiger-hexo-index","per_page":10,"empty":"找不到您查询的内容","placeholder":"搜索文章"}};
+    </script>
+
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/lib/instantsearch.css/@8.5.1/themes/reset-min.css">
+<link rel="stylesheet" href="/lib/highlight.js/@11.10.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/lib/font-awesome/@6.7.2/css/all.min.css"><!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="DoraTiger 的异次元" type="application/atom+xml">
+</head><body><div id="celestial-sky" aria-hidden="true"><div id="celestial-orbit"><span class="celestial-body celestial-body-moon">🌙</span><span class="celestial-body celestial-body-sun">☀️</span></div><div id="celestial-atmosphere"></div></div><canvas id="universe"></canvas><div id="sidebar-container"><div id="sidebar-menu"><button class="sidebar-menu-item" id="sidebar-menu-switch" type="button" aria-controls="sidebar-info sidebar-toc" aria-pressed="true" data-toc-label="文章目录" data-info-label="站点概览"><span>文章目录</span></button></div><div id="sidebar-toc"><div class="sidebar-toc-progress"><div class="sidebar-toc-progress-notice">您已阅读了<span class="sidebar-toc-progress-num">0</span><span class="sidebar-toc-progress-percentage">%</span></div><div class="sidebar-toc-progress-bar"></div></div><div class="sidebar-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%AE%A4%E8%AF%81%E7%BB%93%E6%9E%84"><span class="toc-text">一、认证结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Authentik-%E7%9B%AE%E5%BD%95%E9%85%8D%E7%BD%AE"><span class="toc-text">二、Authentik 目录配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%94%A8%E6%88%B7%E7%BB%84%E4%B8%8E%E6%9F%A5%E8%AF%A2%E8%B4%A6%E5%8F%B7"><span class="toc-text">2.1 用户组与查询账号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-LDAP-%E7%BB%91%E5%AE%9A%E6%B5%81%E7%A8%8B"><span class="toc-text">2.2 LDAP 绑定流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-Provider%E3%80%81%E5%BA%94%E7%94%A8%E5%92%8C%E6%90%9C%E7%B4%A2%E6%9D%83%E9%99%90"><span class="toc-text">2.3 Provider、应用和搜索权限</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81TrueNAS-LDAP-%E5%89%8D%E5%93%A8"><span class="toc-text">三、TrueNAS LDAP 前哨</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Nexus-LDAP-%E9%85%8D%E7%BD%AE"><span class="toc-text">四、Nexus LDAP 配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%A4%87%E4%BB%BD%E4%B8%8E%E8%AF%81%E4%B9%A6%E4%BF%A1%E4%BB%BB"><span class="toc-text">4.1 备份与证书信任</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E8%BF%9E%E6%8E%A5%E5%8F%82%E6%95%B0"><span class="toc-text">4.2 连接参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E7%94%A8%E6%88%B7%E5%B1%9E%E6%80%A7"><span class="toc-text">4.3 用户属性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E7%BB%84%E5%B1%9E%E6%80%A7"><span class="toc-text">4.4 组属性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%A7%92%E8%89%B2%E4%B8%8E%E8%AE%A4%E8%AF%81%E5%9F%9F"><span class="toc-text">五、角色与认证域</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%9C%AC%E5%9C%B0%E8%A7%92%E8%89%B2%E6%98%A0%E5%B0%84"><span class="toc-text">5.1 本地角色映射</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%90%AF%E7%94%A8-LDAP-Realm"><span class="toc-text">5.2 启用 LDAP Realm</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%BB%B4%E6%8A%A4%E4%B8%8E%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98"><span class="toc-text">六、维护与配置问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E8%A7%92%E8%89%B2%E5%88%97%E8%A1%A8%E4%B8%BA%E7%A9%BA"><span class="toc-text">6.1 角色列表为空</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%9C%AC%E5%9C%B0%E5%89%8D%E5%93%A8%E4%B8%8E%E4%BA%91%E7%AB%AF%E4%BE%9D%E8%B5%96"><span class="toc-text">6.2 本地前哨与云端依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-MFA-%E4%B8%8E%E5%AF%86%E7%A0%81"><span class="toc-text">6.3 MFA 与密码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E6%92%A4%E9%94%80%E8%AE%BF%E9%97%AE%E4%B8%8E%E5%9B%9E%E9%80%80"><span class="toc-text">6.4 撤销访问与回退</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div></div><div class="hide" id="sidebar-info"><div class="author-info"><div class="author-info-avatar"><div class="appearance-image"><img class="author-info-avatar-img appearance-image-day" src="/images/identity/badge-emblem-light.svg" alt="有次元袋的 tiger" width="120" height="120"><img class="author-info-avatar-img appearance-image-night" src="/images/identity/badge-emblem-dark.svg" alt="有次元袋的 tiger" width="120" height="120"></div></div><div class="author-info-name">有次元袋的 tiger</div><div class="author-info-description">学海无涯 路在彼岸</div><div class="author-info-social-link"><a class="author-info-social-link-item" href="https://github.com/DoraTiger" target="_blank">Github<i class="author-info-social-link-item-dot bg-color7"></i></a><a class="author-info-social-link-item" href="mailto:superheaoz@hotmail.com" target="_blank">E-Mail<i class="author-info-social-link-item-dot bg-color1"></i></a></div><div class="author-info-articles"><a class="author-info-articles-item" href="/archives"><span class="author-info-articles-item-text">文章</span><span class="author-info-articles-item-num">87</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/tags"><span class="author-info-articles-item-text">标签</span><span class="author-info-articles-item-num">153</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a><a class="author-info-articles-item" href="/categories"><span class="author-info-articles-item-text">分类</span><span class="author-info-articles-item-num">2</span><div class="line line-top"></div><div class="line line-right"></div><div class="line line-bottom"></div><div class="line line-left"></div></a></div></div></div></div><div id="main-container"><header id="header-wrapper"><div id="header-left"><button class="chrome-control chrome-control-icon" id="header-left-menu-icon" type="button" aria-label="切换导航栏" aria-controls="header-left-menu-list" aria-expanded="false"><i class="fas fa-bars"></i></button><nav id="header-left-menu-list" aria-label="导航" aria-hidden="true" tabindex="-1"><button class="chrome-control chrome-control-icon chrome-control-round" id="header-left-menu-close" type="button" aria-label="关闭导航栏"><i class="fas fa-times" aria-hidden="true"></i></button><a class="header-left-menu-list-item chrome-mobile-control" href="/">首页</a><a class="header-left-menu-list-item chrome-mobile-control" href="/archives">归档</a><a class="header-left-menu-list-item chrome-mobile-control" href="/categories">分类</a><a class="header-left-menu-list-item chrome-mobile-control" href="/tags">标签</a><a class="header-left-menu-list-item chrome-mobile-control" href="/about">关于</a><a class="header-left-menu-list-item chrome-mobile-control" href="/privacy">隐私政策</a></nav></div><div id="header-center"></div><div id="header-right"><button class="chrome-control chrome-control-icon" id="header-right-search" type="button" aria-label="搜索" aria-controls="search-container" aria-expanded="false"><i class="fas fa-search" aria-hidden="true"></i><span class="sr-only">搜索</span></button><button class="chrome-control chrome-control-icon chrome-control-round" id="header-right-appearance" type="button" aria-label="切换为日间主题" aria-pressed="false" data-day-label="切换为日间主题" data-night-label="切换为夜间主题"><span class="header-right-appearance-symbol" aria-hidden="true">🌙</span></button><div class="header-inline" id="header-right-title"><a class="header-right-title-text" href="/">DoraTiger 的异次元</a></div><div class="header-inline" id="header-right-time"><span class="header-right-time-time"></span></div></div></header><main id="content-wrapper"><div id="content"><article id="post"><div class="post-item"><div class="post-item-header"><div class="post-item-header-title">统一认证实践（14）Authentik 接入 Nexus 仓库 LDAP 统一账号</div><div class="post-item-header-meta"><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">创建于 2026-11-16</span></div><div class="post-item-header-meta-item"><i class="fas fa-calendar-alt post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">更新于 2026-11-18</span></div><div class="post-item-header-meta-item"><i class="fa fa-inbox post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/categories/%E7%A7%91%E6%8A%80/">科技</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/nexus/">nexus</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/docker/">docker</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/ldap/">ldap</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/truenas/">truenas</a></div><div class="post-item-header-meta-item"><i class="fa fa-tag post-item-header-meta-item-icon" aria-hidden="true"></i><a class="post-item-header-meta-item-text" href="/tags/authentik/">authentik</a></div><div class="post-item-header-meta-item"><i class="fas fa-book-open post-item-header-meta-item-icon" aria-hidden="true"></i><span class="post-item-header-meta-item-text">5466 字 · 约 19 分钟</span></div></div></div><div class="post-item-content"><h2 id="前言">前言</h2>
+<p>统一账号不一定要在每个软件前面加一层网页登录。对于制品仓库，我更希望用户直接使用身份中心的账号，仓库权限仍在 Nexus 内管理。本次采用 Nexus 原生 LDAP 接入 Authentik，保留原来的本地 admin 作为备用入口。</p>
+<span id="more"></span>
+<p>实机运行 Nexus Repository Community <code>3.82.0-08</code>、Authentik <code>2026.8.5</code>，LDAP Outpost 与 Authentik 使用同一版本。镜像标签是 latest，正文版本来自运行服务，不能用标签判断实际版本。</p>
+<h2 id="一、认证结构">一、认证结构</h2>
+<pre><div class="code-header"><span class="code-header-type">text</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div></div><code class="language-text">浏览器／仓库客户端 → NPM HTTPS → Nexus
+                                  ↓ LDAPS
+                          TrueNAS LDAP Outpost
+                                  ↓ HTTPS
+                           云端 Authentik</code></div></pre>
+<p>NPM 保持普通反向代理，不增加 Forward Auth。用户在 Nexus 登录框输入 Authentik 用户名和密码，不跳转身份中心；Nexus 通过 LDAP 查询用户、验证密码、读取组，再根据本地角色授予仓库权限。</p>
+<p>OIDC 适合应用主动跳转身份中心完成登录，LDAP 适合应用原生验证统一用户名密码。两者是按服务能力选择的接入方式。本次 Nexus 只部署 LDAP，没有另加 OIDC 插件，也没有把仓库协议请求重定向到网页登录页。</p>
+<p>本文域名、路径和账号使用示例。LDAP Base DN 使用 <code>ou=nexus3,dc=ldap,dc=example,dc=com</code>，内部服务名使用 <code>ldap.example.internal</code>，它由 Docker 网络解析，不需要公网 DNS。</p>
+<h2 id="二、Authentik-目录配置">二、Authentik 目录配置</h2>
+<h3 id="2-1-用户组与查询账号">2.1 用户组与查询账号</h3>
+<p>在“目录 → 组”创建 <code>truenas-nexus3-users</code> 和 <code>truenas-nexus3-admins</code>，均不启用 Authentik 超级管理员权限。普通成员加入 users 组；仓库管理员同时加入两组。组名带部署位置，避免以后另一台主机部署 Nexus 时混用授权。</p>
+<p>在“目录 → 用户”创建 <code>svc-example-nexus3-reader</code>，类型选择 Service account，设置独立随机密码。该账号供 Nexus 查询目录，不复用人的登录密码，也不授予超级管理员权限。</p>
+<h3 id="2-2-LDAP-绑定流程">2.2 LDAP 绑定流程</h3>
+<p>LDAP 不能执行网页重定向或 Passkey 交互。进入“流程和阶段”，新建身份认证流程，名称 <code>DoraTiger LDAP authentication</code>，Slug <code>doratiger-ldap-authentication</code>，Designation 为 Authentication。</p>
+<p>创建 Password 阶段 <code>doratiger-ldap-password</code>，启用用户数据库标准密码与应用程序密码后端。再创建 Identification 阶段 <code>doratiger-ldap-identification</code>，用户字段选择 username，Password stage 引用刚建的密码阶段。最后创建 User Login 阶段 <code>doratiger-ldap-login</code>。</p>
+<p>进入流程的“阶段绑定”，按顺序添加识别阶段（Order 10）和用户登录阶段（Order 30）。密码阶段由识别阶段调用，不重复绑定。已有这套流程时复用即可，原网页登录和 MFA 流程不修改。</p>
+<h3 id="2-3-Provider、应用和搜索权限">2.3 Provider、应用和搜索权限</h3>
+<p>在“应用程序 → 提供者”创建 LDAP 类型：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>doratiger-truenas-nexus3-ldap</code></td>
+</tr>
+<tr>
+<td>Bind flow／Authorization flow</td>
+<td><code>doratiger-ldap-authentication</code></td>
+</tr>
+<tr>
+<td>Invalidation flow</td>
+<td>现有 <code>doratiger-provider-invalidation</code></td>
+</tr>
+<tr>
+<td>Base DN</td>
+<td><code>ou=nexus3,dc=ldap,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td>Bind mode / Search mode</td>
+<td>Direct / Direct</td>
+</tr>
+<tr>
+<td>TLS server name</td>
+<td><code>ldap.example.internal</code></td>
+</tr>
+<tr>
+<td>Certificate</td>
+<td>SAN 包含上述名称的服务证书</td>
+</tr>
+<tr>
+<td>MFA support</td>
+<td>关闭</td>
+</tr>
+</tbody>
+</table>
+<p>证书在“系统 → 证书”中管理；导入服务端证书及私钥，客户端仅配置相应信任证书。同一前哨承载多个 Provider 时，每个 Provider 使用不同 Base DN。本次使用一年期自签证书并明确建立客户端信任，续期必须同步维护。</p>
+<p>在应用程序中选择 <strong>with existing provider</strong>，名称 <code>TrueNAS · Nexus3 LDAP</code>，Slug <code>truenas-nexus3-ldap</code>，选择刚创建的 Provider。策略引擎模式设为 ANY，在应用详情的“策略／组／用户绑定”分别添加 users 组和查询账号，Order 0、1，均启用、不取反。</p>
+<p>打开“目录 → 角色”，创建 RBAC 角色 <code>doratiger-nexus3-ldap-search</code>，在角色的 Users 页添加查询账号。回到刚建的 LDAP Provider，打开 Permissions → Assign role object permission，选中这个角色并勾选 <code>Search full LDAP directory</code>，保存。应用绑定决定能否使用应用，搜索权限决定能否执行完整目录查询，两处都要配置。</p>
+<h2 id="三、TrueNAS-LDAP-前哨">三、TrueNAS LDAP 前哨</h2>
+<p>在 Authentik“应用程序 → 前哨”创建 LDAP 类型前哨 <code>doratiger-truenas-ldap</code>，选择上述 Provider。已有 LDAP 前哨时增加 Provider，不删除其他服务绑定。保存后取得前哨 token，在 TrueNAS 自定义应用中部署：</p>
+<pre><div class="code-header"><span class="code-header-type">yaml</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div><div class="line-numbers-item">4</div><div class="line-numbers-item">5</div><div class="line-numbers-item">6</div><div class="line-numbers-item">7</div><div class="line-numbers-item">8</div><div class="line-numbers-item">9</div><div class="line-numbers-item">10</div><div class="line-numbers-item">11</div><div class="line-numbers-item">12</div><div class="line-numbers-item">13</div></div><code class="language-yaml">services:
+  ldap:
+    image: ghcr.io/goauthentik/ldap:2026.8.5
+    restart: unless-stopped
+    env_file: /mnt/pool/apps/authentik-ldap/outpost.env
+    networks:
+      nexus:
+        aliases:
+          - ldap.example.internal
+networks:
+  nexus:
+    external: true
+    name: YOUR_NEXUS_DOCKER_NETWORK</code></div></pre>
+<p>网络名从 Nexus 容器的实际网络读取。宿主机创建配置目录并限制访问：</p>
+<pre><div class="code-header"><span class="code-header-type">bash</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-bash">install -d -m 700 /mnt/pool/apps/authentik-ldap
+umask 077
+# 用编辑器创建 outpost.env，写入下列内容并替换占位符</code></div></pre>
+<pre><div class="code-header"><span class="code-header-type">dotenv</span><button type="button" class="code-header-copy" aria-label="复制"><span class="code-header-copy-tips" data-copy="复制" data-copy-success="复制成功" data-copy-error="复制错误"></span><span class="code-header-copy-button" ><i class="fa fa-clipboard" aria-hidden="true"></i></span></button></div><div class="code-content"><div class="line-numbers"><div class="line-numbers-item">1</div><div class="line-numbers-item">2</div><div class="line-numbers-item">3</div></div><code class="language-dotenv">AUTHENTIK_HOST=https://auth.example.com
+AUTHENTIK_INSECURE=false
+AUTHENTIK_TOKEN=REPLACE_WITH_OUTPOST_TOKEN</code></div></pre>
+<p>保存后确认文件权限为 600。在 TrueNAS 自定义应用中创建并启动，检查容器健康和 Authentik 前哨状态。本例不发布主机端口，Nexus 通过共享 Docker 网络访问容器的 6636 LDAPS 端口。前哨必须能访问云端 Authentik；后续加入其他应用时保留此网络。</p>
+<h2 id="四、Nexus-LDAP-配置">四、Nexus LDAP 配置</h2>
+<h3 id="4-1-备份与证书信任">4.1 备份与证书信任</h3>
+<p>使用原本地 admin 登录 Nexus。在改动前备份数据目录，并保存当前 LDAP、Realms、Users、Roles 配置。本文不修改已有仓库和制品，也不把 admin 改成 LDAP 用户。</p>
+<p>进入“Administration → Security → SSL Certificates”，导入 LDAP 服务端的信任证书。连接使用自签证书时这一步不能省略，否则会出现 TLS 验证失败。连接名称必须匹配证书 SAN；不要改用容器 IP 后关闭证书校验。</p>
+<h3 id="4-2-连接参数">4.2 连接参数</h3>
+<p>进入“Security → LDAP → Create connection”，填写：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>DoraTiger Auth LDAP</code></td>
+</tr>
+<tr>
+<td>Protocol / Host / Port</td>
+<td>LDAPS / <code>ldap.example.internal</code> / <code>6636</code></td>
+</tr>
+<tr>
+<td>Use Nexus Repository truststore</td>
+<td>开启</td>
+</tr>
+<tr>
+<td>Search base</td>
+<td><code>ou=nexus3,dc=ldap,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td>Authentication method</td>
+<td>Simple</td>
+</tr>
+<tr>
+<td>Username / Bind DN</td>
+<td><code>cn=svc-example-nexus3-reader,ou=users,ou=nexus3,dc=ldap,dc=example,dc=com</code></td>
+</tr>
+<tr>
+<td>Password</td>
+<td>查询账号独立密码</td>
+</tr>
+<tr>
+<td>Connection timeout</td>
+<td>30 秒</td>
+</tr>
+</tbody>
+</table>
+<p>保存或进入下一步前执行连接测试。TLS、查询账号密码、Base DN 都正确后再配置用户映射。</p>
+<h3 id="4-3-用户属性">4.3 用户属性</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User relative DN</td>
+<td><code>ou=users</code></td>
+</tr>
+<tr>
+<td>User subtree</td>
+<td>关闭</td>
+</tr>
+<tr>
+<td>Object class</td>
+<td><code>user</code></td>
+</tr>
+<tr>
+<td>User filter</td>
+<td><code>(memberOf=cn=truenas-nexus3-users,ou=groups,ou=nexus3,dc=ldap,dc=example,dc=com)</code></td>
+</tr>
+<tr>
+<td>User ID attribute</td>
+<td><code>cn</code></td>
+</tr>
+<tr>
+<td>Real name attribute</td>
+<td><code>cn</code></td>
+</tr>
+<tr>
+<td>Email attribute</td>
+<td><code>mail</code></td>
+</tr>
+<tr>
+<td>Password attribute</td>
+<td>留空，使用绑定验证</td>
+</tr>
+</tbody>
+</table>
+<p>Authentik 的 cn 是用户名，uid 是不透明的唯一标识。这里用 cn 作为 Nexus 登录用户名。过滤条件只返回允许使用此实例的人员，不能因为查询账号有完整目录权限就省略过滤。</p>
+<h3 id="4-4-组属性">4.4 组属性</h3>
+<p>启用 LDAP groups as roles，组类型选 Static：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Group relative DN</td>
+<td><code>ou=groups</code></td>
+</tr>
+<tr>
+<td>Group subtree</td>
+<td>关闭</td>
+</tr>
+<tr>
+<td>Group object class</td>
+<td><code>groupOfNames</code></td>
+</tr>
+<tr>
+<td>Group ID attribute</td>
+<td><code>cn</code></td>
+</tr>
+<tr>
+<td>Group member attribute</td>
+<td><code>member</code></td>
+</tr>
+<tr>
+<td>Group member format</td>
+<td><code>cn=$&#123;username&#125;,ou=users,ou=nexus3,dc=ldap,dc=example,dc=com</code></td>
+</tr>
+</tbody>
+</table>
+<p>保存后测试用户映射，选择已有 Authentik 用户，确认能读取 users 和 admins 组。不要把其他 LDAP 教程里的 uniqueMember 直接套过来，本次目录实际使用 member。</p>
+<h2 id="五、角色与认证域">五、角色与认证域</h2>
+<h3 id="5-1-本地角色映射">5.1 本地角色映射</h3>
+<p>在“Security → Roles”创建 Nexus role，角色 ID 必须匹配 LDAP 组名称，显示名称可以另填：</p>
+<table>
+<thead>
+<tr>
+<th>Role ID</th>
+<th>显示名称</th>
+<th>权限／包含角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>truenas-nexus3-users</code></td>
+<td>DoraTiger Nexus3 readers</td>
+<td><code>nx-repository-view-*-*-browse</code>、<code>nx-repository-view-*-*-read</code></td>
+</tr>
+<tr>
+<td><code>truenas-nexus3-admins</code></td>
+<td>DoraTiger Nexus3 administrators</td>
+<td>包含内置 <code>nx-admin</code> 角色</td>
+</tr>
+</tbody>
+</table>
+<p>普通组当前只读，不能据此认为已有上传权限。需要发布制品时，再按目标仓库创建最小写入角色。管理员同时属于两个组，完整管理能力由管理员组授予。</p>
+<h3 id="5-2-启用-LDAP-Realm">5.2 启用 LDAP Realm</h3>
+<p>进入“Security → Realms”，保留已启用的 <code>NexusAuthenticatingRealm</code>，增加 <code>LdapRealm</code> 并保存。保留本地认证域是为了让原 admin 继续可用，不应为启用 LDAP 把原认证域移走。</p>
+<p>退出后用无痕窗口输入 Authentik 用户名和密码。我用目录账号登录后能看到原仓库和管理设置，本地 admin 也能登录。要验证制品权限，还需要用普通账号在相应格式的仓库中实际下载，并检查它能否向受限仓库上传。</p>
+<h2 id="六、维护与配置问题">六、维护与配置问题</h2>
+<h3 id="6-1-角色列表为空">6.1 角色列表为空</h3>
+<p><strong>Q：接口查到用户，但 roles 是空数组，是否没有获得 LDAP 组？</strong></p>
+<p>本次检查 <code>/service/rest/v1/security/users?source=LDAP&amp;userId=USER</code> 时，roles 为空，但 externalRoles 已返回目录组。两个字段用途不同。应同时核对外部组、本地同名角色和实际操作权限，不因单个字段为空重复修改 LDAP 过滤条件。</p>
+<h3 id="6-2-本地前哨与云端依赖">6.2 本地前哨与云端依赖</h3>
+<p><strong>Q：前哨就在 TrueNAS，密码验证是否完全在本地完成？</strong></p>
+<p>当前 Bind/Search 均为 Direct，前哨仍访问云端 Authentik。本地前哨解决协议和网络接入问题，不提供独立的离线密码库。云端不可达会影响新的 LDAP 认证，因此保留本地管理入口。尚未进行分段延迟测试，也没有启用缓存来替代直接验证。</p>
+<h3 id="6-3-MFA-与密码">6.3 MFA 与密码</h3>
+<p><strong>Q：LDAP 登录是否会弹出网页 MFA？</strong></p>
+<p>不会。本次专用绑定流程验证密码，Provider 的 MFA support 关闭。网页登录流程仍可使用 MFA，但那是另一条认证路径。只通过 Google 或 Microsoft 登录身份中心、没有设置可用本地密码的用户，需要先在 Authentik 设置密码，不能把第三方账号密码直接交给 Nexus。</p>
+<h3 id="6-4-撤销访问与回退">6.4 撤销访问与回退</h3>
+<p><strong>Q：从组里移除用户，是否会立即结束所有客户端会话？</strong></p>
+<p>不能这样推断。组和应用策略影响后续认证授权，已有会话、客户端缓存和已签发凭据还需在 Nexus 侧处理。停用用户时同时检查这些状态。</p>
+<p>回退时用本地 admin 登录，恢复原 Realm 列表并停用 LDAP 连接；确认无依赖后再移除本次角色与 Authentik 对象。不要删除原仓库或整库恢复覆盖新上传的制品。前哨若还供 Jellyfin 使用，应保留服务，只移除 Nexus 专属 Provider。</p>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/providers/ldap/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Fproviders%2Fldap%2F">Authentik LDAP Provider</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.goauthentik.io/add-secure-apps/outposts/manual-deploy-docker-compose/" class="external-link" data-redirect="https%3A%2F%2Fdocs.goauthentik.io%2Fadd-secure-apps%2Foutposts%2Fmanual-deploy-docker-compose%2F">Authentik 手动部署 Outpost</a></li>
+<li><a target="_blank" rel="noopener" href="https://help.sonatype.com/en/ldap.html" class="external-link" data-redirect="https%3A%2F%2Fhelp.sonatype.com%2Fen%2Fldap.html">Sonatype LDAP 配置</a></li>
+<li><a target="_blank" rel="noopener" href="https://help.sonatype.com/en/roles.html" class="external-link" data-redirect="https%3A%2F%2Fhelp.sonatype.com%2Fen%2Froles.html">Sonatype 角色管理</a></li>
+</ul>
+</div><!-- 版权声明--><div class="post-item-copyright"><div class="post-item-copyright-qrcode"><div class="post-item-qrcode-img" id="post-qrcode" data-url="https://www.doratiger.top/2026/11/62514/" data-size="120" data-alt="文章二维码"></div><span class="post-item-copyright-qrcode-tip">手机扫码阅读</span></div><div class="post-item-copyright-info"><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文作者: </span><span class="post-item-copyright-item-text"><a href="mailto:superheaoz@hotmail.com">有次元袋的 tiger</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">本文链接: </span><span class="post-item-copyright-item-text"><a href="https://www.doratiger.top/2026/11/62514/">https://www.doratiger.top/2026/11/62514/</a></span></div><div class="post-item-copyright-item"><span class="post-item-copyright-item-meta">版权声明: </span><span class="post-item-copyright-item-text">本站点所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.doratiger.top">DoraTiger 的异次元</a>！</span></div></div></div><!-- 评论--><div class="post-item-comment"><div id="comment-container"></div></div><!-- 赞赏/打赏--><div class="post-item-sponsor"><button class="post-item-sponsor-btn" id="sponsor-btn" type="button" aria-expanded="false" aria-controls="sponsor-panel"><i class="fas fa-mug-hot"></i><span>赞赏</span></button><div class="post-item-sponsor-panel" id="sponsor-panel" hidden><div class="post-item-sponsor-panel-tip">如果觉得有帮助，可以请作者喝杯咖啡 ☕</div><div class="post-item-sponsor-panel-codes"><div class="post-item-sponsor-panel-codes-code"><img src="/images/alipay.jpg" alt="支付宝"><span>支付宝</span></div><div class="post-item-sponsor-panel-codes-code"><img src="/images/wechat.jpg" alt="微信"><span>微信</span></div></div></div></div></div></article><div class="pagination-wrap" id="pagination"><div class="pagination-wrap-post"><div class="pagination-wrap-post-prev pull-left"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><i class="fas fa-angle-left"></i><a href="/2026/11/62515/"><span>统一认证实践（15）Homepage 统计组件与后台服务账号</span></a></div><div class="pagination-wrap-post-next pull-right"><span class="line line-top"></span><span class="line line-right"></span><span class="line line-bottom"></span><span class="line line-left"></span><a href="/2026/11/62513/"><span>统一认证实践（13）Authentik 接入 RustGuac 与管理员角色映射</span></a><i class="fas fa-angle-right"></i></div></div></div></div><button id="return-top" type="button" aria-label="返回顶部"><i class="fas fa-arrow-up" aria-hidden="true"></i></button></main><footer id="footer-wrapper"><div id="footer-left"><button id="footer-left-sidebar-icon" type="button" aria-label="切换侧边栏" aria-controls="sidebar-container" aria-expanded="true"><i class="fas fa-arrow-left"></i></button></div><div id="footer-center"></div><div id="footer-right"><div id="footer-right-statistics"><span id="site-counter"><span>本站总访问量 </span><span id="counter-value">-</span><span> 次</span></span><span class="footer-right-separator">|</span><span id="page-counter"><span>本文总访问量 </span><span id="page-counter-value">-</span><span> 次</span></span><script>(function() {
+  var api = 'https://api.superheaoz.top/counter/count';
+
+  // Visitor ID: 从 cookie 读取或生成 UUID
+  function getVisitorId() {
+    var match = document.cookie.match(/dtc_uid=([^;]+)/);
+    if (match) return match[1];
+    var uid = crypto.randomUUID();
+    document.cookie = 'dtc_uid=' + uid + '; max-age=31536000; path=/; SameSite=Lax';
+    return uid;
+  }
+  var visitorId = getVisitorId();
+
+  // 计数
+  function count() {
+    if (api) {
+      fetch(api + '?page=' + encodeURIComponent(location.pathname) + '&uid=' + visitorId)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var sv = document.getElementById('counter-value');
+          var pv = document.getElementById('page-counter-value');
+          if (sv) sv.textContent = d.site_pv || 0;
+          if (pv) pv.textContent = d.page_pv || 0;
+        })
+        .catch(function() {
+          fallbackCount();
+        });
+    } else {
+      fallbackCount();
+    }
+  }
+
+  // 无 API 时使用 localStorage
+  function fallbackCount() {
+    var visited = JSON.parse(localStorage.getItem('dtc_visited') || '{}');
+    var path = location.pathname;
+    var sv = document.getElementById('counter-value');
+    var pv = document.getElementById('page-counter-value');
+
+    // 页面访问计数（仅记录是否访问过）
+    if (!visited[path]) {
+      visited[path] = true;
+      localStorage.setItem('dtc_visited', JSON.stringify(visited));
+    }
+
+    var pageCount = Object.keys(visited).length;
+    if (sv) sv.textContent = pageCount;
+    if (pv) pv.textContent = visited[path] ? '1' : '0';
+  }
+
+  count();
+})();
+</script></div><div id="footer-right-copyright"><div class="copyright">&copy;2018 ～ 2026 By 有次元袋的 tiger</div></div></div></footer></div><div id="search-container" role="dialog" aria-modal="true" aria-hidden="true" aria-label="搜索"><div class="search-content"><div class="search-content-header"><div class="search-content-header-title"></div><img class="search-content-header-logo" src="/images/Algolia-logo-blue.svg"><button class="search-content-header-closebutton" type="button" aria-label="关闭搜索"><i class="fa fa-times"></i></button></div><div class="search-content-box" id="algolia-box"></div><div class="search-content-result" id="algolia-hits"></div><div class="search-content-pagination" id="algolia-pagination"></div></div><div class="search-mask"></div><script>document.addEventListener('DOMContentLoaded', function() {
+
+  var algoliaConfig = searchConfig.algolia;
+
+  const { liteClient: algoliasearch } = window['algoliasearch/lite'];
+
+  const search = instantsearch({
+    indexName: algoliaConfig.indexName,
+    searchClient: algoliasearch(
+      algoliaConfig.appId,
+      algoliaConfig.searchKey
+      ),
+  });
+  search.addWidgets([
+    instantsearch.widgets.configure({
+      hitsPerPage: algoliaConfig.per_page, // 设置每页显示的结果数量
+    }),
+    instantsearch.widgets.searchBox({
+      container: '#algolia-box',
+      placeholder: algoliaConfig.placeholder,
+      searchAsYouType: true,
+      showReset: false,
+      showSubmit: false,
+      showLoadingIndicator: false,
+      cssClasses: {
+        input: 'search-content-box-input',
+      },
+    }),
+    instantsearch.widgets.hits({
+      container: '#algolia-hits',
+      templates: {
+        item: (hit) => {
+          return `
+            <a href="${hit.permalink}" class="algolia-hit-item-link">
+              ${hit.title}
+            </a>
+          `;
+        },
+        empty: (result) => {
+          return `
+            <div class="algolia-hit-empty">
+              ${algoliaConfig.empty}
+            </div>
+          `;
+        },
+      },
+      cssClasses:{
+        item: 'algolia-hit-item'
+      }
+    }),
+    instantsearch.widgets.pagination({
+      container: '#algolia-pagination',
+      scrollTo: false,
+      showFirst: false,
+      showLast: false,
+      templates: {
+        first: '<i class="fa fa-angle-double-left"></i>',
+        last: '<i class="fa fa-angle-double-right"></i>',
+        previous: '<i class="fa fa-angle-left"></i>',
+        next: '<i class="fa fa-angle-right"></i>',
+      },
+      cssClasses: {
+        root: "pagination",
+        item: "pagination-item",
+        link: "page-number",
+        selectedItem: "current",
+        disabledItem: "disabled-item",
+      },
+    }),
+  ]);
+
+  search.start();
+});</script></div><!-- hexo injector body_end start --><script type="module" src="/js/main.js"></script>
+<script src="/lib/algoliasearch/@5.23.4/dist/lite/builds/browser.umd.js"></script>
+<script src="/lib/instantsearch.js/@4.78.1/dist/instantsearch.production.min.js"></script>
+<script src="/lib/twikoo/@2.0.17/twikoo.min.js"></script>
+<script src="/lib/highlight.js/@11.10.0/highlight.min.js"></script>
+<script src="/lib/mathjax/@3.2.2/tex-mml-chtml.js"></script>
+<script>hljs.configure({
+    ignoreUnescapedHTML: true,
+    });
+hljs.registerAliases(['plain'], { languageName: 'plaintext' });
+hljs.highlightAll();
+</script>
+
+        <script>
+            twikoo.init({"envId":"https://api.superheaoz.top/twikoo/","el":"#comment-container"});
+        </script>
+        <!-- hexo injector body_end end --></body></html>
