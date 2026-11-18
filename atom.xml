@@ -36,11 +36,11 @@
     
     <category term="ldap" scheme="https://www.doratiger.top/tags/ldap/"/>
     
-    <category term="gitea" scheme="https://www.doratiger.top/tags/gitea/"/>
-    
     <category term="authentik" scheme="https://www.doratiger.top/tags/authentik/"/>
     
     <category term="oidc" scheme="https://www.doratiger.top/tags/oidc/"/>
+    
+    <category term="gitea" scheme="https://www.doratiger.top/tags/gitea/"/>
     
     <category term="jellyfin" scheme="https://www.doratiger.top/tags/jellyfin/"/>
     
@@ -432,13 +432,13 @@
     
     <category term="ldap" scheme="https://www.doratiger.top/tags/ldap/"/>
     
-    <category term="gitea" scheme="https://www.doratiger.top/tags/gitea/"/>
-    
     <category term="truenas" scheme="https://www.doratiger.top/tags/truenas/"/>
     
     <category term="authentik" scheme="https://www.doratiger.top/tags/authentik/"/>
     
     <category term="oidc" scheme="https://www.doratiger.top/tags/oidc/"/>
+    
+    <category term="gitea" scheme="https://www.doratiger.top/tags/gitea/"/>
     
   </entry>
   
